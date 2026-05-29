@@ -10,8 +10,6 @@ import {
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useFrameCallback } from 'react-native-reanimated';
-import { runOnJS } from 'react-native-reanimated';
 import { verseBank } from '@ffs/verses/verseBank';
 import { getVersesForSession, getVersesForDaily } from '@ffs/verses/selectionEngine';
 import type { Verse } from '@ffs/verses/types';
@@ -221,29 +219,35 @@ export default function GameScreen() {
     if (events.length > 0) handleEvents(events);
   }, [handleEvents]);
 
-  useFrameCallback((frameInfo) => {
-    if (!isRunning.current || !stateRef.current) return;
+  useEffect(() => {
+    let rafId: number;
+    const loop = (now: number) => {
+      rafId = requestAnimationFrame(loop);
+      if (!isRunning.current || !stateRef.current) return;
+      if (gameWidth === 0 || gameHeight === 0) return;
 
-    const now = frameInfo.timeSinceFirstFrame;
-    if (lastFrameTime.current === 0) {
+      if (lastFrameTime.current === 0) {
+        lastFrameTime.current = now;
+        return;
+      }
+
+      const deltaMs = now - lastFrameTime.current;
       lastFrameTime.current = now;
-      return;
-    }
 
-    const deltaMs = now - lastFrameTime.current;
-    lastFrameTime.current = now;
+      const result = tick(
+        stateRef.current,
+        deltaMs,
+        gameWidth,
+        gameHeight,
+        rngRef.current,
+      );
 
-    const result = tick(
-      stateRef.current,
-      deltaMs,
-      gameWidth,
-      gameHeight,
-      rngRef.current,
-    );
-
-    stateRef.current = result.state;
-    runOnJS(updateState)(result.state, result.events);
-  });
+      stateRef.current = result.state;
+      updateState(result.state, result.events);
+    };
+    rafId = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafId);
+  }, [gameWidth, gameHeight, updateState]);
 
   const handleTouch = useCallback((evt: { nativeEvent: { locationX: number } }) => {
     if (!stateRef.current || stateRef.current.phase !== 'playing') return;
