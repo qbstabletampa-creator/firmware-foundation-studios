@@ -53,10 +53,16 @@ export const GAME_CONSTANTS = {
   INITIAL_LIVES: 3,
 
   /** Basket width as a fraction of game area width. */
-  BASKET_WIDTH_RATIO: 0.18,
+  BASKET_WIDTH_RATIO: 0.25,
+
+  /** Basket height as a fraction of game area width. */
+  BASKET_HEIGHT_RATIO: 0.12,
+
+  /** Pixels from bottom of game area to bottom edge of basket. */
+  BASKET_BOTTOM_OFFSET: 24,
 
   /** Falling item size as a fraction of game area width. */
-  ITEM_SIZE_RATIO: 0.08,
+  ITEM_SIZE_RATIO: 0.12,
 
   /** Starting fall speed in pixels per second. */
   BASE_SPEED: 120,

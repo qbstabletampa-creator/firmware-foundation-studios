@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   LayoutChangeEvent,
-  Modal,
   Pressable,
   SafeAreaView,
   StyleSheet,
@@ -17,7 +16,7 @@ import { createInitialState, tick, type GameEvent } from '../src/game/gameEngine
 import { GAME_CONSTANTS } from '../src/game/itemConfig';
 import { createRng, seedFromDate } from '../src/game/prng';
 import { useCatchGameStore } from '../src/game/stores/catchGameStore';
-import type { FallingItem, GameMode, GameState } from '../src/game/types';
+import type { GameMode, GameState } from '../src/game/types';
 import { HapticsManager } from '../src/shell/sound/HapticsManager';
 import BadgeCelebration from '../src/shell/components/BadgeCelebration';
 import { useBadgeStore } from '../src/shell/stores/badgeStore';
@@ -68,8 +67,8 @@ export default function GameScreen() {
   const gameWidth = Math.min(areaSize.w, MAX_GAME_WIDTH);
   const gameHeight = areaSize.h;
   const gameOffsetX = (areaSize.w - gameWidth) / 2;
-  const basketWidth = gameWidth * 0.18;
-  const basketHeight = basketWidth * 0.5;
+  const basketWidth = gameWidth * GAME_CONSTANTS.BASKET_WIDTH_RATIO;
+  const basketHeight = gameWidth * GAME_CONSTANTS.BASKET_HEIGHT_RATIO;
 
   const onAreaLayout = useCallback((e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
@@ -203,7 +202,7 @@ export default function GameScreen() {
     if (screenMode === 'gameover' && gameState) {
       handleGameOver();
     }
-  }, [screenMode]);
+  }, [screenMode, handleGameOver, gameState]);
 
   useEffect(() => {
     if (newlyUnlocked.length > 0 && screenMode === 'gameover' && !celebratingBadge) {
@@ -249,10 +248,14 @@ export default function GameScreen() {
     return () => cancelAnimationFrame(rafId);
   }, [gameWidth, gameHeight, updateState]);
 
+  const claimResponder = useCallback(() => true, []);
+  const denyTermination = useCallback(() => false, []);
+
   const handleTouch = useCallback((evt: { nativeEvent: { locationX: number } }) => {
     if (!stateRef.current || stateRef.current.phase !== 'playing') return;
     const touchX = evt.nativeEvent.locationX;
-    const newX = Math.max(0, Math.min(gameWidth - stateRef.current.basket.width, touchX - stateRef.current.basket.width / 2));
+    const bw = stateRef.current.basket.width;
+    const newX = Math.max(0, Math.min(gameWidth - bw, touchX - bw / 2));
     stateRef.current = {
       ...stateRef.current,
       basket: { ...stateRef.current.basket, x: newX },
@@ -350,9 +353,15 @@ export default function GameScreen() {
           },
         ]}
         onLayout={onAreaLayout}
-        onTouchMove={handleTouch}
-        onTouchStart={handleTouch}
+        onStartShouldSetResponder={claimResponder}
+        onMoveShouldSetResponder={claimResponder}
+        onResponderTerminationRequest={denyTermination}
+        onResponderGrant={handleTouch}
+        onResponderMove={handleTouch}
       >
+        {/* Ground glow */}
+        <View style={styles.groundGlow} />
+
         {/* Falling Items */}
         {gs.items.map((item) => (
           <View
@@ -367,12 +376,7 @@ export default function GameScreen() {
               },
             ]}
           >
-            <Text
-              style={[
-                styles.itemIcon,
-                { fontSize: item.width * 0.7, transform: [{ rotate: `${item.rotation}deg` }] },
-              ]}
-            >
+            <Text style={[styles.itemIcon, { fontSize: item.width * 0.75 }]}>
               {item.icon}
             </Text>
           </View>
@@ -384,13 +388,15 @@ export default function GameScreen() {
             styles.basket,
             {
               left: gs.basket.x,
-              bottom: 40,
+              bottom: GAME_CONSTANTS.BASKET_BOTTOM_OFFSET,
               width: currentBasketWidth,
               height: basketHeight,
             },
           ]}
         >
-          <Text style={styles.basketIcon}>{'🧺'}</Text>
+          <Text style={[styles.basketIcon, { fontSize: currentBasketWidth * 0.5 }]}>
+            {'🧺'}
+          </Text>
         </View>
       </View>
 
@@ -468,8 +474,20 @@ const styles = StyleSheet.create({
 
   // Mode Select
   selectContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: spacing.xl },
-  backButton: { position: 'absolute', top: spacing.lg, left: spacing.xl },
-  backArrow: { color: colors.gold, fontSize: 28, fontWeight: '700' },
+  backButton: {
+    position: 'absolute',
+    top: spacing.lg,
+    left: spacing.xl,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backArrow: { color: colors.gold, fontSize: 22, fontWeight: '700' },
   selectTitle: { color: colors.gold, ...typography.title, marginBottom: spacing.sm },
   selectTagline: { color: colors.textSecondary, ...typography.subtitle, marginBottom: spacing.xxl },
   modeButtons: { width: '100%', gap: spacing.md },
@@ -494,6 +512,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     height: 60,
+    backgroundColor: 'rgba(16, 16, 14, 0.85)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 215, 0, 0.12)',
   },
   hudLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
   hudScore: { color: colors.gold, ...typography.score },
@@ -518,13 +539,39 @@ const styles = StyleSheet.create({
 
   // Game Area
   gameArea: { flex: 1, position: 'relative', overflow: 'hidden' },
-  fallingItem: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
+  groundGlow: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 100,
+    backgroundColor: 'rgba(255, 215, 0, 0.04)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 215, 0, 0.08)',
+  },
+  fallingItem: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+  },
   itemIcon: { textAlign: 'center' },
 
   basket: {
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(255, 215, 0, 0.12)',
+    borderRadius: radii.lg,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 215, 0, 0.35)',
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
   },
   basketIcon: { fontSize: 40 },
 

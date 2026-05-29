@@ -16,7 +16,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
           name="game"
-          options={{ animation: 'slide_from_bottom' }}
+          options={{ animation: 'slide_from_bottom', gestureEnabled: false }}
         />
         <Stack.Screen name="splash" />
         <Stack.Screen name="onboarding" />

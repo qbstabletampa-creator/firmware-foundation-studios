@@ -62,18 +62,12 @@ function hasPowerUp(state: GameState, type: PowerUpType): boolean {
   return state.activePowerUps.some((p) => p.type === type);
 }
 
-/**
- * Basket catch zone. The basket sits at the bottom of the screen. We define
- * a thin rectangle so collisions feel fair: the top of the zone is slightly
- * above the bottom edge, and its height is a fraction of the item size.
- */
 function basketRect(
-  _basket: { x: number; width: number },
+  gameWidth: number,
   gameHeight: number,
-  itemHeight: number,
 ): { basketY: number; basketHeight: number } {
-  const basketHeight = itemHeight * 0.6;
-  const basketY = gameHeight - itemHeight - basketHeight;
+  const basketHeight = Math.round(gameWidth * GAME_CONSTANTS.BASKET_HEIGHT_RATIO);
+  const basketY = gameHeight - GAME_CONSTANTS.BASKET_BOTTOM_OFFSET - basketHeight;
   return { basketY, basketHeight };
 }
 
@@ -127,7 +121,7 @@ export function tick(
 
   // -- 1. Move items ----------------------------------------------------------
   const itemSize = Math.round(gameWidth * GAME_CONSTANTS.ITEM_SIZE_RATIO);
-  const { basketY, basketHeight } = basketRect(state.basket, gameHeight, itemSize);
+  const { basketY, basketHeight } = basketRect(gameWidth, gameHeight);
 
   const survivingItems: FallingItem[] = [];
 
