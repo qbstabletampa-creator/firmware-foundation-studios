@@ -27,8 +27,8 @@ export default function IndexScreen() {
     return (
       <View style={styles.container}>
         <SplashComponent
-          logoSource={require('../assets/logo.png')}
-          studioName="Romans 8:28"
+          logoSource={require('../assets/ffs-logo.png')}
+          studioName="Firmware Foundation Studios"
           onComplete={() => setSplashDone(true)}
           duration={2500}
         />

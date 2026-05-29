@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
+  LayoutChangeEvent,
   Modal,
   Pressable,
   SafeAreaView,
@@ -17,7 +18,6 @@ import type { Verse } from '@ffs/verses/types';
 import { createInitialState, tick, type GameEvent } from '../src/game/gameEngine';
 import { GAME_CONSTANTS } from '../src/game/itemConfig';
 import { createRng, seedFromDate } from '../src/game/prng';
-import { useResponsiveLayout } from '../src/game/useResponsiveLayout';
 import { useCatchGameStore } from '../src/game/stores/catchGameStore';
 import type { FallingItem, GameMode, GameState } from '../src/game/types';
 import { HapticsManager } from '../src/shell/sound/HapticsManager';
@@ -38,9 +38,11 @@ function getTodayDateString(): string {
 
 type ScreenMode = 'select' | 'playing' | 'gameover';
 
+const MAX_GAME_WIDTH = 500;
+
 export default function GameScreen() {
   const router = useRouter();
-  const layout = useResponsiveLayout();
+  const [areaSize, setAreaSize] = useState({ w: 0, h: 0 });
   const recordPlay = useStreakStore((s) => s.recordPlay);
   const processEvent = useBadgeStore((s) => s.processEvent);
   const newlyUnlocked = useBadgeStore((s) => s.newlyUnlocked);
@@ -64,6 +66,17 @@ export default function GameScreen() {
 
   const verseOpacity = useRef(new Animated.Value(0)).current;
   const gameOverOpacity = useRef(new Animated.Value(0)).current;
+
+  const gameWidth = Math.min(areaSize.w, MAX_GAME_WIDTH);
+  const gameHeight = areaSize.h;
+  const gameOffsetX = (areaSize.w - gameWidth) / 2;
+  const basketWidth = gameWidth * 0.18;
+  const basketHeight = basketWidth * 0.5;
+
+  const onAreaLayout = useCallback((e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout;
+    setAreaSize({ w: width, h: height });
+  }, []);
 
   const todayStr = getTodayDateString();
   const dailyAlreadyPlayed = catchStore.hasDailyScore(todayStr);
@@ -91,8 +104,8 @@ export default function GameScreen() {
     setTookDamage(false);
 
     const initial = createInitialState(mode);
-    initial.basket.width = layout.basketWidth;
-    initial.basket.x = (layout.gameWidth - layout.basketWidth) / 2;
+    initial.basket.width = basketWidth;
+    initial.basket.x = (gameWidth - basketWidth) / 2;
 
     stateRef.current = initial;
     setGameState(initial);
@@ -102,7 +115,7 @@ export default function GameScreen() {
 
     gameOverOpacity.setValue(0);
     verseOpacity.setValue(0);
-  }, [catchStore, todayStr, layout]);
+  }, [catchStore, todayStr, basketWidth, gameWidth]);
 
   const handleEvents = useCallback((events: GameEvent[]) => {
     for (const ev of events) {
@@ -223,8 +236,8 @@ export default function GameScreen() {
     const result = tick(
       stateRef.current,
       deltaMs,
-      layout.gameWidth,
-      layout.gameHeight,
+      gameWidth,
+      gameHeight,
       rngRef.current,
     );
 
@@ -234,18 +247,18 @@ export default function GameScreen() {
 
   const handleTouch = useCallback((evt: { nativeEvent: { locationX: number } }) => {
     if (!stateRef.current || stateRef.current.phase !== 'playing') return;
-    const touchX = evt.nativeEvent.locationX - layout.gameOffsetX;
-    const newX = Math.max(0, Math.min(layout.gameWidth - stateRef.current.basket.width, touchX - stateRef.current.basket.width / 2));
+    const touchX = evt.nativeEvent.locationX;
+    const newX = Math.max(0, Math.min(gameWidth - stateRef.current.basket.width, touchX - stateRef.current.basket.width / 2));
     stateRef.current = {
       ...stateRef.current,
       basket: { ...stateRef.current.basket, x: newX },
     };
-  }, [layout]);
+  }, [gameWidth]);
 
   if (screenMode === 'select') {
     return (
       <SafeAreaView style={styles.screen}>
-        <View style={styles.selectContainer}>
+        <View style={styles.selectContainer} onLayout={onAreaLayout}>
           <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
             <Text style={styles.backArrow}>{'<'}</Text>
           </Pressable>
@@ -328,11 +341,11 @@ export default function GameScreen() {
         style={[
           styles.gameArea,
           {
-            width: layout.gameWidth,
-            height: layout.gameHeight,
-            marginLeft: layout.gameOffsetX,
+            width: gameWidth,
+            marginLeft: gameOffsetX,
           },
         ]}
+        onLayout={onAreaLayout}
         onTouchMove={handleTouch}
         onTouchStart={handleTouch}
       >
@@ -500,7 +513,7 @@ const styles = StyleSheet.create({
   powerUpTimer: { fontSize: 12, fontWeight: '700' },
 
   // Game Area
-  gameArea: { position: 'relative', overflow: 'hidden' },
+  gameArea: { flex: 1, position: 'relative', overflow: 'hidden' },
   fallingItem: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   itemIcon: { textAlign: 'center' },
 
