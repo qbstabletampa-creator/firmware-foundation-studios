@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "Manna Catch",
+    "slug": "manna-catch",
+    "scheme": "mannacatch",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#10100E"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-dev-client"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.firmwarefoundation.mannacatch",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#10100E",
+        "foregroundImage": "./assets/adaptive-icon.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d5b4265a-aab0-461a-a76d-e91f0af94d24"
+      }
+    },
+    "owner": "firmfoundationstudios"
+  }
+}

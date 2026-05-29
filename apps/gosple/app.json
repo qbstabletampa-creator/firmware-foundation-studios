@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "Gosple",
+    "slug": "gosple",
+    "scheme": "gosple",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#10100E"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.firmwarefoundation.gosple",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#10100E",
+        "foregroundImage": "./assets/adaptive-icon.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "919a2ce7-1a11-48fe-a5a7-ea7382682019"
+      },
+      "router": {}
+    },
+    "owner": "firmfoundationstudios"
+  }
+}
