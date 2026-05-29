@@ -386,7 +386,7 @@ export default function GameScreen() {
               left: gs.basket.x,
               bottom: 40,
               width: currentBasketWidth,
-              height: layout.basketHeight,
+              height: basketHeight,
             },
           ]}
         >
