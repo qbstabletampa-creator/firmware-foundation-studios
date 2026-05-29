@@ -11,9 +11,9 @@ import {
 import { useRouter } from 'expo-router';
 import { useFrameCallback } from 'react-native-reanimated';
 import { runOnJS } from 'react-native-reanimated';
-import { verseBank } from '../../../packages/verses/verseBank';
-import { getVersesForSession, getVersesForDaily } from '../../../packages/verses/selectionEngine';
-import type { Verse } from '../../../packages/verses/types';
+import { verseBank } from '@ffs/verses/verseBank';
+import { getVersesForSession, getVersesForDaily } from '@ffs/verses/selectionEngine';
+import type { Verse } from '@ffs/verses/types';
 import { createInitialState, tick, type GameEvent } from '../src/game/gameEngine';
 import { GAME_CONSTANTS } from '../src/game/itemConfig';
 import { createRng, seedFromDate } from '../src/game/prng';

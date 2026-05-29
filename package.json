@@ -1,0 +1,8 @@
+{
+  "name": "firmware-foundation-studios",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
