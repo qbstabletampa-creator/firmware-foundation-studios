@@ -1,0 +1,62 @@
+:root {
+  --bg: #FFFBF0;
+  --surface: #FFFFFF;
+  --surface-border: #E8E4DC;
+  --text-primary: #1A1A1A;
+  --text-secondary: #5A5A5A;
+  --text-muted: #9A9A9A;
+  --gold: #D4C36A;
+  --gold-muted: #B8A94E;
+  --correct: #4CAF79;
+  --present: #F5A623;
+  --absent: #D2D2D2;
+  --coral: #FF6B6B;
+  --teal: #4ECDC4;
+  --sky: #5BA4E6;
+  --verse-card: #FFF8E7;
+  --danger: #E74C3C;
+  --dark: #10100E;
+  --dark-surface: #1A1A18;
+  --white: #FFFFFF;
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-button: 0 1px 4px rgba(0, 0, 0, 0.04);
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 18px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+button {
+  font-family: inherit;
+  border: none;
+  cursor: pointer;
+  background: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}

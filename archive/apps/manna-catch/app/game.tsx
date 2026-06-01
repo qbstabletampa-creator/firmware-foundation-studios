@@ -202,7 +202,7 @@ export default function GameScreen() {
     if (screenMode === 'gameover' && gameState) {
       handleGameOver();
     }
-  }, [screenMode, handleGameOver, gameState]);
+  }, [screenMode]);
 
   useEffect(() => {
     if (newlyUnlocked.length > 0 && screenMode === 'gameover' && !celebratingBadge) {

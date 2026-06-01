@@ -1,0 +1,134 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 20px;
+  min-height: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 32px;
+}
+
+.logoSmall {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--gold);
+  color: var(--dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.settingsBtn {
+  font-size: 24px;
+  color: var(--text-muted);
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.settingsBtn:hover {
+  color: var(--gold);
+}
+
+.greeting {
+  font-size: 16px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.gameTitle {
+  font-size: 46px;
+  font-weight: 900;
+  color: var(--text-primary);
+  text-align: center;
+  line-height: 1.1;
+}
+
+.tagline {
+  font-size: 15px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: 8px;
+  margin-bottom: 32px;
+}
+
+.progressCard {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 32px;
+}
+
+.streakRow {
+  margin-bottom: 8px;
+}
+
+.streakText {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.statusRow {
+  font-size: 14px;
+}
+
+.completed {
+  color: var(--correct);
+  font-weight: 600;
+}
+
+.ready {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.playButton {
+  width: 100%;
+  max-width: 320px;
+  padding: 20px;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--dark);
+  background: var(--gold);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-button);
+  transition: transform 0.15s;
+}
+
+.playButton:hover {
+  transform: translateY(-1px);
+}
+
+.footer {
+  margin-top: auto;
+  padding-top: 32px;
+  text-align: center;
+}
+
+.studioName {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+.giveback {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}

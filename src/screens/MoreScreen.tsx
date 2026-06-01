@@ -1,0 +1,51 @@
+import { useNavigate } from 'react-router-dom';
+import { ScreenShell } from '../components/ScreenShell';
+import { useProfileStore } from '../stores/profileStore';
+import styles from './MoreScreen.module.css';
+
+const menuItems = [
+  { icon: '⚙️', label: 'Settings', path: '/settings' },
+  { icon: 'ℹ️', label: 'About', path: '/about' },
+  { icon: '🔒', label: 'Privacy', path: '/privacy' },
+  { icon: '💛', label: 'Giveback', path: '/giveback' },
+];
+
+export function MoreScreen() {
+  const navigate = useNavigate();
+  const { username, profileType } = useProfileStore();
+
+  return (
+    <ScreenShell>
+      <div className={styles.container}>
+        <h1 className={styles.heading}>More</h1>
+
+        <div className={styles.profileCard}>
+          <div className={styles.avatar}>
+            {username.charAt(0).toUpperCase()}
+          </div>
+          <div className={styles.profileInfo}>
+            <span className={styles.profileName}>{username}</span>
+            <span className={styles.profileHint}>
+              {profileType === 'kid' ? 'Kid' : 'Parent'} profile
+            </span>
+          </div>
+          <span className={styles.arrow}>&#x203A;</span>
+        </div>
+
+        <div className={styles.menuList}>
+          {menuItems.map((item) => (
+            <button
+              key={item.path}
+              className={styles.menuItem}
+              onClick={() => navigate(item.path)}
+            >
+              <span className={styles.menuIcon}>{item.icon}</span>
+              <span className={styles.menuLabel}>{item.label}</span>
+              <span className={styles.menuArrow}>&#x203A;</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </ScreenShell>
+  );
+}
