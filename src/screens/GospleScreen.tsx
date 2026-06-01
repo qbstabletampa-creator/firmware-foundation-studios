@@ -1,25 +1,38 @@
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ScreenShell } from '../components/ScreenShell';
-import { PageHeader } from '../components/PageHeader';
-import styles from './GameScreen.module.css';
+import Phaser from 'phaser';
+import { createGospleConfig } from '../games/gosple/config';
+import { useStreakStore } from '../stores/streakStore';
+import styles from './GospleScreen.module.css';
 
 export function GospleScreen() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const gameRef = useRef<Phaser.Game | null>(null);
   const navigate = useNavigate();
+  const recordPlay = useStreakStore((s) => s.recordPlay);
+
+  useEffect(() => {
+    if (!containerRef.current || gameRef.current) return;
+
+    const config = createGospleConfig('gosple-game');
+    const game = new Phaser.Game(config);
+    gameRef.current = game;
+
+    game.events.on('gosple:complete', (data: { won: boolean; attempts: number }) => {
+      recordPlay(data.won);
+      navigate('/home');
+    });
+
+    return () => {
+      game.events.off('gosple:complete');
+      game.destroy(true);
+      gameRef.current = null;
+    };
+  }, [navigate, recordPlay]);
 
   return (
-    <ScreenShell showTabs={false}>
-      <PageHeader title="Gosple" backTo="/home" />
-      <div className={styles.container}>
-        <div className={styles.comingSoon}>
-          <span className={styles.icon}>&#x1F4D6;</span>
-          <h2 className={styles.title}>Gosple</h2>
-          <p className={styles.subtitle}>Daily Bible word puzzle</p>
-          <p className={styles.status}>Coming soon</p>
-          <button className={styles.backBtn} onClick={() => navigate('/home')}>
-            Back to Home
-          </button>
-        </div>
-      </div>
-    </ScreenShell>
+    <div className={styles.screen}>
+      <div id="gosple-game" ref={containerRef} className={styles.gameContainer} />
+    </div>
   );
 }
