@@ -1,5 +1,19 @@
 # Firmware Foundation Studios Log
 
+## 2026-06-01
+
+- Added Gosple `/play/` build lane as an exact copy for safe iteration.
+- Source: `/mnt/c/Users/rodge/projects/firmware-foundation-studios/apps/play/`.
+- Live URL: `https://firmwarefoundation.com/play/`.
+- Verified local tests and typecheck passed, GitHub Pages deployed, and the live `/play/` page renders the Gosple onboarding UI.
+- Added `docs/.nojekyll` so GitHub Pages serves Expo `_expo` assets instead of dropping them through Jekyll.
+
+## 2026-05-31 -- Gosple live URL and code path confirmed
+- Updated `pages/studio-decisions.md` with CJ's correction: keep the public URL on `/gosple` and treat Gosple as live.
+- Confirmed current local source path: `/mnt/c/Users/rodge/projects/firmware-foundation-studios/apps/gosple/`.
+- Confirmed repo remote from that app folder: `https://github.com/qbstabletampa-creator/firmware-foundation-studios.git`.
+- Confirmed Expo slug `gosple` and iOS bundle identifier `com.firmwarefoundation.gosple` in `app.json`.
+
 ## 2026-05-27 -- 40 plus app portfolio article added
 - Updated `pages/app-factory-strategy.md` with CJ's capture/article about creating 40 plus apps.
 - Clarified that the strategy is not random apps, it is one reusable Christian kids app factory, small focused launches, then scale winners.

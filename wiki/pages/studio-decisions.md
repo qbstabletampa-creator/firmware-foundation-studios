@@ -1,8 +1,8 @@
 # Studio Decisions
 
 **Summary:** Locked product and brand decisions for Firmware Foundation Studios.
-**Last Updated:** 2026-05-27
-**Sources:** CJ Telegram planning thread.
+**Last Updated:** 2026-06-01
+**Sources:** CJ Telegram planning thread, CJ Telegram correction on live Gosple URL, CJ Telegram direction for `/play` build lane.
 **Related:** [[app-factory-strategy]], [[gosple-product-spec]], [[charity-options]]
 
 ---
@@ -42,3 +42,19 @@ Use this safer language in prompts and briefs:
 - NIV licensing path
 - First app store title and subtitle
 - Exact icon and color system
+
+## Live URL Decision
+
+- Keep Firmware Foundation Studios Gosple public URL on the `/gosple` path.
+- Treat the app as live, not just a concept or prototype, when discussing current status.
+- Current local source of truth for code: `/mnt/c/Users/rodge/projects/firmware-foundation-studios/apps/gosple/`.
+- Expo slug: `gosple`; iOS bundle identifier: `com.firmwarefoundation.gosple`.
+
+## Play Build Lane
+
+- `/play/` is CJ's owned build lane for iterating on Gosple without risking the live app path.
+- Live URL: `https://firmwarefoundation.com/play/`.
+- Source path: `/mnt/c/Users/rodge/projects/firmware-foundation-studios/apps/play/`.
+- Web export path: `/mnt/c/Users/rodge/projects/firmware-foundation-studios/docs/play/`.
+- Starting point is an exact Gosple copy in play and format. Build future changes on this lane first.
+- GitHub Pages requires `/mnt/c/Users/rodge/projects/firmware-foundation-studios/docs/.nojekyll` so Expo `_expo` assets serve correctly.
