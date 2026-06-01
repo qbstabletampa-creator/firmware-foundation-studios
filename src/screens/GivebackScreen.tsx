@@ -18,7 +18,7 @@ const charities = [
 export function GivebackScreen() {
   return (
     <ScreenShell showTabs={false}>
-      <PageHeader title="Giveback" backTo="/more" />
+      <PageHeader title="Giveback" backTo="/gosple/more" />
       <div className={styles.container}>
         <p className={styles.intro}>
           10% of every purchase supports ministries that serve children.

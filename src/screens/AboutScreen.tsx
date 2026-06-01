@@ -5,7 +5,7 @@ import styles from './InfoScreen.module.css';
 export function AboutScreen() {
   return (
     <ScreenShell showTabs={false}>
-      <PageHeader title="About" backTo="/more" />
+      <PageHeader title="About" backTo="/gosple/more" />
       <div className={styles.container}>
         <p className={styles.studioLabel}>Firmware Foundation Studios</p>
         <h2 className={styles.appName}>Gosple</h2>

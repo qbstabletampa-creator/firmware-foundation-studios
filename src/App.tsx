@@ -14,43 +14,46 @@ import { MannaCatchScreen } from './screens/MannaCatchScreen';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const onboarded = useProfileStore((s) => s.onboarded);
-  if (!onboarded) return <Navigate to="/onboarding" replace />;
+  if (!onboarded) return <Navigate to="/gosple/onboarding" replace />;
   return <>{children}</>;
 }
 
 export function App() {
   return (
     <Routes>
-      <Route path="/" element={<SplashScreen />} />
-      <Route path="/onboarding" element={<OnboardingScreen />} />
+      {/* Gosple app routes */}
+      <Route path="/gosple" element={<SplashScreen />} />
+      <Route path="/gosple/onboarding" element={<OnboardingScreen />} />
       <Route
-        path="/home"
+        path="/gosple/home"
         element={<ProtectedRoute><HomeScreen /></ProtectedRoute>}
       />
       <Route
-        path="/gosple"
+        path="/gosple/play"
         element={<ProtectedRoute><GospleScreen /></ProtectedRoute>}
       />
       <Route
-        path="/manna-catch"
-        element={<ProtectedRoute><MannaCatchScreen /></ProtectedRoute>}
-      />
-      <Route
-        path="/stats"
+        path="/gosple/stats"
         element={<ProtectedRoute><StatsScreen /></ProtectedRoute>}
       />
       <Route
-        path="/more"
+        path="/gosple/more"
         element={<ProtectedRoute><MoreScreen /></ProtectedRoute>}
       />
       <Route
-        path="/settings"
+        path="/gosple/settings"
         element={<ProtectedRoute><SettingsScreen /></ProtectedRoute>}
       />
-      <Route path="/about" element={<AboutScreen />} />
-      <Route path="/privacy" element={<PrivacyScreen />} />
-      <Route path="/giveback" element={<GivebackScreen />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/gosple/about" element={<AboutScreen />} />
+      <Route path="/gosple/privacy" element={<PrivacyScreen />} />
+      <Route path="/gosple/giveback" element={<GivebackScreen />} />
+
+      {/* Manna Catch app routes */}
+      <Route path="/manna-catch" element={<MannaCatchScreen />} />
+
+      {/* Studio landing page (TODO) */}
+      <Route path="/" element={<Navigate to="/gosple" replace />} />
+      <Route path="*" element={<Navigate to="/gosple" replace />} />
     </Routes>
   );
 }

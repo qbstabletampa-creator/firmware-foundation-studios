@@ -20,7 +20,7 @@ export function GospleScreen() {
 
     game.events.on('gosple:complete', (data: { won: boolean; attempts: number }) => {
       recordPlay(data.won);
-      navigate('/home');
+      navigate('/gosple/home');
     });
 
     return () => {

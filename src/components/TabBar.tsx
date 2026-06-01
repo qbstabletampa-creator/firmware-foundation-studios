@@ -2,9 +2,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import styles from './TabBar.module.css';
 
 const tabs = [
-  { path: '/home', icon: '⌂', label: 'Home' },
-  { path: '/stats', icon: '≡', label: 'Stats' },
-  { path: '/more', icon: '…', label: 'More' },
+  { path: '/gosple/home', icon: '⌂', label: 'Home' },
+  { path: '/gosple/stats', icon: '≡', label: 'Stats' },
+  { path: '/gosple/more', icon: '…', label: 'More' },
 ] as const;
 
 export function TabBar() {

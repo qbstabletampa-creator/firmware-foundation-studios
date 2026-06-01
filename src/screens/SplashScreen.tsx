@@ -10,7 +10,7 @@ export function SplashScreen() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate(onboarded ? '/home' : '/onboarding', { replace: true });
+      navigate(onboarded ? '/gosple/home' : '/gosple/onboarding', { replace: true });
     }, 2500);
     return () => clearTimeout(timer);
   }, [navigate, onboarded]);

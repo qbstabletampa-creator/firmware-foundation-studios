@@ -13,7 +13,7 @@ const statements = [
 export function PrivacyScreen() {
   return (
     <ScreenShell showTabs={false}>
-      <PageHeader title="Privacy" backTo="/more" />
+      <PageHeader title="Privacy" backTo="/gosple/more" />
       <div className={styles.container}>
         {statements.map((s, i) => (
           <div key={i} className={styles.card}>

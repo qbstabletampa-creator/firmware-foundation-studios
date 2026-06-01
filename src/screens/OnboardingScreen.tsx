@@ -21,7 +21,7 @@ export function OnboardingScreen() {
   function handleSubmit() {
     if (!selected || !username.trim()) return;
     setProfile(selected, username.trim());
-    navigate('/home', { replace: true });
+    navigate('/gosple/home', { replace: true });
   }
 
   return (

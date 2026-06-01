@@ -32,7 +32,7 @@ export function HomeScreen() {
             <div className={styles.logoSmall}>F</div>
             <button
               className={styles.settingsBtn}
-              onClick={() => navigate('/settings')}
+              onClick={() => navigate('/gosple/settings')}
             >
               &#x2699;
             </button>
@@ -76,7 +76,7 @@ export function HomeScreen() {
 
         <motion.button
           className={styles.playButton}
-          onClick={() => navigate('/gosple')}
+          onClick={() => navigate('/gosple/play')}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4, duration: 0.4, type: 'spring' }}

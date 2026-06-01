@@ -15,7 +15,7 @@ export function SettingsScreen() {
 
   return (
     <ScreenShell showTabs={false}>
-      <PageHeader title="Settings" backTo="/more" />
+      <PageHeader title="Settings" backTo="/gosple/more" />
       <div className={styles.container}>
         <div className={styles.card}>
           {toggles.map((t) => (

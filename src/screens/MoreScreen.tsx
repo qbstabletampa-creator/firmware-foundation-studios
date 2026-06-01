@@ -4,10 +4,10 @@ import { useProfileStore } from '../stores/profileStore';
 import styles from './MoreScreen.module.css';
 
 const menuItems = [
-  { icon: '⚙️', label: 'Settings', path: '/settings' },
-  { icon: 'ℹ️', label: 'About', path: '/about' },
-  { icon: '🔒', label: 'Privacy', path: '/privacy' },
-  { icon: '💛', label: 'Giveback', path: '/giveback' },
+  { icon: '⚙️', label: 'Settings', path: '/gosple/settings' },
+  { icon: 'ℹ️', label: 'About', path: '/gosple/about' },
+  { icon: '🔒', label: 'Privacy', path: '/gosple/privacy' },
+  { icon: '💛', label: 'Giveback', path: '/gosple/giveback' },
 ];
 
 export function MoreScreen() {
