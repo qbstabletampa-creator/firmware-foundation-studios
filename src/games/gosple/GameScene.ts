@@ -53,7 +53,7 @@ export class GameScene extends Phaser.Scene {
   constructor() { super('GameScene'); }
 
   preload() {
-    this.load.image('logo', '/logo.png');
+    this.load.image('logo', '/gosple-icon.png');
   }
 
   create() {

@@ -3,17 +3,19 @@ import { GameScene } from './GameScene';
 
 export function createGospleConfig(parent: string): Phaser.Types.Core.GameConfig {
   const el = document.getElementById(parent);
-  const w = el?.clientWidth ?? 500;
-  const h = el?.clientHeight ?? 800;
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  const cssW = el?.clientWidth ?? 500;
+  const cssH = el?.clientHeight ?? 800;
 
   return {
     type: Phaser.AUTO,
-    width: w,
-    height: h,
+    width: cssW * dpr,
+    height: cssH * dpr,
     parent,
     backgroundColor: '#FFFBF0',
     scale: {
       mode: Phaser.Scale.NONE,
+      zoom: 1 / dpr,
     },
     scene: [GameScene],
   };

@@ -29,7 +29,7 @@ export function HomeScreen() {
           transition={{ duration: 0.5 }}
         >
           <header className={styles.header}>
-            <div className={styles.logoSmall}>F</div>
+            <img src="/gosple-icon.png" alt="Gosple" className={styles.logoSmall} />
             <button
               className={styles.settingsBtn}
               onClick={() => navigate('/gosple/settings')}
