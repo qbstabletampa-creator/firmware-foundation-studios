@@ -23,7 +23,7 @@ const C = {
 const KB_ROWS = [
   ['Q','W','E','R','T','Y','U','I','O','P'],
   ['A','S','D','F','G','H','J','K','L'],
-  ['ENTER','Z','X','C','V','B','N','M','DEL'],
+  ['Z','X','C','V','B','N','M','DEL'],
 ];
 
 function getTodayPuzzle(): StarterPuzzle {
@@ -120,21 +120,22 @@ export class GameScene extends Phaser.Scene {
   }
 
   private drawKeyboard(W: number) {
-    const keyH = 72;
+    const keyH = 68;
     const keyGap = 8;
-    const kbTotalH = 3 * keyH + 2 * keyGap;
+    const enterH = 64;
+    const kbTotalH = 3 * keyH + 2 * keyGap + keyGap + enterH;
     const kbTop = 1334 - kbTotalH - 30;
 
     for (let r = 0; r < KB_ROWS.length; r++) {
       const row = KB_ROWS[r];
-      const wide = (k: string) => k === 'ENTER' || k === 'DEL';
+      const isDel = (k: string) => k === 'DEL';
       const normalW = 58;
-      const wideW = 92;
-      const totalW = row.reduce((s, k) => s + (wide(k) ? wideW : normalW) + keyGap, -keyGap);
+      const delW = 88;
+      const totalW = row.reduce((s, k) => s + (isDel(k) ? delW : normalW) + keyGap, -keyGap);
       let x = (W - totalW) / 2;
 
       for (const key of row) {
-        const w = wide(key) ? wideW : normalW;
+        const w = isDel(key) ? delW : normalW;
         const cx = x + w / 2;
         const cy = kbTop + r * (keyH + keyGap);
 
@@ -142,15 +143,25 @@ export class GameScene extends Phaser.Scene {
           .setInteractive({ useHandCursor: true })
           .on('pointerdown', () => { if (!this.busy) this.onKey(key); });
 
-        const label = key === 'DEL' ? '⌫' : key === 'ENTER' ? '↵' : key;
+        const label = key === 'DEL' ? '⌫' : key;
         const text = this.add.text(cx, cy, label, {
-          fontSize: wide(key) ? '26px' : '24px', fontStyle: 'bold', color: '#1A1A1A', fontFamily: FONT,
+          fontSize: isDel(key) ? '26px' : '24px', fontStyle: 'bold', color: '#1A1A1A', fontFamily: FONT,
         }).setOrigin(0.5);
 
         this.keys.set(key, { bg, text });
         x += w + keyGap;
       }
     }
+
+    const enterY = kbTop + 3 * (keyH + keyGap);
+    const enterW = 400;
+    const enterBg = this.add.rectangle(W / 2, enterY, enterW, enterH, C.gold)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => { if (!this.busy) this.onKey('ENTER'); });
+    const enterTxt = this.add.text(W / 2, enterY, 'ENTER', {
+      fontSize: '28px', fontStyle: 'bold', color: '#1A1A1A', fontFamily: FONT,
+    }).setOrigin(0.5);
+    this.keys.set('ENTER', { bg: enterBg, text: enterTxt });
   }
 
   private onKey(key: string) {
