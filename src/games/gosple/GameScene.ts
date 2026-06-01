@@ -3,7 +3,7 @@ import { scoreGuess, type TileScore } from '../../engines/wordle/wordleEngine';
 import { starterPuzzles, type StarterPuzzle } from '../../engines/wordle/starterPuzzles';
 
 const MAX_ATTEMPTS = 6;
-const TILE_GAP = 6;
+const TILE_GAP = 10;
 const FLIP_MS = 250;
 const FLIP_STAGGER = 120;
 const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
@@ -16,7 +16,6 @@ const C = {
   border: 0xE8E4DC,
   active: 0xD4C36A,
   gold: 0xD4C36A,
-  dark: 0x1A1A1A,
   verse: 0xFFF8E7,
   key: 0xE8E4DC,
 };
@@ -47,8 +46,6 @@ export class GameScene extends Phaser.Scene {
   private over = false;
   private won = false;
   private busy = false;
-  private W!: number;
-  private H!: number;
 
   constructor() { super('GameScene'); }
 
@@ -57,8 +54,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   create() {
-    this.W = this.scale.width;
-    this.H = this.scale.height;
     this.puzzle = getTodayPuzzle();
     this.wLen = this.puzzle.answer.length;
     this.row = 0;
@@ -70,9 +65,25 @@ export class GameScene extends Phaser.Scene {
     this.letterStates.clear();
     this.keys.clear();
 
-    this.drawHeader();
-    this.drawGrid();
-    this.drawKeyboard();
+    const W = 750;
+    const cx = W / 2;
+
+    const epoch = new Date('2026-01-01').getTime();
+    const day = Math.floor((Date.now() - epoch) / 86400000) + 1;
+
+    const logo = this.add.image(30, 44, 'logo').setOrigin(0, 0.5);
+    logo.setDisplaySize(56, 56);
+
+    this.add.text(cx, 36, 'Gosple', {
+      fontSize: '44px', fontStyle: 'bold', color: '#1A1A1A', fontFamily: FONT,
+    }).setOrigin(0.5);
+
+    this.add.text(cx, 78, `Day ${day}`, {
+      fontSize: '22px', fontStyle: 'bold', color: '#D4C36A', fontFamily: FONT,
+    }).setOrigin(0.5);
+
+    this.drawGrid(W);
+    this.drawKeyboard(W);
 
     this.input.keyboard!.on('keydown', (e: KeyboardEvent) => {
       if (this.over || this.busy) return;
@@ -83,41 +94,24 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  private drawHeader() {
-    const cx = this.W / 2;
-    const epoch = new Date('2026-01-01').getTime();
-    const day = Math.floor((Date.now() - epoch) / 86400000) + 1;
-
-    const logo = this.add.image(20, 22, 'logo').setOrigin(0, 0.5);
-    logo.setDisplaySize(32, 32);
-
-    this.add.text(cx, 20, 'Gosple', {
-      fontSize: '24px', fontStyle: 'bold', color: '#1A1A1A', fontFamily: FONT,
-    }).setOrigin(0.5);
-
-    this.add.text(cx, 44, `Day ${day}`, {
-      fontSize: '12px', fontStyle: 'bold', color: '#D4C36A', fontFamily: FONT,
-    }).setOrigin(0.5);
-  }
-
-  private drawGrid() {
+  private drawGrid(W: number) {
     this.tiles = [];
-    const tileSize = Math.min(48, Math.floor((this.W - 40 - (this.wLen - 1) * TILE_GAP) / this.wLen));
+    const tileSize = 86;
     const gridW = this.wLen * (tileSize + TILE_GAP) - TILE_GAP;
     const gridH = MAX_ATTEMPTS * (tileSize + TILE_GAP) - TILE_GAP;
-    const startX = (this.W - gridW) / 2 + tileSize / 2;
-    const kbHeight = 3 * 44 + 2 * 5 + 20;
-    const available = this.H - 60 - kbHeight;
-    const startY = 60 + (available - gridH) / 2;
+    const startX = (W - gridW) / 2 + tileSize / 2;
+    const kbHeight = 3 * 76 + 2 * 10 + 40;
+    const available = 1334 - 110 - kbHeight;
+    const startY = 110 + (available - gridH) / 2;
 
     for (let r = 0; r < MAX_ATTEMPTS; r++) {
       const rowTiles: Tile[] = [];
       for (let c = 0; c < this.wLen; c++) {
         const x = startX + c * (tileSize + TILE_GAP);
         const y = startY + r * (tileSize + TILE_GAP);
-        const bg = this.add.rectangle(x, y, tileSize, tileSize, C.empty).setStrokeStyle(2, C.border);
+        const bg = this.add.rectangle(x, y, tileSize, tileSize, C.empty).setStrokeStyle(3, C.border);
         const text = this.add.text(x, y, '', {
-          fontSize: `${Math.floor(tileSize * 0.42)}px`, fontStyle: 'bold', color: '#1A1A1A', fontFamily: FONT,
+          fontSize: '38px', fontStyle: 'bold', color: '#1A1A1A', fontFamily: FONT,
         }).setOrigin(0.5);
         rowTiles.push({ bg, text });
       }
@@ -125,22 +119,22 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private drawKeyboard() {
-    const keyH = 42;
-    const keyGap = 4;
+  private drawKeyboard(W: number) {
+    const keyH = 72;
+    const keyGap = 8;
     const kbTotalH = 3 * keyH + 2 * keyGap;
-    const kbTop = this.H - kbTotalH - 10;
+    const kbTop = 1334 - kbTotalH - 30;
 
     for (let r = 0; r < KB_ROWS.length; r++) {
       const row = KB_ROWS[r];
       const wide = (k: string) => k === 'ENTER' || k === 'DEL';
-      const keyW = Math.floor((this.W - 20 - (row.length - 1) * keyGap) / (row.length + (row.filter(k => wide(k)).length * 0.6)));
-      const wideW = Math.floor(keyW * 1.6);
-      const totalW = row.reduce((s, k) => s + (wide(k) ? wideW : keyW) + keyGap, -keyGap);
-      let x = (this.W - totalW) / 2;
+      const normalW = 58;
+      const wideW = 92;
+      const totalW = row.reduce((s, k) => s + (wide(k) ? wideW : normalW) + keyGap, -keyGap);
+      let x = (W - totalW) / 2;
 
       for (const key of row) {
-        const w = wide(key) ? wideW : keyW;
+        const w = wide(key) ? wideW : normalW;
         const cx = x + w / 2;
         const cy = kbTop + r * (keyH + keyGap);
 
@@ -150,7 +144,7 @@ export class GameScene extends Phaser.Scene {
 
         const label = key === 'DEL' ? '⌫' : key === 'ENTER' ? '↵' : key;
         const text = this.add.text(cx, cy, label, {
-          fontSize: wide(key) ? '14px' : '13px', fontStyle: 'bold', color: '#1A1A1A', fontFamily: FONT,
+          fontSize: wide(key) ? '26px' : '24px', fontStyle: 'bold', color: '#1A1A1A', fontFamily: FONT,
         }).setOrigin(0.5);
 
         this.keys.set(key, { bg, text });
@@ -167,7 +161,7 @@ export class GameScene extends Phaser.Scene {
         this.col--;
         const t = this.tiles[this.row][this.col];
         t.text.setText('');
-        t.bg.setStrokeStyle(2, C.border);
+        t.bg.setStrokeStyle(3, C.border);
         this.guesses[this.row][this.col] = '';
       }
       return;
@@ -183,7 +177,7 @@ export class GameScene extends Phaser.Scene {
       this.guesses[this.row][this.col] = key;
       const t = this.tiles[this.row][this.col];
       t.text.setText(key);
-      t.bg.setStrokeStyle(2, C.active);
+      t.bg.setStrokeStyle(3, C.active);
       this.tweens.add({
         targets: [t.bg, t.text], scaleX: 1.08, scaleY: 1.08,
         duration: 50, yoyo: true, ease: 'Quad.easeOut',
@@ -252,48 +246,48 @@ export class GameScene extends Phaser.Scene {
 
   private shakeRow(row: number) {
     for (const t of this.tiles[row]) {
-      this.tweens.add({ targets: [t.bg, t.text], x: '+=5', duration: 40, yoyo: true, repeat: 2, ease: 'Sine.easeInOut' });
+      this.tweens.add({ targets: [t.bg, t.text], x: '+=8', duration: 40, yoyo: true, repeat: 2, ease: 'Sine.easeInOut' });
     }
   }
 
   private bounceRow(row: number) {
     this.tiles[row].forEach((t, i) => {
-      this.tweens.add({ targets: [t.bg, t.text], y: '-=12', duration: 160, delay: i * 60, yoyo: true, ease: 'Quad.easeOut' });
+      this.tweens.add({ targets: [t.bg, t.text], y: '-=20', duration: 160, delay: i * 60, yoyo: true, ease: 'Quad.easeOut' });
     });
   }
 
   private showResult() {
-    const cx = this.W / 2;
-    const cy = this.H / 2;
-    const cardW = Math.min(this.W - 40, 400);
+    const cx = 375;
+    const cy = 667;
+    const cardW = 620;
 
-    const overlay = this.add.rectangle(cx, cy, this.W, this.H, 0x000000, 0.4).setInteractive();
-    const card = this.add.rectangle(cx, cy, cardW, 280, C.verse);
+    const overlay = this.add.rectangle(cx, cy, 750, 1334, 0x000000, 0.4).setInteractive();
+    const card = this.add.rectangle(cx, cy, cardW, 480, C.verse);
 
     const label = this.won ? `You got it in ${this.row + 1}!` : `The answer was ${this.puzzle.answer}`;
 
-    const resultTxt = this.add.text(cx, cy - 100, label, {
-      fontSize: '18px', fontStyle: 'bold', color: '#1A1A1A', align: 'center', fontFamily: FONT,
+    const resultTxt = this.add.text(cx, cy - 180, label, {
+      fontSize: '34px', fontStyle: 'bold', color: '#1A1A1A', align: 'center', fontFamily: FONT,
     }).setOrigin(0.5);
 
-    const refTxt = this.add.text(cx, cy - 72, this.puzzle.reference, {
-      fontSize: '13px', fontStyle: 'bold', color: '#D4C36A', align: 'center', fontFamily: FONT,
+    const refTxt = this.add.text(cx, cy - 130, this.puzzle.reference, {
+      fontSize: '22px', fontStyle: 'bold', color: '#D4C36A', align: 'center', fontFamily: FONT,
     }).setOrigin(0.5);
 
-    const verseTxt = this.add.text(cx, cy - 16, `"${this.puzzle.verse}"`, {
-      fontSize: '14px', color: '#2D2D2D', align: 'center', fontFamily: FONT,
-      wordWrap: { width: cardW - 50 }, lineSpacing: 4,
+    const verseTxt = this.add.text(cx, cy - 30, `"${this.puzzle.verse}"`, {
+      fontSize: '26px', color: '#2D2D2D', align: 'center', fontFamily: FONT,
+      wordWrap: { width: cardW - 80 }, lineSpacing: 6,
     }).setOrigin(0.5);
 
-    const promptTxt = this.add.text(cx, cy + 48, this.puzzle.kidPrompt, {
-      fontSize: '12px', fontStyle: 'italic', color: '#5A5A5A', align: 'center', fontFamily: FONT,
-      wordWrap: { width: cardW - 50 },
+    const promptTxt = this.add.text(cx, cy + 80, this.puzzle.kidPrompt, {
+      fontSize: '22px', fontStyle: 'italic', color: '#5A5A5A', align: 'center', fontFamily: FONT,
+      wordWrap: { width: cardW - 80 },
     }).setOrigin(0.5);
 
-    const btnBg = this.add.rectangle(cx, cy + 100, 170, 42, C.gold)
+    const btnBg = this.add.rectangle(cx, cy + 180, 300, 72, C.gold)
       .setInteractive({ useHandCursor: true });
-    const btnTxt = this.add.text(cx, cy + 100, 'BACK TO HOME', {
-      fontSize: '13px', fontStyle: 'bold', color: '#1A1A1A', fontFamily: FONT,
+    const btnTxt = this.add.text(cx, cy + 180, 'BACK TO HOME', {
+      fontSize: '24px', fontStyle: 'bold', color: '#1A1A1A', fontFamily: FONT,
     }).setOrigin(0.5);
 
     btnBg.on('pointerdown', () => {
