@@ -3,17 +3,28 @@ import { useStreakStore } from '../stores/streakStore';
 import styles from './StatsScreen.module.css';
 
 const badges = [
-  { id: 'first-win', icon: '&#x2B50;', name: 'First Win', desc: 'Complete your first puzzle', threshold: 1 },
-  { id: 'streak-3', icon: '&#x1F525;', name: 'On Fire', desc: '3 day streak', threshold: 3 },
-  { id: 'streak-7', icon: '&#x1F31F;', name: 'Weekly Warrior', desc: '7 day streak', threshold: 7 },
-  { id: 'played-10', icon: '&#x1F4DA;', name: 'Dedicated', desc: 'Play 10 puzzles', threshold: 10 },
-  { id: 'streak-14', icon: '&#x1F3C6;', name: 'Fortnight', desc: '14 day streak', threshold: 14 },
-  { id: 'played-30', icon: '&#x1F48E;', name: 'Scholar', desc: 'Play 30 puzzles', threshold: 30 },
+  { id: 'first_win', icon: '⭐', name: 'First Win', desc: 'Won your first game', check: (s: Stats) => s.won >= 1 },
+  { id: 'ten_wins', icon: '🏅', name: 'Double Digits', desc: 'Won 10 games', check: (s: Stats) => s.won >= 10 },
+  { id: 'fifty_wins', icon: '📖', name: 'Scholar', desc: 'Won 50 games', check: (s: Stats) => s.won >= 50 },
+  { id: 'three_streak', icon: '🔥', name: 'On Fire', desc: '3 day streak', check: (s: Stats) => s.best >= 3 },
+  { id: 'week_warrior', icon: '⚔️', name: 'Week Warrior', desc: '7 day streak', check: (s: Stats) => s.best >= 7 },
+  { id: 'two_week', icon: '🛡️', name: 'Fortified', desc: '14 day streak', check: (s: Stats) => s.best >= 14 },
+  { id: 'faithful', icon: '✞', name: 'Faithful', desc: '30 day streak', check: (s: Stats) => s.best >= 30 },
+  { id: 'devoted', icon: '🕊️', name: 'Devoted', desc: '60 day streak', check: (s: Stats) => s.best >= 60 },
+  { id: 'unshakable', icon: '👑', name: 'Unshakable', desc: '100 day streak', check: (s: Stats) => s.best >= 100 },
+  { id: 'first_guess', icon: '💡', name: 'Revelation', desc: 'Solved in 1 guess', check: () => false },
+  { id: 'two_guesses', icon: '🧠', name: 'Sharp Mind', desc: 'Solved in 2 guesses', check: () => false },
+  { id: 'three_guesses', icon: '⚡', name: 'Quick Study', desc: 'Solved in 3 guesses', check: () => false },
+  { id: 'dedicated', icon: '💎', name: 'Dedicated', desc: 'Played 100 games', check: (s: Stats) => s.played >= 100 },
+  { id: 'committed', icon: '🏆', name: 'Committed', desc: 'Played 250 games', check: (s: Stats) => s.played >= 250 },
 ];
+
+type Stats = { played: number; won: number; best: number };
 
 export function StatsScreen() {
   const { currentStreak, longestStreak, totalGamesPlayed, totalGamesWon } = useStreakStore();
   const winPct = totalGamesPlayed > 0 ? Math.round((totalGamesWon / totalGamesPlayed) * 100) : 0;
+  const stats: Stats = { played: totalGamesPlayed, won: totalGamesWon, best: longestStreak };
 
   return (
     <ScreenShell>
@@ -42,19 +53,13 @@ export function StatsScreen() {
         <h2 className={styles.sectionTitle}>Badges</h2>
         <div className={styles.badgeGrid}>
           {badges.map((badge) => {
-            const unlocked =
-              badge.id.startsWith('streak')
-                ? longestStreak >= badge.threshold
-                : totalGamesPlayed >= badge.threshold;
+            const unlocked = badge.check(stats);
             return (
               <div
                 key={badge.id}
                 className={`${styles.badgeCard} ${unlocked ? '' : styles.locked}`}
               >
-                <span
-                  className={styles.badgeIcon}
-                  dangerouslySetInnerHTML={{ __html: badge.icon }}
-                />
+                <span className={styles.badgeIcon}>{badge.icon}</span>
                 <span className={styles.badgeName}>{badge.name}</span>
                 <span className={styles.badgeDesc}>
                   {unlocked ? badge.desc : 'Keep playing!'}
