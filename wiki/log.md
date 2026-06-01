@@ -4,9 +4,11 @@
 
 - Added Gosple `/play/` build lane as an exact copy for safe iteration.
 - Source: `/mnt/c/Users/rodge/projects/firmware-foundation-studios/apps/play/`.
-- Live URL: `https://firmwarefoundation.com/play/`.
+- Working URL while SSL is pending: `http://firmwarefoundation.com/play/`.
+- Target secure URL after GitHub Pages certificate issuance: `https://firmwarefoundation.com/play/`.
 - Verified local tests and typecheck passed, GitHub Pages deployed, and the live `/play/` page renders the Gosple onboarding UI.
 - Added `docs/.nojekyll` so GitHub Pages serves Expo `_expo` assets instead of dropping them through Jekyll.
+- Investigated mobile link failure. Root cause is GitHub Pages SSL certificate missing, not the app code. DNS points to GitHub Pages and the root domain is HTTPS eligible. Next action is add or verify the `www` CNAME, wait for GitHub certificate issuance, then enforce HTTPS.
 
 ## 2026-05-31 -- Gosple live URL and code path confirmed
 - Updated `pages/studio-decisions.md` with CJ's correction: keep the public URL on `/gosple` and treat Gosple as live.

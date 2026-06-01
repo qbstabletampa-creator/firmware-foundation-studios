@@ -53,8 +53,10 @@ Use this safer language in prompts and briefs:
 ## Play Build Lane
 
 - `/play/` is CJ's owned build lane for iterating on Gosple without risking the live app path.
-- Live URL: `https://firmwarefoundation.com/play/`.
+- Working URL while GitHub Pages SSL is pending: `http://firmwarefoundation.com/play/`.
+- Target secure URL after certificate issuance: `https://firmwarefoundation.com/play/`.
 - Source path: `/mnt/c/Users/rodge/projects/firmware-foundation-studios/apps/play/`.
 - Web export path: `/mnt/c/Users/rodge/projects/firmware-foundation-studios/docs/play/`.
 - Starting point is an exact Gosple copy in play and format. Build future changes on this lane first.
 - GitHub Pages requires `/mnt/c/Users/rodge/projects/firmware-foundation-studios/docs/.nojekyll` so Expo `_expo` assets serve correctly.
+- Current security state: GitHub Pages serves the domain, DNS points to GitHub Pages, and the root domain is HTTPS eligible, but the certificate has not been issued yet. Add or verify `www` CNAME to `qbstabletampa-creator.github.io`, wait for GitHub certificate issuance, then enforce HTTPS.
