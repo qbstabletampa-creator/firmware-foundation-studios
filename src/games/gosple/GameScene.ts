@@ -100,7 +100,7 @@ export class GameScene extends Phaser.Scene {
     const gridW = this.wLen * (tileSize + TILE_GAP) - TILE_GAP;
     const gridH = MAX_ATTEMPTS * (tileSize + TILE_GAP) - TILE_GAP;
     const startX = (W - gridW) / 2 + tileSize / 2;
-    const kbHeight = 3 * 76 + 2 * 10 + 40;
+    const kbHeight = 3 * 82 + 2 * 6 + 6 + 76 + 20;
     const available = 1334 - 110 - kbHeight;
     const startY = 110 + (available - gridH) / 2;
 
@@ -120,20 +120,25 @@ export class GameScene extends Phaser.Scene {
   }
 
   private drawKeyboard(W: number) {
-    const keyH = 68;
-    const keyGap = 8;
-    const enterH = 64;
+    const pad = 16;
+    const keyGap = 6;
+    const keyH = 82;
+    const enterH = 76;
     const kbTotalH = 3 * keyH + 2 * keyGap + keyGap + enterH;
-    const kbTop = 1334 - kbTotalH - 30;
+    const kbTop = 1334 - kbTotalH - 20;
+    const kbW = W - pad * 2;
 
     for (let r = 0; r < KB_ROWS.length; r++) {
       const row = KB_ROWS[r];
       const isDel = (k: string) => k === 'DEL';
-      const normalW = 58;
-      const delW = 88;
-      const totalW = row.reduce((s, k) => s + (isDel(k) ? delW : normalW) + keyGap, -keyGap);
-      let x = (W - totalW) / 2;
+      const delExtra = 16;
+      const normalCount = row.filter(k => !isDel(k)).length;
+      const delCount = row.filter(k => isDel(k)).length;
+      const availW = kbW - (row.length - 1) * keyGap - delCount * delExtra;
+      const normalW = Math.floor(availW / (normalCount + delCount));
+      const delW = normalW + delExtra;
 
+      let x = pad;
       for (const key of row) {
         const w = isDel(key) ? delW : normalW;
         const cx = x + w / 2;
@@ -145,7 +150,7 @@ export class GameScene extends Phaser.Scene {
 
         const label = key === 'DEL' ? '⌫' : key;
         const text = this.add.text(cx, cy, label, {
-          fontSize: isDel(key) ? '26px' : '24px', fontStyle: 'bold', color: '#1A1A1A', fontFamily: FONT,
+          fontSize: isDel(key) ? '30px' : '28px', fontStyle: 'bold', color: '#1A1A1A', fontFamily: FONT,
         }).setOrigin(0.5);
 
         this.keys.set(key, { bg, text });
@@ -154,12 +159,12 @@ export class GameScene extends Phaser.Scene {
     }
 
     const enterY = kbTop + 3 * (keyH + keyGap);
-    const enterW = 400;
+    const enterW = kbW * 0.65;
     const enterBg = this.add.rectangle(W / 2, enterY, enterW, enterH, C.gold)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => { if (!this.busy) this.onKey('ENTER'); });
     const enterTxt = this.add.text(W / 2, enterY, 'ENTER', {
-      fontSize: '28px', fontStyle: 'bold', color: '#1A1A1A', fontFamily: FONT,
+      fontSize: '32px', fontStyle: 'bold', color: '#1A1A1A', fontFamily: FONT,
     }).setOrigin(0.5);
     this.keys.set('ENTER', { bg: enterBg, text: enterTxt });
   }
