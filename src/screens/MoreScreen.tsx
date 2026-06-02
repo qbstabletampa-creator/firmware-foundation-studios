@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { ScreenShell } from '../components/ScreenShell';
+import { InstallButton } from '../components/InstallButton';
 import { useProfileStore } from '../stores/profileStore';
 import styles from './MoreScreen.module.css';
 
@@ -49,6 +50,9 @@ export function MoreScreen() {
               <span className={styles.menuArrow}>&#x203A;</span>
             </button>
           ))}
+        </div>
+        <div className={styles.installRow}>
+          <InstallButton />
         </div>
       </div>
     </ScreenShell>

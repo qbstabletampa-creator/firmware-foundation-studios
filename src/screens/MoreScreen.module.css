@@ -108,3 +108,7 @@
   font-size: 20px;
   color: var(--text-muted);
 }
+
+.installRow {
+  margin-top: 16px;
+}

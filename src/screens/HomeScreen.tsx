@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ScreenShell } from '../components/ScreenShell';
-import { InstallButton } from '../components/InstallButton';
 import { useProfileStore } from '../stores/profileStore';
 import { useStreakStore } from '../stores/streakStore';
 import styles from './HomeScreen.module.css';
@@ -85,15 +84,6 @@ export function HomeScreen() {
         >
           PLAY NOW
         </motion.button>
-
-        <motion.div
-          className={styles.installWrap}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          <InstallButton />
-        </motion.div>
 
         <motion.div
           className={styles.footer}
