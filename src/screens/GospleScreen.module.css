@@ -50,15 +50,23 @@
 }
 
 .paywallBtn {
+  display: block;
   width: 100%;
   padding: 18px;
   font-size: 16px;
   font-weight: 800;
-  color: var(--text-muted);
-  background: var(--surface-border);
+  color: var(--dark);
+  background: var(--gold);
   border-radius: var(--radius-lg);
   margin-bottom: 16px;
-  cursor: not-allowed;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: var(--shadow-button);
+  transition: transform 0.15s;
+}
+
+.paywallBtn:hover {
+  transform: translateY(-1px);
 }
 
 .paywallBack {
