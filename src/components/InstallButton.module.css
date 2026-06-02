@@ -1,0 +1,60 @@
+.installBtn {
+  width: 100%;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg);
+  transition: background 0.15s;
+}
+
+.installBtn:hover {
+  background: #FAFAF5;
+}
+
+.iosOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+
+.iosCard {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+.iosTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.iosStep {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.iosClose {
+  width: 100%;
+  padding: 14px;
+  margin-top: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--dark);
+  background: var(--gold);
+  border-radius: var(--radius-lg);
+}

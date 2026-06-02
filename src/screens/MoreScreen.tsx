@@ -12,25 +12,30 @@ const menuItems = [
 
 export function MoreScreen() {
   const navigate = useNavigate();
-  const { username, profileType } = useProfileStore();
+  const { username, profileType, reset } = useProfileStore();
+
+  function handleChangeProfile() {
+    reset();
+    navigate('/gosple/onboarding');
+  }
 
   return (
     <ScreenShell>
       <div className={styles.container}>
         <h1 className={styles.heading}>More</h1>
 
-        <div className={styles.profileCard}>
+        <button className={styles.profileCard} onClick={handleChangeProfile}>
           <div className={styles.avatar}>
             {username.charAt(0).toUpperCase()}
           </div>
           <div className={styles.profileInfo}>
             <span className={styles.profileName}>{username}</span>
             <span className={styles.profileHint}>
-              {profileType === 'kid' ? 'Kid' : 'Parent'} profile
+              {profileType === 'kid' ? 'Kid' : 'Parent'} profile · Tap to change
             </span>
           </div>
           <span className={styles.arrow}>&#x203A;</span>
-        </div>
+        </button>
 
         <div className={styles.menuList}>
           {menuItems.map((item) => (

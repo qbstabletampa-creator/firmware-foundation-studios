@@ -1,5 +1,6 @@
 import { ScreenShell } from '../components/ScreenShell';
 import { PageHeader } from '../components/PageHeader';
+import { InstallButton } from '../components/InstallButton';
 import { usePreferencesStore } from '../stores/preferencesStore';
 import styles from './SettingsScreen.module.css';
 
@@ -29,6 +30,9 @@ export function SettingsScreen() {
               </button>
             </div>
           ))}
+        </div>
+        <div style={{ marginTop: 20 }}>
+          <InstallButton />
         </div>
       </div>
     </ScreenShell>

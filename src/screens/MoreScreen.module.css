@@ -18,6 +18,13 @@
   box-shadow: var(--shadow-card);
   margin-bottom: 24px;
   gap: 14px;
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.profileCard:hover {
+  background: #FAFAF5;
 }
 
 .avatar {
