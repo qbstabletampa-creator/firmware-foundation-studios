@@ -87,12 +87,20 @@ export function HomeScreen() {
         </motion.button>
 
         <motion.div
+          className={styles.installWrap}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <InstallButton />
+        </motion.div>
+
+        <motion.div
           className={styles.footer}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
         >
-          <InstallButton />
           <p className={styles.studioName}>Firmware Foundation</p>
           <p className={styles.giveback}>
             &#x1F49B; 10% Giveback
