@@ -27,7 +27,7 @@ const KB_ROWS = [
 ];
 
 function getTodayPuzzle(): StarterPuzzle {
-  const epoch = new Date('2026-01-01').getTime();
+  const epoch = new Date('2026-06-02').getTime();
   const day = Math.floor((Date.now() - epoch) / 86400000);
   return starterPuzzles[((day % starterPuzzles.length) + starterPuzzles.length) % starterPuzzles.length];
 }
@@ -68,7 +68,7 @@ export class GameScene extends Phaser.Scene {
     const W = 750;
     const cx = W / 2;
 
-    const epoch = new Date('2026-01-01').getTime();
+    const epoch = new Date('2026-06-02').getTime();
     const day = Math.floor((Date.now() - epoch) / 86400000) + 1;
 
     const logo = this.add.image(30, 44, 'logo').setOrigin(0, 0.5);
