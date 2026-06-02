@@ -43,8 +43,13 @@ export function GospleScreen() {
       navigate('/gosple/home');
     });
 
+    game.events.on('gosple:back', () => {
+      navigate('/gosple/home');
+    });
+
     return () => {
       game.events.off('gosple:complete');
+      game.events.off('gosple:back');
       game.destroy(true);
       gameRef.current = null;
     };

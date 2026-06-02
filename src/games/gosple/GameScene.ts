@@ -71,8 +71,12 @@ export class GameScene extends Phaser.Scene {
     const epoch = new Date('2026-06-02').getTime();
     const day = Math.floor((Date.now() - epoch) / 86400000) + 1;
 
-    const logo = this.add.image(30, 44, 'logo').setOrigin(0, 0.5);
-    logo.setDisplaySize(56, 56);
+    const backBtn = this.add.text(30, 44, '← Back', {
+      fontSize: '24px', fontStyle: 'bold', color: '#D4C36A', fontFamily: FONT,
+    }).setOrigin(0, 0.5).setInteractive({ useHandCursor: true });
+    backBtn.on('pointerdown', () => {
+      this.game.events.emit('gosple:back');
+    });
 
     this.add.text(cx, 36, 'Gosple', {
       fontSize: '44px', fontStyle: 'bold', color: '#1A1A1A', fontFamily: FONT,
