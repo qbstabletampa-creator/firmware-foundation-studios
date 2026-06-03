@@ -23,7 +23,7 @@ export function GospleScreen() {
     }
   }, [searchParams, purchased, purchaseGame]);
 
-  const canPlay = purchased || canPlayGospleFree();
+  const canPlay = true;
 
   useEffect(() => {
     if (!canPlay) {

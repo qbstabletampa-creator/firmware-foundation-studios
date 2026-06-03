@@ -1,0 +1,144 @@
+.container {
+  padding: 0 20px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+}
+
+.toggleRow:not(:last-child) {
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.toggleLabel {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.toggle {
+  position: relative;
+  width: 52px;
+  height: 30px;
+  border-radius: 15px;
+  background: var(--absent);
+  transition: background 0.25s;
+  padding: 0;
+}
+
+.toggle.on {
+  background: var(--correct);
+}
+
+.toggleKnob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: transform 0.25s;
+}
+
+.toggle.on .toggleKnob {
+  transform: translateX(22px);
+}
+
+.dangerButton {
+  width: 100%;
+  margin-top: 24px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #E53935;
+  background: rgba(229, 57, 53, 0.08);
+  border: 1px solid rgba(229, 57, 53, 0.2);
+  border-radius: var(--radius-lg);
+  transition: background 0.2s;
+}
+
+.dangerButton:hover {
+  background: rgba(229, 57, 53, 0.14);
+}
+
+.confirmOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+
+.confirmDialog {
+  width: 100%;
+  max-width: 340px;
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.confirmTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.confirmText {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 12px;
+}
+
+.cancelButton {
+  flex: 1;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: var(--surface-border);
+  border-radius: var(--radius-md);
+  transition: background 0.2s;
+}
+
+.cancelButton:hover {
+  background: #E0E0E0;
+}
+
+.resetButton {
+  flex: 1;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  color: white;
+  background: #E53935;
+  border-radius: var(--radius-md);
+  transition: opacity 0.2s;
+}
+
+.resetButton:hover {
+  opacity: 0.85;
+}

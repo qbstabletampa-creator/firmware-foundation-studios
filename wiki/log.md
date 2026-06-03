@@ -1,5 +1,51 @@
 # Firmware Foundation Studios Log
 
+## 2026-06-03 -- All 47 sprites generated, path bug fixed, games made free
+
+- claude-image-gen plugin MCP server not connecting (tool missing from deferred tools). Debugged, works manually but Claude Code plugin system doesn't surface it.
+- Pivoted to Gemini REST API direct (gemini-2.5-flash-image). Free tier. Tested with rabbit sprite, perfect.
+- Built scripts/generate-sprites.py. Generated all 38 remaining sprites in one batch run. $0 spent.
+- Fixed critical sprite loading bug: relative paths in sprite maps resolved wrong from nested SPA routes. Prefixed all paths with / in all 3 sprite maps.
+- Made all 4 games free: gameCatalog.ts price=Free, canPlay=true in all game screens.
+- Renamed bread.png to manna.png (matching sprite map key).
+- Browser tested: Ark Hopper and Manna Catch load sprites correctly, 0 console errors.
+- Updated pages/sprite-system-build.md with generation progress, path fix, pricing status.
+
+## 2026-06-03 -- Sprite generation pipeline: HF failed, Gemini plugin installed
+
+- HuggingFace FLUX.1-schnell MCP tool hangs at 5% on free tier (GPU queue congestion). Direct API also fails (DNS does not resolve for api-inference.huggingface.co on this machine).
+- Attempted 40-agent workflow to batch generate 38 sprites. All agents blocked on same HF timeout.
+- Researched alternatives: game-asset-mcp, claude-image-gen, banana-claude, pixel-plugin, AutoSprite MCP.
+- Installed claude-image-gen plugin (guinacio/claude-image-gen). Uses Google Gemini API (free tier, 20-500 images/day).
+- Found existing GEMINI_API_KEY in autoagent/crons/.env. Added to ~/.claude/settings.json env block.
+- Plugin installed as media-pipeline@media-pipeline-marketplace. Needs session restart to load.
+- 8 sprites still in place from June 2 ChatGPT session. 38 remaining.
+- Found Hermes captures HTML (Downloads/cj-captures-last-few-weeks.html): 19 cards including AI Agent Game Build Pattern.
+
+## 2026-06-03 -- AI agent game build pattern captured
+
+- Added `pages/ai-agent-game-build-pattern.md` from Om Patel's X post and the LMAO official site.
+- Captured the useful pattern for Firmware Foundation Studios: agent lane builds, placeholder assets, bots for solo play, browser friendly prototypes, and IP clean public releases.
+- Linked it to app factory strategy, sprite system build, and game build order.
+
+## 2026-06-02 -- Sprite system built, art style locked
+
+- Built full sprite loading infrastructure via 7-agent workflow (4 phases, ~7 min).
+- Created spriteHelper.ts with GameSprite union type, createGameSprite() with emoji fallback, preloadSprites() with silent error handling.
+- Created sprite maps for all 3 games (arkHopper, noahAnimalMatch, mannaCatch).
+- Created sprite directories at public/sprites/ (ark-hopper, noah-animal-match, manna-catch, shared).
+- Refactored ArkHopperScene.ts: player, lane items, stars, ark goal use createGameSprite(). All animations preserved.
+- Refactored NoahAnimalMatchScene.ts: card faces/backs use sprites with destroy/recreate on flip.
+- Refactored MannaCatchScene.ts + renderItems.ts + renderBasket.ts: falling items and basket support sprites.
+- Added environment polish to Ark Hopper: gradient sky, 4 animated clouds, water shimmer, grass detail, goal glow.
+- Added environment polish to Noah Animal Match: warm gradient, golden particles, wooden frame border.
+- TypeScript: 0 errors. Vite build: clean (13s).
+- Art style test: CJ compared Leonardo.AI vs ChatGPT for lamb sprite. ChatGPT won (better texture, better proportions, cleaner transparency).
+- Style locked: soft 3D claymation, Pixar-like, 512x512 transparent PNG via ChatGPT.
+- Lamb and Lion sprites approved. Remaining 6 test batch sprites in progress.
+- Full prompt sheet saved at docs/sprite-prompts.md.
+- Ops Wiki (D:/Google Drive/Ops Wiki/firmware-foundation-studios.md) updated with art direction and sprite system sections.
+
 ## 2026-06-01
 
 - Added Gosple `/play/` build lane as an exact copy for safe iteration.

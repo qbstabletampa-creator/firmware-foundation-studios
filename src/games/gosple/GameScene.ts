@@ -86,6 +86,9 @@ export class GameScene extends Phaser.Scene {
       fontSize: '22px', fontStyle: 'bold', color: '#D4C36A', fontFamily: FONT,
     }).setOrigin(0.5);
 
+    const logo = this.add.image(W - 30, 44, 'logo').setOrigin(1, 0.5);
+    logo.setDisplaySize(52, 52);
+
     this.drawGrid(W);
     this.drawKeyboard(W);
 

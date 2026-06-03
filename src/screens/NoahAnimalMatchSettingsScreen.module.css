@@ -1,0 +1,129 @@
+.container {
+  padding: 0 20px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+}
+
+.toggleRow:not(:last-child) {
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.toggleLabel {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.toggle {
+  position: relative;
+  width: 52px;
+  height: 30px;
+  border-radius: 15px;
+  background: var(--absent);
+  transition: background 0.25s;
+  padding: 0;
+}
+
+.toggle.on {
+  background: var(--correct);
+}
+
+.toggleKnob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: transform 0.25s;
+}
+
+.toggle.on .toggleKnob {
+  transform: translateX(22px);
+}
+
+.dangerSection {
+  margin-top: 32px;
+}
+
+.dangerButton {
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #E53935;
+  background: var(--surface);
+  border: 1px solid #E53935;
+  border-radius: var(--radius-xl);
+  transition: background 0.15s;
+}
+
+.dangerButton:hover {
+  background: #FFF5F5;
+}
+
+.confirmCard {
+  background: var(--surface);
+  border: 1px solid #E53935;
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+}
+
+.confirmText {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 12px;
+}
+
+.cancelButton {
+  flex: 1;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: var(--surface-border);
+  border-radius: var(--radius-lg);
+  transition: background 0.15s;
+}
+
+.cancelButton:hover {
+  background: #E8E8E0;
+}
+
+.confirmButton {
+  flex: 1;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #FFFFFF;
+  background: #E53935;
+  border-radius: var(--radius-lg);
+  transition: opacity 0.15s;
+}
+
+.confirmButton:hover {
+  opacity: 0.85;
+}
