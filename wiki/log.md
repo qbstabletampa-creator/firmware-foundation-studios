@@ -1,6 +1,6 @@
 # Firmware Foundation Studios Log
 
-## 2026-06-04 -- Session 5: All Sprites Complete + 6 QA Bug Fixes
+## 2026-06-04 -- Session 5: Sprites, QA Fixes, Splash Unification, Navigation Bug Found
 
 - Committed 120 files from session 4 (was sitting uncommitted on main).
 - Generated all 16 game sprites (6 Light Snake + 10 BBB). 13 via Reve, 3 via FLUX/schnell as fallback when Reve CDN timed out repeatedly. Total cost ~$0.60.
@@ -13,6 +13,10 @@
 - All 10 BBB Bible verses verified accurate (NIV references).
 - All routes + all 16 sprites serve 200. tsc clean.
 - Dropped GameLabs dependency. Kenney.nl (free CC0) + Reve/FLUX covers world tiles.
+- Unified all 6 splash screens: FFS company logo + Romans 8:28 (CJ family verse). Splash is the company intro, not per-game branding.
+- Removed ProtectedRoute from /play routes for Light Snake and BBB (was blocking first-time users, inconsistent with other 4 games).
+- Fixed deprecated apple-mobile-web-app-capable meta tag in index.html.
+- BLOCKER FOUND: Splash screen navigation bug. Playwright confirmed splash NEVER navigates away from /app URL. Root cause: React StrictMode double-mounting kills the mounted ref (first cleanup sets mounted.current=false, second mount timers check it and bail). Fix: remove mounted.current guards from setTimeout callbacks in GameSplashScreen.tsx, or reset ref at top of useEffect. Affects ALL 6 games.
 - Key learning: Reve via AIML CDN silently fails ~25% of generations. FLUX/schnell delivers instantly via different CDN path. Use FLUX as fallback.
 
 ## 2026-06-04 -- Elite Upgrade Session 4: Audit + BBB Build + Sprites + iOS

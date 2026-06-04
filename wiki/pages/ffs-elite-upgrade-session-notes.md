@@ -40,10 +40,18 @@ Phase 5: App Store Prep - NOT STARTED
 - GameLabs DROPPED. Kenney.nl (free CC0 tilesets) + Reve/FLUX covers world tiles.
 - FLUX/schnell confirmed as sprite fallback model on AIML API.
 
+### BLOCKER: Splash Navigation Bug
+Playwright verified: ALL splash screens never navigate away. URL stays on /game/app forever.
+Root cause: React StrictMode double-mounting. First mount cleanup sets `mounted.current = false`. Second mount's setTimeout callbacks check `mounted.current` and bail since it's false.
+File: `src/components/GameSplashScreen.tsx`
+Fix: Remove the `if (mounted.current)` guard from the three setTimeout callbacks. The cleanup function already clears the timers on unmount, so the guard is redundant. Alternatively, reset `mounted.current = true` at the top of the useEffect body.
+After fix: Playwright verify navigating from /light-snake/app to /light-snake/onboarding or /light-snake/home within 3 seconds.
+
 ### What Needs to Be Done Next
-1. CJ browser QA: play Light Snake and BBB at http://localhost:5173
-2. Phase 3.4 world tiles: download Kenney tilesets or generate via FLUX
-3. Phase 5 App Store Prep: Capacitor wrapper for iOS/Android
+1. CRITICAL: Fix splash navigation bug in GameSplashScreen.tsx (see above)
+2. Browser QA both Light Snake and BBB end-to-end (splash > onboarding > home > play)
+3. Phase 3.4 world tiles: download Kenney tilesets or generate via FLUX
+4. Phase 5 App Store Prep: Capacitor wrapper for iOS/Android
 
 ---
 
