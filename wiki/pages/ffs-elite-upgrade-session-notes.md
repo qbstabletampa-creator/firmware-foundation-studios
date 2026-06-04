@@ -1,18 +1,51 @@
 # FFS Elite Upgrade Session Notes
 
-**Date:** 2026-06-04 session 4
+**Last updated:** 2026-06-04 session 5
 **Purpose:** Pickup notes for continuing the elite upgrade plan after /clear
 
 ---
 
 ## Where We Are in the Plan
 
-Phase 0: Tool Installation - PARTIAL (AIML API configured, GameLabs/Sprite Lab researched not installed)
+Phase 0: Tool Installation - DONE (AIML API configured, GameLabs DROPPED, using Kenney + FLUX instead)
 Phase 1: Full Audit - DONE
 Phase 2: Shared Infrastructure - DONE
-Phase 3: Game Upgrades - 90% (3.4 visual tiles blocked on GameLabs, juice mostly done)
-Phase 4: New Game Factory - DONE (Light Snake + Bible Brick Breaker, both compile clean)
+Phase 3: Game Upgrades - 95% (3.4 world tiles unblocked, use Kenney.nl + FLUX)
+Phase 4: New Game Factory - DONE (Light Snake + Bible Brick Breaker, all sprites, QA bugs fixed)
 Phase 5: App Store Prep - NOT STARTED
+
+---
+
+## Session 5 Work (June 4, 2026)
+
+### Commits
+- `e6a6c38` Committed 120 files from session 4 (was uncommitted on main)
+- `6bcaeb2` Fix 6 QA bugs, generate all 16 game sprites
+
+### Sprite Generation (16/16 complete)
+- Light Snake (6): lantern, light-trail, bread, fish, lamp, thorn
+- BBB (10): paddle, ball, brick-clay, brick-stone, brick-gold, powerup-wide, powerup-multi, powerup-slow, heart, star
+- 13 via Reve ($0.52), 3 via FLUX/schnell (Reve CDN timed out)
+- FLUX delivers instantly via different CDN. Use as fallback when Reve stalls.
+
+### QA Bug Fixes (6 bugs found by 14-agent workflow)
+1. Double recordGame() in Light Snake (scene + React both called it, stats 2x)
+2. Double recordGame() in BBB (same pattern)
+3. Light Snake NEW BEST celebration never fired (highScore read after store update)
+4. Shutdown not wired to Phaser events in both games (memory leak on restart)
+5. BBB powerup ghost sprites from unstable array index tracking (added stable IDs)
+6. BBB dead code in word-reveal logic
+
+### Decisions
+- GameLabs DROPPED. Kenney.nl (free CC0 tilesets) + Reve/FLUX covers world tiles.
+- FLUX/schnell confirmed as sprite fallback model on AIML API.
+
+### What Needs to Be Done Next
+1. CJ browser QA: play Light Snake and BBB at http://localhost:5173
+2. Phase 3.4 world tiles: download Kenney tilesets or generate via FLUX
+3. Phase 5 App Store Prep: Capacitor wrapper for iOS/Android
+
+---
 
 ---
 

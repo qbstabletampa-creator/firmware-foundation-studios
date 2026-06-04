@@ -1,5 +1,20 @@
 # Firmware Foundation Studios Log
 
+## 2026-06-04 -- Session 5: All Sprites Complete + 6 QA Bug Fixes
+
+- Committed 120 files from session 4 (was sitting uncommitted on main).
+- Generated all 16 game sprites (6 Light Snake + 10 BBB). 13 via Reve, 3 via FLUX/schnell as fallback when Reve CDN timed out repeatedly. Total cost ~$0.60.
+- Ran 14-agent QA workflow across both games. Found 6 bugs, all fixed:
+  1. Double recordGame() in both games (stats inflated 2x every play)
+  2. Light Snake "NEW BEST" celebration never triggered (highScore read after store update)
+  3. Shutdown not wired to Phaser events in either game (memory leak on restart)
+  4. BBB powerup ghost sprites from unstable array index tracking (added stable IDs to engine)
+  5. BBB dead code in word-reveal logic removed
+- All 10 BBB Bible verses verified accurate (NIV references).
+- All routes + all 16 sprites serve 200. tsc clean.
+- Dropped GameLabs dependency. Kenney.nl (free CC0) + Reve/FLUX covers world tiles.
+- Key learning: Reve via AIML CDN silently fails ~25% of generations. FLUX/schnell delivers instantly via different CDN path. Use FLUX as fallback.
+
 ## 2026-06-04 -- Elite Upgrade Session 4: Audit + BBB Build + Sprites + iOS
 
 - Ran 9-agent deep audit of all Light Snake + shared infrastructure code. Found 54 issues (4 critical, 15 major).

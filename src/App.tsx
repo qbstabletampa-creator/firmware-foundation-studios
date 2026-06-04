@@ -137,7 +137,7 @@ export function App() {
       <Route path="/light-snake/app" element={<LightSnakeSplashScreen />} />
       <Route path="/light-snake/onboarding" element={<LightSnakeOnboardingScreen />} />
       <Route path="/light-snake/home" element={<ProtectedRoute redirectTo="/light-snake/onboarding"><LightSnakeHomeScreen /></ProtectedRoute>} />
-      <Route path="/light-snake/play" element={<ProtectedRoute redirectTo="/light-snake/onboarding"><LightSnakeGameScreen /></ProtectedRoute>} />
+      <Route path="/light-snake/play" element={<LightSnakeGameScreen />} />
       <Route path="/light-snake/stats" element={<ProtectedRoute redirectTo="/light-snake/onboarding"><LightSnakeStatsScreen /></ProtectedRoute>} />
       <Route path="/light-snake/more" element={<ProtectedRoute redirectTo="/light-snake/onboarding"><LightSnakeMoreScreen /></ProtectedRoute>} />
       <Route path="/light-snake/settings" element={<ProtectedRoute redirectTo="/light-snake/onboarding"><LightSnakeSettingsScreen /></ProtectedRoute>} />
@@ -148,7 +148,7 @@ export function App() {
       <Route path="/bible-brick-breaker/app" element={<BibleBrickBreakerSplashScreen />} />
       <Route path="/bible-brick-breaker/onboarding" element={<BibleBrickBreakerOnboardingScreen />} />
       <Route path="/bible-brick-breaker/home" element={<ProtectedRoute redirectTo="/bible-brick-breaker/onboarding"><BibleBrickBreakerHomeScreen /></ProtectedRoute>} />
-      <Route path="/bible-brick-breaker/play" element={<ProtectedRoute redirectTo="/bible-brick-breaker/onboarding"><BibleBrickBreakerGameScreen /></ProtectedRoute>} />
+      <Route path="/bible-brick-breaker/play" element={<BibleBrickBreakerGameScreen />} />
       <Route path="/bible-brick-breaker/stats" element={<ProtectedRoute redirectTo="/bible-brick-breaker/onboarding"><BibleBrickBreakerStatsScreen /></ProtectedRoute>} />
       <Route path="/bible-brick-breaker/more" element={<ProtectedRoute redirectTo="/bible-brick-breaker/onboarding"><BibleBrickBreakerMoreScreen /></ProtectedRoute>} />
       <Route path="/bible-brick-breaker/settings" element={<ProtectedRoute redirectTo="/bible-brick-breaker/onboarding"><BibleBrickBreakerSettingsScreen /></ProtectedRoute>} />
