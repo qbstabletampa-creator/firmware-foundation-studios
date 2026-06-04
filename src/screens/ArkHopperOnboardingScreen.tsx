@@ -3,6 +3,7 @@ import { GameOnboarding } from '../components/GameOnboarding';
 export function ArkHopperOnboardingScreen() {
   return (
     <GameOnboarding
+      gameId="ark-hopper"
       gameName="Ark Hopper"
       iconSrc="/ark-hopper-icon.png"
       tagline="Help them reach the Ark!"

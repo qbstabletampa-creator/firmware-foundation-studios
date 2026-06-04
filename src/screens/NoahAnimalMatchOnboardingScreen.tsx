@@ -3,6 +3,7 @@ import { GameOnboarding } from '../components/GameOnboarding';
 export function NoahAnimalMatchOnboardingScreen() {
   return (
     <GameOnboarding
+      gameId="noah-animal-match"
       gameName="Noah's Animal Match"
       iconSrc="/noah-animal-match-icon.png"
       tagline="Match animals two by two"

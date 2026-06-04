@@ -398,7 +398,7 @@ export class ArkHopperScene extends Phaser.Scene {
   private buildArkGoal(): void {
     const goalRow = this.engineState.totalRows - 1;
     const yPixel = H - (goalRow + 1) * this.cellH + this.cellH / 2;
-    const arkSize = Math.floor(this.cellH * 0.8);
+    const arkSize = Math.min(Math.floor(this.cellH * 0.8), 80);
 
     this.arkSprite = createGameSprite(
       this, CX, yPixel, 'noahs-ark', '\u{1F6A2}', arkSize, arkSize,
@@ -430,7 +430,7 @@ export class ArkHopperScene extends Phaser.Scene {
 
     // Player sprite (image with emoji fallback)
     const animal = getAnimalForLevel(this.currentLevel);
-    const spriteSize = Math.floor(Math.min(this.cellW, this.cellH) * 0.7);
+    const spriteSize = Math.min(Math.floor(Math.min(this.cellW, this.cellH) * 0.7), 72);
     this.playerSprite = createGameSprite(
       this, x, y, spriteKeyForAnimal(animal.name), this.engineState.player.emoji,
       spriteSize, spriteSize,
@@ -970,7 +970,7 @@ export class ArkHopperScene extends Phaser.Scene {
           // Handle star sprites separately
           let starSprite = this.starSprites.get(item.id);
           if (!starSprite) {
-            const starSize = Math.floor(this.cellH * 0.5);
+            const starSize = Math.min(Math.floor(this.cellH * 0.5), 40);
             starSprite = createGameSprite(
               this, item.x + item.width / 2, laneYCenter,
               spriteKeyForItemType('star'), '⭐', starSize, starSize,
@@ -999,7 +999,7 @@ export class ArkHopperScene extends Phaser.Scene {
         // Moving items (obstacles, platforms)
         let sprite = this.laneItemSprites.get(item.id);
         if (!sprite) {
-          const itemSize = Math.floor(this.cellH * 0.65);
+          const itemSize = Math.min(Math.floor(this.cellH * 0.65), 64);
           sprite = createGameSprite(
             this, item.x + item.width / 2, laneYCenter,
             spriteKeyForItemType(item.itemType), item.emoji, itemSize, itemSize,

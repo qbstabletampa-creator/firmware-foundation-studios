@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ScreenShell } from '../components/ScreenShell';
 import { useProfileStore } from '../stores/profileStore';
 import { useNoahAnimalMatchStore } from '../stores/noahAnimalMatchStore';
@@ -15,6 +16,7 @@ function getGreeting(): string {
 
 export function NoahAnimalMatchHomeScreen() {
   const navigate = useNavigate();
+  const [showHelp, setShowHelp] = useState(false);
   const username = useProfileStore((s) => s.username);
   const { highScore, currentStreak, bestLevel, perfectLevels } = useNoahAnimalMatchStore();
   const { noahAnimalMatch: purchased, canPlayNoahAnimalMatchFree } = usePurchaseStore();
@@ -114,6 +116,49 @@ export function NoahAnimalMatchHomeScreen() {
         >
           PLAY NOW
         </motion.button>
+
+        <motion.button
+          className={styles.helpButton}
+          onClick={() => setShowHelp(true)}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          How to Play
+        </motion.button>
+
+        <AnimatePresence>
+          {showHelp && (
+            <motion.div
+              className={styles.helpOverlay}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowHelp(false)}
+            >
+              <motion.div
+                className={styles.helpCard}
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2 className={styles.helpTitle}>How to Play</h2>
+                <div className={styles.helpSteps}>
+                  <p>Tap a card to flip it over and reveal the animal.</p>
+                  <p>Tap a second card to find its match.</p>
+                  <p>Match all pairs to complete the level.</p>
+                  <p>Be quick! Faster matches earn bonus points.</p>
+                  <p>Build combos by matching pairs in a row.</p>
+                </div>
+                <button className={styles.helpClose} onClick={() => setShowHelp(false)}>
+                  Got it!
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <motion.div
           className={styles.footer}

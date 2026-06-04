@@ -3,6 +3,7 @@ import { GameOnboarding } from '../components/GameOnboarding';
 export function MannaCatchOnboardingScreen() {
   return (
     <GameOnboarding
+      gameId="manna-catch"
       gameName="Manna Catch"
       iconSrc="/manna-catch-icon.png"
       tagline="Catch the blessings from heaven"

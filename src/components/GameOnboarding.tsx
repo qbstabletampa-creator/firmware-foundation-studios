@@ -13,6 +13,7 @@ interface PromiseBullet {
 }
 
 interface GameOnboardingConfig {
+  gameId: string;
   gameName: string;
   iconSrc: string;
   tagline: string;
@@ -23,8 +24,8 @@ interface GameOnboardingConfig {
   gamePath: string;
 }
 
-const STEPS = ['opener', 'guide', 'promise', 'profile', 'reward', 'streak', 'play'] as const;
-type Step = typeof STEPS[number];
+const ALL_STEPS = ['opener', 'guide', 'promise', 'profile', 'reward', 'streak', 'play'] as const;
+type Step = typeof ALL_STEPS[number];
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -33,9 +34,15 @@ function getTodayIndex(): number {
   return d === 0 ? 6 : d - 1;
 }
 
-export function GameOnboarding({ gameName, iconSrc, tagline, verse, guideSrc, guideText, promises, gamePath }: GameOnboardingConfig) {
+export function GameOnboarding({ gameId, gameName, iconSrc, tagline, verse, guideSrc, guideText, promises, gamePath }: GameOnboardingConfig) {
   const navigate = useNavigate();
-  const { setProfile, username: existingName, profileType: existingType } = useProfileStore();
+  const { setProfile, markGameOnboarded, onboarded, username: existingName, profileType: existingType } = useProfileStore();
+
+  const hasProfile = onboarded && !!existingName;
+  const STEPS = hasProfile
+    ? ALL_STEPS.filter(s => s !== 'profile' && s !== 'reward')
+    : ALL_STEPS;
+
   const [stepIdx, setStepIdx] = useState(0);
   const [selected, setSelected] = useState<ProfileType | null>(existingType || null);
   const [username, setUsername] = useState(existingName || '');
@@ -45,6 +52,7 @@ export function GameOnboarding({ gameName, iconSrc, tagline, verse, guideSrc, gu
 
   function next() {
     if (isLastContentStep) {
+      markGameOnboarded(gameId);
       navigate(gamePath, { replace: true });
       return;
     }
@@ -58,6 +66,7 @@ export function GameOnboarding({ gameName, iconSrc, tagline, verse, guideSrc, gu
   function handleProfileSubmit() {
     if (!selected || !username.trim()) return;
     setProfile(selected, username.trim());
+    markGameOnboarded(gameId);
     SharedSFX.milestone();
     next();
   }

@@ -3,6 +3,7 @@ import { GameSplashScreen } from '../components/GameSplashScreen';
 export function BibleBrickBreakerSplashScreen() {
   return (
     <GameSplashScreen
+      gameId="bible-brick-breaker"
       logoSrc="/logo.png"
       logoAlt="Firmware Foundation Studios"
       verseText="Romans 8:28"

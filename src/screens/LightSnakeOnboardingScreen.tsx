@@ -3,6 +3,7 @@ import { GameOnboarding } from '../components/GameOnboarding';
 export function LightSnakeOnboardingScreen() {
   return (
     <GameOnboarding
+      gameId="light-snake"
       gameName="Light Snake"
       iconSrc="/light-snake-icon.png"
       tagline="Guide the light through darkness"

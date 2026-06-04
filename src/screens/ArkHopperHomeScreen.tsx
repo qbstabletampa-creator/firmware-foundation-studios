@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ScreenShell } from '../components/ScreenShell';
 import { useProfileStore } from '../stores/profileStore';
 import { useArkHopperStore } from '../stores/arkHopperStore';
@@ -15,6 +16,7 @@ function getGreeting(): string {
 
 export function ArkHopperHomeScreen() {
   const navigate = useNavigate();
+  const [showHelp, setShowHelp] = useState(false);
   const username = useProfileStore((s) => s.username);
   const { highScore, currentStreak, furthestLevel, totalStarsCollected, lastPlayedDate } =
     useArkHopperStore();
@@ -121,6 +123,50 @@ export function ArkHopperHomeScreen() {
         >
           PLAY NOW
         </motion.button>
+
+        <motion.button
+          className={styles.helpButton}
+          onClick={() => setShowHelp(true)}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          How to Play
+        </motion.button>
+
+        <AnimatePresence>
+          {showHelp && (
+            <motion.div
+              className={styles.helpOverlay}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowHelp(false)}
+            >
+              <motion.div
+                className={styles.helpCard}
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2 className={styles.helpTitle}>How to Play</h2>
+                <div className={styles.helpSteps}>
+                  <p>Swipe or tap to hop in any direction.</p>
+                  <p>Dodge animals on the paths. They will knock you down.</p>
+                  <p>Hop onto logs and lily pads to cross water.</p>
+                  <p>Collect stars for bonus points.</p>
+                  <p>Reach Noah's Ark at the top to clear the level.</p>
+                  <p>Watch the flood meter. If it fills up, the water rises.</p>
+                </div>
+                <button className={styles.helpClose} onClick={() => setShowHelp(false)}>
+                  Got it!
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <motion.div
           className={styles.footer}

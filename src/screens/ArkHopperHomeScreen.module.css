@@ -152,6 +152,71 @@
   transform: translateY(-1px);
 }
 
+.helpButton {
+  margin-top: 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.helpOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+
+.helpCard {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: 32px 24px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+}
+
+.helpTitle {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+}
+
+.helpSteps {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.helpSteps p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  padding-left: 8px;
+  border-left: 3px solid var(--gold);
+}
+
+.helpClose {
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--dark);
+  background: var(--gold);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+}
+
 .footer {
   margin-top: auto;
   padding-top: 24px;

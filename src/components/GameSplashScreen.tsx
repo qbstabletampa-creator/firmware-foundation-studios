@@ -6,18 +6,18 @@ import { useRayCanvas } from '../utils/rayShader';
 import styles from './GameSplashScreen.module.css';
 
 interface GameSplashConfig {
+  gameId: string;
   logoSrc: string;
   logoAlt: string;
   verseText: string;
   homePath: string;
   onboardingPath: string;
-  isOnboarded?: boolean;
 }
 
-export function GameSplashScreen({ logoSrc, logoAlt, verseText, homePath, onboardingPath, isOnboarded }: GameSplashConfig) {
+export function GameSplashScreen({ gameId, logoSrc, logoAlt, verseText, homePath, onboardingPath }: GameSplashConfig) {
   const navigate = useNavigate();
-  const globalOnboarded = useProfileStore((s) => s.onboarded);
-  const onboarded = isOnboarded ?? globalOnboarded;
+  const isGameOnboarded = useProfileStore((s) => s.isGameOnboarded);
+  const onboarded = isGameOnboarded(gameId);
   const [visible, setVisible] = useState(true);
   const [raysActive, setRaysActive] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);

@@ -3,6 +3,7 @@ import { GameOnboarding } from '../components/GameOnboarding';
 export function BibleBrickBreakerOnboardingScreen() {
   return (
     <GameOnboarding
+      gameId="bible-brick-breaker"
       gameName="Bible Brick Breaker"
       iconSrc="/bible-brick-breaker-icon.png"
       tagline="Break through to God's Word"

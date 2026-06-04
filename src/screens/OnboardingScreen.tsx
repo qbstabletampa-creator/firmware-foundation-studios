@@ -3,6 +3,7 @@ import { GameOnboarding } from '../components/GameOnboarding';
 export function OnboardingScreen() {
   return (
     <GameOnboarding
+      gameId="gosple"
       gameName="Gosple"
       iconSrc="/gosple-icon.png"
       tagline="A daily Bible word puzzle"

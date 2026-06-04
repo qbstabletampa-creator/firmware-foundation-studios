@@ -53,9 +53,9 @@ import { PrivacyScreen } from './screens/PrivacyScreen';
 import { GivebackScreen } from './screens/GivebackScreen';
 import { GospleScreen } from './screens/GospleScreen';
 
-function ProtectedRoute({ children, redirectTo = '/gosple/onboarding' }: { children: React.ReactNode; redirectTo?: string }) {
-  const onboarded = useProfileStore((s) => s.onboarded);
-  if (!onboarded) return <Navigate to={redirectTo} replace />;
+function ProtectedRoute({ children, gameId, redirectTo = '/gosple/onboarding' }: { children: React.ReactNode; gameId: string; redirectTo?: string }) {
+  const isGameOnboarded = useProfileStore((s) => s.isGameOnboarded);
+  if (!isGameOnboarded(gameId)) return <Navigate to={redirectTo} replace />;
   return <>{children}</>;
 }
 
@@ -73,23 +73,23 @@ export function App() {
       <Route path="/gosple/onboarding" element={<OnboardingScreen />} />
       <Route
         path="/gosple/home"
-        element={<ProtectedRoute><HomeScreen /></ProtectedRoute>}
+        element={<ProtectedRoute gameId="gosple"><HomeScreen /></ProtectedRoute>}
       />
       <Route
         path="/gosple/play"
-        element={<ProtectedRoute><GospleScreen /></ProtectedRoute>}
+        element={<ProtectedRoute gameId="gosple"><GospleScreen /></ProtectedRoute>}
       />
       <Route
         path="/gosple/stats"
-        element={<ProtectedRoute><StatsScreen /></ProtectedRoute>}
+        element={<ProtectedRoute gameId="gosple"><StatsScreen /></ProtectedRoute>}
       />
       <Route
         path="/gosple/more"
-        element={<ProtectedRoute><MoreScreen /></ProtectedRoute>}
+        element={<ProtectedRoute gameId="gosple"><MoreScreen /></ProtectedRoute>}
       />
       <Route
         path="/gosple/settings"
-        element={<ProtectedRoute><SettingsScreen /></ProtectedRoute>}
+        element={<ProtectedRoute gameId="gosple"><SettingsScreen /></ProtectedRoute>}
       />
       <Route path="/gosple/about" element={<AboutScreen />} />
       <Route path="/gosple/privacy" element={<PrivacyScreen />} />
@@ -101,11 +101,11 @@ export function App() {
       {/* Manna Catch app routes */}
       <Route path="/manna-catch/app" element={<MannaCatchSplashScreen />} />
       <Route path="/manna-catch/onboarding" element={<MannaCatchOnboardingScreen />} />
-      <Route path="/manna-catch/home" element={<ProtectedRoute redirectTo="/manna-catch/onboarding"><MannaCatchHomeScreen /></ProtectedRoute>} />
+      <Route path="/manna-catch/home" element={<ProtectedRoute gameId="manna-catch" redirectTo="/manna-catch/onboarding"><MannaCatchHomeScreen /></ProtectedRoute>} />
       <Route path="/manna-catch/play" element={<MannaCatchGameScreen />} />
-      <Route path="/manna-catch/stats" element={<ProtectedRoute redirectTo="/manna-catch/onboarding"><MannaCatchStatsScreen /></ProtectedRoute>} />
-      <Route path="/manna-catch/more" element={<ProtectedRoute redirectTo="/manna-catch/onboarding"><MannaCatchMoreScreen /></ProtectedRoute>} />
-      <Route path="/manna-catch/settings" element={<ProtectedRoute redirectTo="/manna-catch/onboarding"><MannaCatchSettingsScreen /></ProtectedRoute>} />
+      <Route path="/manna-catch/stats" element={<ProtectedRoute gameId="manna-catch" redirectTo="/manna-catch/onboarding"><MannaCatchStatsScreen /></ProtectedRoute>} />
+      <Route path="/manna-catch/more" element={<ProtectedRoute gameId="manna-catch" redirectTo="/manna-catch/onboarding"><MannaCatchMoreScreen /></ProtectedRoute>} />
+      <Route path="/manna-catch/settings" element={<ProtectedRoute gameId="manna-catch" redirectTo="/manna-catch/onboarding"><MannaCatchSettingsScreen /></ProtectedRoute>} />
 
       {/* Noah Animal Match listing page (App Store style) */}
       <Route path="/noah-animal-match" element={<NoahAnimalMatchListingScreen />} />
@@ -113,11 +113,11 @@ export function App() {
       {/* Noah Animal Match app routes */}
       <Route path="/noah-animal-match/app" element={<NoahAnimalMatchSplashScreen />} />
       <Route path="/noah-animal-match/onboarding" element={<NoahAnimalMatchOnboardingScreen />} />
-      <Route path="/noah-animal-match/home" element={<ProtectedRoute redirectTo="/noah-animal-match/onboarding"><NoahAnimalMatchHomeScreen /></ProtectedRoute>} />
+      <Route path="/noah-animal-match/home" element={<ProtectedRoute gameId="noah-animal-match" redirectTo="/noah-animal-match/onboarding"><NoahAnimalMatchHomeScreen /></ProtectedRoute>} />
       <Route path="/noah-animal-match/play" element={<NoahAnimalMatchGameScreen />} />
-      <Route path="/noah-animal-match/stats" element={<ProtectedRoute redirectTo="/noah-animal-match/onboarding"><NoahAnimalMatchStatsScreen /></ProtectedRoute>} />
-      <Route path="/noah-animal-match/more" element={<ProtectedRoute redirectTo="/noah-animal-match/onboarding"><NoahAnimalMatchMoreScreen /></ProtectedRoute>} />
-      <Route path="/noah-animal-match/settings" element={<ProtectedRoute redirectTo="/noah-animal-match/onboarding"><NoahAnimalMatchSettingsScreen /></ProtectedRoute>} />
+      <Route path="/noah-animal-match/stats" element={<ProtectedRoute gameId="noah-animal-match" redirectTo="/noah-animal-match/onboarding"><NoahAnimalMatchStatsScreen /></ProtectedRoute>} />
+      <Route path="/noah-animal-match/more" element={<ProtectedRoute gameId="noah-animal-match" redirectTo="/noah-animal-match/onboarding"><NoahAnimalMatchMoreScreen /></ProtectedRoute>} />
+      <Route path="/noah-animal-match/settings" element={<ProtectedRoute gameId="noah-animal-match" redirectTo="/noah-animal-match/onboarding"><NoahAnimalMatchSettingsScreen /></ProtectedRoute>} />
 
       {/* Ark Hopper listing page (App Store style) */}
       <Route path="/ark-hopper" element={<ArkHopperListingScreen />} />
@@ -125,33 +125,33 @@ export function App() {
       {/* Ark Hopper app routes */}
       <Route path="/ark-hopper/app" element={<ArkHopperSplashScreen />} />
       <Route path="/ark-hopper/onboarding" element={<ArkHopperOnboardingScreen />} />
-      <Route path="/ark-hopper/home" element={<ProtectedRoute redirectTo="/ark-hopper/onboarding"><ArkHopperHomeScreen /></ProtectedRoute>} />
+      <Route path="/ark-hopper/home" element={<ProtectedRoute gameId="ark-hopper" redirectTo="/ark-hopper/onboarding"><ArkHopperHomeScreen /></ProtectedRoute>} />
       <Route path="/ark-hopper/play" element={<ArkHopperGameScreen />} />
-      <Route path="/ark-hopper/stats" element={<ProtectedRoute redirectTo="/ark-hopper/onboarding"><ArkHopperStatsScreen /></ProtectedRoute>} />
-      <Route path="/ark-hopper/more" element={<ProtectedRoute redirectTo="/ark-hopper/onboarding"><ArkHopperMoreScreen /></ProtectedRoute>} />
-      <Route path="/ark-hopper/settings" element={<ProtectedRoute redirectTo="/ark-hopper/onboarding"><ArkHopperSettingsScreen /></ProtectedRoute>} />
+      <Route path="/ark-hopper/stats" element={<ProtectedRoute gameId="ark-hopper" redirectTo="/ark-hopper/onboarding"><ArkHopperStatsScreen /></ProtectedRoute>} />
+      <Route path="/ark-hopper/more" element={<ProtectedRoute gameId="ark-hopper" redirectTo="/ark-hopper/onboarding"><ArkHopperMoreScreen /></ProtectedRoute>} />
+      <Route path="/ark-hopper/settings" element={<ProtectedRoute gameId="ark-hopper" redirectTo="/ark-hopper/onboarding"><ArkHopperSettingsScreen /></ProtectedRoute>} />
 
       {/* Light Snake */}
       <Route path="/light-snake" element={<LightSnakeListingScreen />} />
       {/* Light Snake App */}
       <Route path="/light-snake/app" element={<LightSnakeSplashScreen />} />
       <Route path="/light-snake/onboarding" element={<LightSnakeOnboardingScreen />} />
-      <Route path="/light-snake/home" element={<ProtectedRoute redirectTo="/light-snake/onboarding"><LightSnakeHomeScreen /></ProtectedRoute>} />
+      <Route path="/light-snake/home" element={<ProtectedRoute gameId="light-snake" redirectTo="/light-snake/onboarding"><LightSnakeHomeScreen /></ProtectedRoute>} />
       <Route path="/light-snake/play" element={<LightSnakeGameScreen />} />
-      <Route path="/light-snake/stats" element={<ProtectedRoute redirectTo="/light-snake/onboarding"><LightSnakeStatsScreen /></ProtectedRoute>} />
-      <Route path="/light-snake/more" element={<ProtectedRoute redirectTo="/light-snake/onboarding"><LightSnakeMoreScreen /></ProtectedRoute>} />
-      <Route path="/light-snake/settings" element={<ProtectedRoute redirectTo="/light-snake/onboarding"><LightSnakeSettingsScreen /></ProtectedRoute>} />
+      <Route path="/light-snake/stats" element={<ProtectedRoute gameId="light-snake" redirectTo="/light-snake/onboarding"><LightSnakeStatsScreen /></ProtectedRoute>} />
+      <Route path="/light-snake/more" element={<ProtectedRoute gameId="light-snake" redirectTo="/light-snake/onboarding"><LightSnakeMoreScreen /></ProtectedRoute>} />
+      <Route path="/light-snake/settings" element={<ProtectedRoute gameId="light-snake" redirectTo="/light-snake/onboarding"><LightSnakeSettingsScreen /></ProtectedRoute>} />
 
       {/* Bible Brick Breaker */}
       <Route path="/bible-brick-breaker" element={<BibleBrickBreakerListingScreen />} />
       {/* Bible Brick Breaker App */}
       <Route path="/bible-brick-breaker/app" element={<BibleBrickBreakerSplashScreen />} />
       <Route path="/bible-brick-breaker/onboarding" element={<BibleBrickBreakerOnboardingScreen />} />
-      <Route path="/bible-brick-breaker/home" element={<ProtectedRoute redirectTo="/bible-brick-breaker/onboarding"><BibleBrickBreakerHomeScreen /></ProtectedRoute>} />
+      <Route path="/bible-brick-breaker/home" element={<ProtectedRoute gameId="bible-brick-breaker" redirectTo="/bible-brick-breaker/onboarding"><BibleBrickBreakerHomeScreen /></ProtectedRoute>} />
       <Route path="/bible-brick-breaker/play" element={<BibleBrickBreakerGameScreen />} />
-      <Route path="/bible-brick-breaker/stats" element={<ProtectedRoute redirectTo="/bible-brick-breaker/onboarding"><BibleBrickBreakerStatsScreen /></ProtectedRoute>} />
-      <Route path="/bible-brick-breaker/more" element={<ProtectedRoute redirectTo="/bible-brick-breaker/onboarding"><BibleBrickBreakerMoreScreen /></ProtectedRoute>} />
-      <Route path="/bible-brick-breaker/settings" element={<ProtectedRoute redirectTo="/bible-brick-breaker/onboarding"><BibleBrickBreakerSettingsScreen /></ProtectedRoute>} />
+      <Route path="/bible-brick-breaker/stats" element={<ProtectedRoute gameId="bible-brick-breaker" redirectTo="/bible-brick-breaker/onboarding"><BibleBrickBreakerStatsScreen /></ProtectedRoute>} />
+      <Route path="/bible-brick-breaker/more" element={<ProtectedRoute gameId="bible-brick-breaker" redirectTo="/bible-brick-breaker/onboarding"><BibleBrickBreakerMoreScreen /></ProtectedRoute>} />
+      <Route path="/bible-brick-breaker/settings" element={<ProtectedRoute gameId="bible-brick-breaker" redirectTo="/bible-brick-breaker/onboarding"><BibleBrickBreakerSettingsScreen /></ProtectedRoute>} />
 
       {/* Catch-all */}
       <Route path="*" element={<Navigate to="/" replace />} />
