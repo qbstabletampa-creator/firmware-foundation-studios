@@ -3,9 +3,9 @@ import { GameSplashScreen } from '../components/GameSplashScreen';
 export function ArkHopperSplashScreen() {
   return (
     <GameSplashScreen
-      logoSrc="/ark-hopper-icon.png"
-      logoAlt="Ark Hopper"
-      verseText="Genesis 6:14"
+      logoSrc="/logo.png"
+      logoAlt="Firmware Foundation Studios"
+      verseText="Romans 8:28"
       homePath="/ark-hopper/home"
       onboardingPath="/ark-hopper/onboarding"
     />
