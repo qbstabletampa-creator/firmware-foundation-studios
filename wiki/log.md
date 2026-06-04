@@ -1,5 +1,22 @@
 # Firmware Foundation Studios Log
 
+## 2026-06-03 -- Macadam onboarding gamification capture
+
+- Added `pages/macadam-onboarding-gamification-capture.md` from César Álvarez's X video and Macadam app listings.
+- Captured the reusable FFS pattern: onboarding should feel like first play, with a warm guide, one tiny choice, instant reward, streak preview, and fast jump into the real game.
+- Linked it to app factory strategy, puzzle UX research, arcade UX research, and Gosple product spec.
+
+## 2026-06-03 -- Full gameplay audit, 24 bug fixes, production deploy
+
+- Ran 6-agent workflow (469K tokens, 248 tool calls) auditing all 3 new games for transparency, gameplay bugs, and visual glitches.
+- Found 8 critical, 16 major, 20 minor issues.
+- Fixed all 8 criticals: sprite transparency (46 PNGs flood-fill bg removal + resize to 256px), Noah Match dead "View Results" button, Ark Hopper infinite death loop + double flood-kill, Manna Catch game over race condition + power-up stacking + browser crash, missing homepage icons.
+- Fixed 11 majors: momentum score inflation, player sprite desync, water platform detection, HUD text contrast, keyboard listener accumulation, overlay/tween leaks, frame-rate LERP, speed ramp per-level, slow-mo tint bug, overlay double-alpha, item spawn overlap, level scaling.
+- Fixed minors: redundant error suppression, dead code, collision hitbox consistency, combo state.
+- Committed 161 files (16,820 lines) to main. Deployed to Cloudflare Pages via wrangler.
+- Live at firmwarefoundation.com. All 4 games free and playable.
+- Updated pages/sprite-system-build.md.
+
 ## 2026-06-03 -- All 47 sprites generated, path bug fixed, games made free
 
 - claude-image-gen plugin MCP server not connecting (tool missing from deferred tools). Debugged, works manually but Claude Code plugin system doesn't surface it.

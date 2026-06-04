@@ -30,6 +30,7 @@
 
 ## Research
 
+- [Macadam Onboarding Gamification Capture](pages/macadam-onboarding-gamification-capture.md) -- X video capture on premium mobile onboarding. Use this for FFS first win flow, mascot guidance, instant rewards, streaks, and reusable onboarding checklist.
 - [AI Agent Game Build Pattern](pages/ai-agent-game-build-pattern.md) -- X capture on the LMAO browser MOBA build. Use this as a pattern for agent lane game builds, placeholder assets, bots, and IP clean prototypes.
 - [Puzzle App UX Research](pages/puzzle-app-ux-research.md) -- Wordle, NYT Games, YouVersion, Bible App for Kids patterns. Applied to Gosple.
 - [Arcade Game UX Research](pages/arcade-ux-research.md) -- Subway Surfers, Fruit Ninja, Angry Birds, Temple Run, Crossy Road, Flappy Bird, Doodle Jump. Applies to all factory games.
