@@ -22,20 +22,17 @@ export function GameSplashScreen({ logoSrc, logoAlt, verseText, homePath, onboar
   const [raysActive, setRaysActive] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const mounted = useRef(true);
-  useEffect(() => { return () => { mounted.current = false; }; }, []);
-
   useRayCanvas(canvasRef, raysActive);
 
   useEffect(() => {
     const rayTimer = setTimeout(() => {
-      if (mounted.current) setRaysActive(true);
+      setRaysActive(true);
     }, 300);
     const fadeTimer = setTimeout(() => {
-      if (mounted.current) setVisible(false);
+      setVisible(false);
     }, 2200);
     const navTimer = setTimeout(() => {
-      if (mounted.current) navigate(onboarded ? homePath : onboardingPath, { replace: true });
+      navigate(onboarded ? homePath : onboardingPath, { replace: true });
     }, 2500);
     return () => {
       clearTimeout(rayTimer);
