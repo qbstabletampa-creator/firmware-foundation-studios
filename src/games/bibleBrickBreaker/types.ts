@@ -36,6 +36,7 @@ export interface Paddle {
 export type PowerUpKind = 'widePaddle' | 'multiBall' | 'slowBall';
 
 export interface PowerUp {
+  id: number;
   x: number;
   y: number;
   kind: PowerUpKind;
@@ -64,6 +65,7 @@ export interface GameState {
   verseWords: string[];
   revealedWords: boolean[];
   elapsedMs: number;
+  nextPowerUpId: number;
 }
 
 export type GameEvent =

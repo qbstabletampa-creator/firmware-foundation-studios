@@ -117,6 +117,8 @@ export class LightSnakeScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.events.once('shutdown', this.shutdown, this);
+
     // Reset flags
     this.paused = false;
     this.gameStarted = false;
@@ -1080,8 +1082,8 @@ export class LightSnakeScene extends Phaser.Scene {
   private showGameOver(): void {
     this.paused = true;
 
-    // Persist stats to store
-    useLightSnakeStore.getState().recordGame(this.engineState.score, this.engineState.combo, this.engineState.snake.length, this.engineState.itemsEaten);
+    // Read high score BEFORE the React component calls recordGame via the complete event
+    const prevHighScore = useLightSnakeStore.getState().highScore;
 
     // Dark overlay
     const overlay = this.add
@@ -1120,8 +1122,6 @@ export class LightSnakeScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(DEPTH_OVERLAY + 2);
 
-    // Check for new high score
-    const prevHighScore = useLightSnakeStore.getState().highScore;
     const isNewBest = this.engineState.score > prevHighScore && this.engineState.score > 0;
 
     // "NEW BEST!" text (created off-screen, slides up with card)

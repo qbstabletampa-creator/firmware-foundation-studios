@@ -248,6 +248,7 @@ export function createGame(
     verseWords,
     revealedWords,
     elapsedMs: 0,
+    nextPowerUpId: 0,
   };
 }
 
@@ -279,6 +280,7 @@ export function tick(
   let combo = state.combo;
   let lives = state.lives;
   let revealedWords = [...state.revealedWords];
+  let nextPowerUpId = state.nextPowerUpId;
   const elapsedMs = state.elapsedMs + deltaMs;
 
   // ---- Move balls and handle collisions ----
@@ -365,6 +367,7 @@ export function tick(
         if (brick.type === 'gold') {
           const kind = randomPowerUpKind(Math.random);
           const pu: PowerUp = {
+            id: nextPowerUpId++,
             x: rect.x + rect.w / 2,
             y: rect.y + rect.h / 2,
             kind,
@@ -412,6 +415,7 @@ export function tick(
           lives,
           revealedWords,
           elapsedMs,
+          nextPowerUpId,
         },
         events,
       };
@@ -543,17 +547,6 @@ export function tick(
     // Since we can't perfectly track which brick got which verse char without extra state,
     // we use a simpler heuristic: count broken bricks with matching letters.
     // For a more robust approach, we check if enough bricks with each needed letter are broken.
-    let allBroken = true;
-    for (let li = 0; li < wordLetters.length; li++) {
-      const globalCharIdx = charIdx + li;
-      if (globalCharIdx >= verseChars.length) break;
-      // Find any unbroken brick with this letter
-      // Since we can't track exact assignment, we consider the word revealed
-      // if the total broken count for each letter meets the requirement
-    }
-
-    // Simplified: a word is revealed when all non-filler bricks are broken
-    // Better approach: count letter occurrences needed vs broken
     const neededCounts = new Map<string, number>();
     for (const ch of wordLetters) {
       neededCounts.set(ch, (neededCounts.get(ch) ?? 0) + 1);
@@ -566,7 +559,7 @@ export function tick(
       }
     }
 
-    allBroken = true;
+    let allBroken = true;
     neededCounts.forEach((needed, ch) => {
       if ((brokenCounts.get(ch) ?? 0) < needed) {
         allBroken = false;
@@ -599,6 +592,7 @@ export function tick(
         lives,
         revealedWords,
         elapsedMs,
+        nextPowerUpId,
       },
       events,
     };
@@ -625,6 +619,7 @@ export function tick(
       lives,
       revealedWords,
       elapsedMs,
+      nextPowerUpId,
     },
     events,
   };

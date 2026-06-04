@@ -129,9 +129,8 @@ export class BibleBrickBreakerScene extends Phaser.Scene {
   private totalBricksBroken = 0;
   private totalWordsRevealed = 0;
 
-  // Powerup index counter for unique keys
-  private powerUpIdCounter = 0;
-  private powerUpIndexMap = new Map<number, number>(); // engineIndex -> id
+  // Tracks which powerup IDs have active sprites
+  private activePowerUpIds = new Set<number>();
 
   constructor() {
     super('BibleBrickBreakerScene');
@@ -159,6 +158,8 @@ export class BibleBrickBreakerScene extends Phaser.Scene {
   // -----------------------------------------------------------------------
 
   create(): void {
+    this.events.once('shutdown', this.shutdown, this);
+
     // Reset all flags
     this.paused = false;
     this.gameStarted = false;
@@ -168,11 +169,10 @@ export class BibleBrickBreakerScene extends Phaser.Scene {
     this.totalBricksBroken = 0;
     this.totalWordsRevealed = 0;
     this.currentLevel = 1;
-    this.powerUpIdCounter = 0;
     this.brickGraphics.clear();
     this.ballSprites = [];
     this.powerUpSprites.clear();
-    this.powerUpIndexMap.clear();
+    this.activePowerUpIds.clear();
     this.heartSprites = [];
     this.verseWordTexts = [];
 
@@ -428,30 +428,19 @@ export class BibleBrickBreakerScene extends Phaser.Scene {
   // -----------------------------------------------------------------------
 
   private syncPowerUps(): void {
-    const activePowerUps = this.engineState.powerUps.filter((p) => p.active);
     const activeIds = new Set<number>();
 
-    // Update or create powerup sprites
-    for (let i = 0; i < activePowerUps.length; i++) {
-      const pu = activePowerUps[i];
+    for (const pu of this.engineState.powerUps) {
+      if (!pu.active) continue;
+      activeIds.add(pu.id);
 
-      // Assign stable IDs to powerups by engine index
-      let id = this.powerUpIndexMap.get(i);
-      if (id === undefined) {
-        id = this.powerUpIdCounter++;
-        this.powerUpIndexMap.set(i, id);
-      }
-      activeIds.add(id);
-
-      if (this.powerUpSprites.has(id)) {
-        // Update position
-        const entry = this.powerUpSprites.get(id)!;
+      if (this.powerUpSprites.has(pu.id)) {
+        const entry = this.powerUpSprites.get(pu.id)!;
         entry.gfx.setPosition(pu.x, pu.y);
         entry.text.setPosition(pu.x, pu.y);
         continue;
       }
 
-      // Create new powerup visual
       const color = POWERUP_COLORS[pu.kind] ?? 0xffffff;
       const gfx = this.add.graphics();
       gfx.setDepth(DEPTH_POWERUPS);
@@ -462,7 +451,7 @@ export class BibleBrickBreakerScene extends Phaser.Scene {
       const emojiMap: Record<string, string> = {
         widePaddle: '↔️',
         multiBall: '🔮',
-        slowBall: '⏳',
+        slowBall: '⌛',
       };
 
       const text = this.add
@@ -472,7 +461,6 @@ export class BibleBrickBreakerScene extends Phaser.Scene {
         .setOrigin(0.5)
         .setDepth(DEPTH_POWERUPS + 1);
 
-      // Gentle bob animation
       const bobTween = this.tweens.add({
         targets: [gfx, text],
         y: pu.y - 6,
@@ -482,23 +470,15 @@ export class BibleBrickBreakerScene extends Phaser.Scene {
         ease: 'Sine.easeInOut',
       });
 
-      this.powerUpSprites.set(id, { gfx, text, bobTween });
+      this.powerUpSprites.set(pu.id, { gfx, text, bobTween });
     }
 
-    // Remove stale powerup sprites
     for (const [id, entry] of this.powerUpSprites) {
       if (!activeIds.has(id)) {
         entry.bobTween.destroy();
         entry.gfx.destroy();
         entry.text.destroy();
         this.powerUpSprites.delete(id);
-      }
-    }
-
-    // Clean up index map for removed engine indices
-    for (const [engineIdx, id] of this.powerUpIndexMap) {
-      if (!activeIds.has(id)) {
-        this.powerUpIndexMap.delete(engineIdx);
       }
     }
   }
@@ -1491,8 +1471,7 @@ export class BibleBrickBreakerScene extends Phaser.Scene {
       entry.text.destroy();
     }
     this.powerUpSprites.clear();
-    this.powerUpIndexMap.clear();
-    this.powerUpIdCounter = 0;
+    this.activePowerUpIds.clear();
 
     // Create new engine state
     this.engineState = createGame(this.currentLevel, verseWords);
@@ -1577,19 +1556,11 @@ export class BibleBrickBreakerScene extends Phaser.Scene {
   private showGameOver(): void {
     this.paused = true;
 
-    // Record game FIRST (learned from LightSnake audit)
     const wordsRevealed = this.engineState.revealedWords.filter((r) => r).length;
-    useBibleBrickBreakerStore.getState().recordGame(
-      this.engineState.score,
-      this.engineState.combo,
-      this.totalBricksBroken,
-      this.engineState.level,
-      wordsRevealed,
-    );
 
-    // Check for new high score (read AFTER recordGame so highScore is updated)
-    const storeState = useBibleBrickBreakerStore.getState();
-    const isNewBest = this.engineState.score === storeState.highScore && this.engineState.score > 0;
+    // Read high score BEFORE the React component calls recordGame via the complete event
+    const prevHighScore = useBibleBrickBreakerStore.getState().highScore;
+    const isNewBest = this.engineState.score > prevHighScore && this.engineState.score > 0;
 
     // Dark overlay
     const overlay = this.add
@@ -1784,7 +1755,6 @@ export class BibleBrickBreakerScene extends Phaser.Scene {
       entry.text.destroy();
     }
     this.powerUpSprites.clear();
-    this.powerUpIndexMap.clear();
 
     // Destroy HUD elements
     for (const h of this.heartSprites) h.destroy();
