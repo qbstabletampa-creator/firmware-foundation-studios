@@ -30,22 +30,28 @@ export function NoahAnimalMatchHomeScreen() {
           transition={{ duration: 0.5 }}
         >
           <header className={styles.header}>
-            <button
+            <motion.button
               className={styles.backBtn}
               onClick={() => navigate('/noah-animal-match')}
               aria-label="Back"
+              whileTap={{ scale: 0.95 }}
             >
               &#x2190;
-            </button>
-            <div className={styles.logoCircle}>
+            </motion.button>
+            <motion.div
+              className={styles.logoCircle}
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            >
               <span className={styles.logoEmoji}>🕊️</span>
-            </div>
-            <button
+            </motion.div>
+            <motion.button
               className={styles.settingsBtn}
               onClick={() => navigate('/noah-animal-match/settings')}
+              whileTap={{ scale: 0.95 }}
             >
               &#x2699;
-            </button>
+            </motion.button>
           </header>
 
           <p className={styles.greeting}>

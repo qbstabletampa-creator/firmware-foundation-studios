@@ -1,7 +1,7 @@
 # Firmware Foundation Studios Wiki
 
 **Summary:** Dedicated vault for Firmware Foundation Studios, CJ's separate public Christian kids game studio.
-**Last Updated:** 2026-05-27
+**Last Updated:** 2026-06-03
 **Sources:** CJ Telegram planning thread, Christian kids game factory capture, charity research.
 **Related:** [[studio-decisions]], [[app-factory-strategy]], [[gosple-product-spec]], [[charity-options]]
 
@@ -17,7 +17,15 @@
 
 ## Active Build
 
-- [Sprite System Build](pages/sprite-system-build.md) -- Full sprite infrastructure, scene refactors, environment polish. ChatGPT claymation style locked. 52 sprites needed, 2 approved.
+- [Elite Upgrade Plan](pages/elite-upgrade-plan.md) -- MASTER PLAN: 6-phase roadmap. Phases 0-4 done (Phase 0 partial), Phase 5 App Store not started.
+- [Elite Audit - June 2026](pages/elite-audit-june-2026.md) -- 8-agent audit: 44 bugs (8 critical), 3/4 games silent, 2/4 emoji splash screens, 2/7 onboarding, ~1,660 duplicated lines.
+- [Phase 2 Build Log](pages/phase2-build-log.md) -- Shared infrastructure: GameSplashScreen, soundEngine, GameOnboarding, rayShader extraction. ~1,436 duplicated lines eliminated.
+- [Phase 3 Build Log](pages/phase3-build-log.md) -- Sound wired into all 4 games, score tweens, button springs. Visual polish blocked on art.
+- [Phase 4 Build Log](pages/phase4-build-log.md) -- Light Snake + Bible Brick Breaker complete. 54-bug audit + fix pass. All code compiles clean.
+- [Session 4 Notes](pages/ffs-elite-upgrade-session-notes.md) -- PICKUP NOTES: Session 4 state, remaining sprites, browser QA needed, iOS/App Store next steps.
+- [Phase 0 Tool Setup](pages/phase0-tool-setup.md) -- AIML API configured, GameLabs/Sprite Lab/OpusGameLabs researched, Reve confirmed as primary sprite model.
+- [Sprite System Build](pages/sprite-system-build.md) -- Full sprite infrastructure, scene refactors, environment polish. ChatGPT claymation style locked. 47/47 game sprites done, icons + tiles remain.
+- [Gameplay Audit - June 2026](pages/gameplay-audit-june-2026.md) -- 6-agent audit of all 4 games. 8 critical, 16 major, 20 minor bugs found and fixed. Deployed June 3.
 
 ## Core Pages
 

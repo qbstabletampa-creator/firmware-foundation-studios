@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { ScreenShell } from '../components/ScreenShell';
 import { PageHeader } from '../components/PageHeader';
 import { usePreferencesStore } from '../stores/preferencesStore';
@@ -30,42 +31,46 @@ export function NoahAnimalMatchSettingsScreen() {
           {toggles.map((t) => (
             <div key={t.label} className={styles.toggleRow}>
               <span className={styles.toggleLabel}>{t.label}</span>
-              <button
+              <motion.button
                 className={`${styles.toggle} ${t.value ? styles.on : ''}`}
                 onClick={t.onToggle}
+                whileTap={{ scale: 0.95 }}
               >
                 <span className={styles.toggleKnob} />
-              </button>
+              </motion.button>
             </div>
           ))}
         </div>
 
         <div className={styles.dangerSection}>
           {!showConfirm ? (
-            <button
+            <motion.button
               className={styles.dangerButton}
               onClick={() => setShowConfirm(true)}
+              whileTap={{ scale: 0.95 }}
             >
               Reset Progress
-            </button>
+            </motion.button>
           ) : (
             <div className={styles.confirmCard}>
               <p className={styles.confirmText}>
                 This will erase all your stats, badges, and progress. This cannot be undone.
               </p>
               <div className={styles.confirmActions}>
-                <button
+                <motion.button
                   className={styles.cancelButton}
                   onClick={() => setShowConfirm(false)}
+                  whileTap={{ scale: 0.95 }}
                 >
                   Cancel
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   className={styles.confirmButton}
                   onClick={handleReset}
+                  whileTap={{ scale: 0.95 }}
                 >
                   Yes, Reset
-                </button>
+                </motion.button>
               </div>
             </div>
           )}

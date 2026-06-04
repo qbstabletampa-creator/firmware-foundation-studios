@@ -1,0 +1,95 @@
+.screen {
+  height: 100%;
+  background: #87CEEB;
+  overflow: hidden;
+}
+
+.gameContainer {
+  width: 100%;
+  height: 100%;
+}
+
+.paywall {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.paywallIconPlaceholder {
+  width: 96px;
+  height: 96px;
+  border-radius: 20px;
+  margin-bottom: 24px;
+  background: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+}
+
+.paywallIcon {
+  width: 96px;
+  height: 96px;
+  border-radius: 20px;
+  margin-bottom: 24px;
+}
+
+.paywallTitle {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.paywallDesc {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.paywallPrice {
+  font-size: 36px;
+  font-weight: 900;
+  color: var(--gold);
+  margin-bottom: 24px;
+}
+
+.paywallBtn {
+  display: block;
+  width: 100%;
+  padding: 18px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--dark);
+  background: var(--gold);
+  border-radius: var(--radius-lg);
+  margin-bottom: 16px;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: var(--shadow-button);
+  transition: transform 0.15s;
+}
+
+.paywallBtn:hover {
+  transform: translateY(-1px);
+}
+
+.paywallBack {
+  padding: 14px 32px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  border-radius: var(--radius-lg);
+  transition: background 0.15s;
+}
+
+.paywallBack:hover {
+  background: var(--surface);
+}

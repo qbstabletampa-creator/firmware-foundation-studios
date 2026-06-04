@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import styles from './TabBar.module.css';
 
 const tabs = [
@@ -16,14 +17,15 @@ export function TabBar() {
       {tabs.map((tab) => {
         const active = location.pathname === tab.path;
         return (
-          <button
+          <motion.button
             key={tab.path}
             className={`${styles.tab} ${active ? styles.active : ''}`}
             onClick={() => navigate(tab.path)}
+            whileTap={{ scale: 0.95 }}
           >
             <span className={styles.icon}>{tab.icon}</span>
             <span className={styles.label}>{tab.label}</span>
-          </button>
+          </motion.button>
         );
       })}
     </nav>

@@ -1,0 +1,324 @@
+.container {
+  height: 100%;
+  background: #10100E;
+  overflow: hidden;
+}
+
+.fullScreen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Step 1: Emotional Opener */
+.openerIcon {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  margin-bottom: 24px;
+}
+
+.openerTagline {
+  font-size: 28px;
+  font-weight: 900;
+  color: #FFFFFF;
+  text-align: center;
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+
+.openerVerse {
+  font-size: 14px;
+  font-weight: 600;
+  color: #D4C36A;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+/* Step 2: Visual Guide */
+.guideSprite {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  margin-bottom: 32px;
+}
+
+.guideText {
+  font-size: 20px;
+  font-weight: 700;
+  color: #FFFFFF;
+  text-align: center;
+  max-width: 300px;
+  line-height: 1.4;
+}
+
+/* Step 3: Clear Promise */
+.promiseTitle {
+  font-size: 22px;
+  font-weight: 900;
+  color: #FFFFFF;
+  margin-bottom: 32px;
+}
+
+.promiseList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.promiseItem {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.promiseIcon {
+  font-size: 32px;
+  flex-shrink: 0;
+  width: 48px;
+  text-align: center;
+}
+
+.promiseText {
+  font-size: 17px;
+  font-weight: 600;
+  color: #FFFFFF;
+  line-height: 1.3;
+}
+
+/* Step 4: Profile Selection */
+.profileScreen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  background: #10100E;
+}
+
+.profileTitle {
+  font-size: 24px;
+  font-weight: 900;
+  color: #FFFFFF;
+  margin-bottom: 32px;
+}
+
+.profileGrid {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.profileCard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 16px;
+  background: #1A1A18;
+  border: 2px solid #2A2A28;
+  border-radius: 20px;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.profileCard:hover {
+  transform: translateY(-2px);
+  border-color: #D4C36A;
+}
+
+.profileEmoji {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.profileLabel {
+  font-size: 16px;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.nameStep {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.namePrompt {
+  font-size: 18px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-bottom: 24px;
+}
+
+.nameInput {
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 18px;
+  font-weight: 600;
+  font-family: inherit;
+  border: 2px solid #2A2A28;
+  border-radius: 14px;
+  background: #1A1A18;
+  color: #FFFFFF;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.nameInput:focus {
+  border-color: #D4C36A;
+}
+
+.nameInput::placeholder {
+  color: #666;
+  font-weight: 400;
+}
+
+.nameActions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin-top: 24px;
+}
+
+.backButton {
+  flex: 0 0 auto;
+  padding: 16px 24px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #999;
+  border-radius: 14px;
+  transition: background 0.2s;
+}
+
+.backButton:hover {
+  background: #2A2A28;
+}
+
+.nextButton {
+  flex: 1;
+  padding: 16px 24px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #10100E;
+  background: #D4C36A;
+  border-radius: 14px;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.nextButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.nextButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Step 5: Instant Reward */
+.rewardStar {
+  font-size: 80px;
+  margin-bottom: 20px;
+}
+
+.rewardTitle {
+  font-size: 32px;
+  font-weight: 900;
+  color: #FFFFFF;
+  margin-bottom: 8px;
+}
+
+.rewardSub {
+  font-size: 16px;
+  color: #D4C36A;
+  font-weight: 600;
+}
+
+/* Step 6: Streak Preview */
+.streakTitle {
+  font-size: 24px;
+  font-weight: 900;
+  color: #FFFFFF;
+  margin-bottom: 8px;
+}
+
+.streakSub {
+  font-size: 15px;
+  color: #999;
+  margin-bottom: 32px;
+}
+
+.streakRow {
+  display: flex;
+  gap: 8px;
+}
+
+.streakDay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  min-width: 42px;
+}
+
+.streakToday {
+  background: rgba(212, 195, 106, 0.15);
+  border: 1px solid #D4C36A;
+}
+
+.streakLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.streakDot {
+  font-size: 20px;
+}
+
+/* Step 7: Play Button */
+.playIcon {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  margin-bottom: 40px;
+}
+
+.playButton {
+  width: 100%;
+  max-width: 320px;
+  padding: 20px 32px;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #10100E;
+  background: #D4C36A;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(212, 195, 106, 0.3);
+  cursor: pointer;
+}
+
+/* Shared */
+.tapHint {
+  position: absolute;
+  bottom: 40px;
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+}

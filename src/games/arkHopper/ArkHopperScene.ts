@@ -6,6 +6,9 @@ import { arkHopperVerses, type ArkHopperVerse } from './verses';
 import { preloadSprites, createGameSprite, type GameSprite } from '../../utils/spriteHelper';
 import { SPRITE_MAP } from './spriteMap';
 import type { GameState, Direction, Lane, LaneItem, MomentumTier } from './types';
+import { ArkHopperSFX, unlockAudio } from './sounds';
+import { SharedSFX } from '../../utils/soundEngine';
+import { useArkHopperStore } from '../../stores/arkHopperStore';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -184,6 +187,7 @@ export class ArkHopperScene extends Phaser.Scene {
     this.createHUD();
     this.createFloodMeter();
     this.setupInput();
+    unlockAudio();
 
     // Overlay group
     this.overlayGroup = this.add.group();
@@ -465,6 +469,7 @@ export class ArkHopperScene extends Phaser.Scene {
       .setDepth(DEPTH_HUD);
 
     backBtn.on('pointerdown', () => {
+      SharedSFX.buttonTap();
       this.game.events.emit('arkhopper:back');
     });
 
@@ -767,6 +772,13 @@ export class ArkHopperScene extends Phaser.Scene {
       countdownText.setScale(1.5);
       countdownText.setAlpha(1);
 
+      // Countdown sounds
+      if (label === '3' || label === '2' || label === '1') {
+        SharedSFX.countdown();
+      } else if (label === 'GO!') {
+        SharedSFX.countdownGo();
+      }
+
       this.tweens.add({
         targets: countdownText,
         scaleX: 1,
@@ -891,6 +903,7 @@ export class ArkHopperScene extends Phaser.Scene {
     switch (event.type) {
       case 'hop':
         // Hop animation handled in executeHop
+        ArkHopperSFX.hop();
         break;
       case 'new_row_reached':
         this.showScorePopup(event.points, this.playerSprite.x, this.playerSprite.y);
@@ -909,9 +922,11 @@ export class ArkHopperScene extends Phaser.Scene {
         break;
       case 'game_over':
         // Handled in update loop
+        ArkHopperSFX.gameOver();
         break;
       case 'level_complete':
         // Handled in update loop
+        ArkHopperSFX.levelComplete();
         break;
       case 'flood_row':
         this.onFloodRow(event.rowsFlooded);
@@ -921,6 +936,7 @@ export class ArkHopperScene extends Phaser.Scene {
         this.cameras.main.shake(200, 0.003);
         break;
       case 'momentum':
+        ArkHopperSFX.momentum(event.chain);
         this.showMomentum(event.tier, event.chain, event.bonus);
         break;
       case 'verse_milestone':
@@ -1048,8 +1064,19 @@ export class ArkHopperScene extends Phaser.Scene {
   // HUD updates
   // -----------------------------------------------------------------------
 
+  private prevDisplayScore = 0;
+
   private updateHUD(): void {
-    this.scoreText.setText(String(this.engineState.score));
+    const score = this.engineState.score;
+    if (score !== this.prevDisplayScore) {
+      this.prevDisplayScore = score;
+      this.tweens.add({
+        targets: this.scoreText,
+        scaleX: 1.2, scaleY: 1.2,
+        duration: 100, yoyo: true, ease: 'Back.easeOut',
+      });
+    }
+    this.scoreText.setText(String(score));
     this.livesText.setText(this.heartsString(this.engineState.lives));
   }
 
@@ -1109,6 +1136,7 @@ export class ArkHopperScene extends Phaser.Scene {
   // -----------------------------------------------------------------------
 
   private onStarCollected(itemId: number, points: number): void {
+    ArkHopperSFX.starCollect(points);
     const sprite = this.starSprites.get(itemId);
     if (sprite) {
       // Sparkle burst
@@ -1142,6 +1170,13 @@ export class ArkHopperScene extends Phaser.Scene {
     // Cancel any active hop
     this.isHopping = false;
     this.queuedHop = null;
+
+    // Death sound based on cause
+    if (cause === 'water' || cause === 'flood' || cause === 'off_screen') {
+      ArkHopperSFX.deathWater();
+    } else {
+      ArkHopperSFX.deathObstacle();
+    }
 
     // Screen shake
     this.cameras.main.shake(200, 0.008);
@@ -1500,6 +1535,7 @@ export class ArkHopperScene extends Phaser.Scene {
     }
 
     btnBg.on('pointerdown', () => {
+      SharedSFX.buttonTap();
       for (const el of elements) {
         this.tweens.add({
           targets: el,
@@ -1565,11 +1601,13 @@ export class ArkHopperScene extends Phaser.Scene {
     const elements = [overlay, pauseTitle, resumeBg, resumeText, quitText];
 
     resumeBg.on('pointerdown', () => {
+      SharedSFX.buttonTap();
       for (const el of elements) el.destroy();
       this.paused = false;
     });
 
     quitText.on('pointerdown', () => {
+      SharedSFX.buttonTap();
       this.game.events.emit('arkhopper:back');
     });
   }
@@ -1665,6 +1703,7 @@ export class ArkHopperScene extends Phaser.Scene {
     }
 
     btnBg.on('pointerdown', () => {
+      SharedSFX.buttonTap();
       for (const el of elements) {
         this.tweens.add({
           targets: el,
@@ -1834,6 +1873,7 @@ export class ArkHopperScene extends Phaser.Scene {
 
     // Button handlers
     nextBg.on('pointerdown', () => {
+      SharedSFX.buttonTap();
       if (hasNextLevel) {
         this.currentLevel += 1;
         this.scene.restart({ level: this.currentLevel });
@@ -1849,6 +1889,7 @@ export class ArkHopperScene extends Phaser.Scene {
     });
 
     backText.on('pointerdown', () => {
+      SharedSFX.buttonTap();
       this.game.events.emit('arkhopper:complete', {
         score: this.engineState.score,
         level: this.currentLevel,
@@ -1912,6 +1953,25 @@ export class ArkHopperScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(DEPTH_OVERLAY + 2);
 
+    // Check for new high score
+    const prevHighScore = useArkHopperStore.getState().highScore;
+    const isNewBest = this.engineState.score > prevHighScore && this.engineState.score > 0;
+
+    // "NEW BEST!" text (created off-screen, slides up with card)
+    let newBestText: Phaser.GameObjects.Text | null = null;
+    if (isNewBest) {
+      newBestText = this.add
+        .text(CX, H + cardH - 80, 'NEW BEST!', {
+          fontSize: '28px',
+          fontStyle: 'bold',
+          color: GOLD_HEX,
+          fontFamily: FONT,
+        })
+        .setOrigin(0.5)
+        .setDepth(DEPTH_OVERLAY + 2);
+    }
+
+    const statsStartY = isNewBest ? -30 : -60;
     const stats = [
       `Final Score: ${this.engineState.score}`,
       `Level Reached: ${this.currentLevel}`,
@@ -1922,7 +1982,7 @@ export class ArkHopperScene extends Phaser.Scene {
     const statTexts: Phaser.GameObjects.Text[] = [];
     stats.forEach((stat, i) => {
       const t = this.add
-        .text(CX, H + cardH - 60 + i * 44, stat, {
+        .text(CX, H + cardH + statsStartY + i * 44, stat, {
           fontSize: '22px',
           color: '#2D2D2D',
           fontFamily: FONT,
@@ -1964,11 +2024,12 @@ export class ArkHopperScene extends Phaser.Scene {
       .setDepth(DEPTH_OVERLAY + 4);
 
     // Slide all card elements up
-    const slideTargets = [
+    const slideTargets: { obj: Phaser.GameObjects.GameObject & { y: number }; targetY: number }[] = [
       { obj: card, targetY: cardY },
       { obj: title, targetY: cardY - 180 },
       { obj: floodEmoji, targetY: cardY - 130 },
-      ...statTexts.map((t, i) => ({ obj: t, targetY: cardY - 60 + i * 44 })),
+      ...(newBestText ? [{ obj: newBestText, targetY: cardY - 80 }] : []),
+      ...statTexts.map((t, i) => ({ obj: t, targetY: cardY + statsStartY + i * 44 })),
       { obj: playBg, targetY: cardY + 130 },
       { obj: playText, targetY: cardY + 130 },
       { obj: backText, targetY: cardY + 200 },
@@ -1984,12 +2045,25 @@ export class ArkHopperScene extends Phaser.Scene {
       });
     }
 
+    // New high score celebration effects
+    if (isNewBest) {
+      this.time.delayedCall(800, () => {
+        SharedSFX.milestone();
+        // Particle burst around the "NEW BEST!" text
+        this.spawnParticleBurst(CX, cardY - 80, 0xffd700, 12);
+        this.spawnParticleBurst(CX - 80, cardY - 80, GOLD, 8);
+        this.spawnParticleBurst(CX + 80, cardY - 80, GOLD, 8);
+      });
+    }
+
     // Button handlers
     playBg.on('pointerdown', () => {
+      SharedSFX.buttonTap();
       this.scene.restart({ level: 1 });
     });
 
     backText.on('pointerdown', () => {
+      SharedSFX.buttonTap();
       this.game.events.emit('arkhopper:back');
     });
 

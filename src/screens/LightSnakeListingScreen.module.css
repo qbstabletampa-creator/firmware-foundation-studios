@@ -1,0 +1,2 @@
+/* LightSnakeListingScreen delegates to GameListingScreen, which owns all styles.
+   This module exists for pattern consistency with other game listing screens. */

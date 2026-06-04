@@ -29,13 +29,20 @@ export function HomeScreen() {
           transition={{ duration: 0.5 }}
         >
           <header className={styles.header}>
-            <img src="/gosple-icon.png" alt="Gosple" className={styles.logoSmall} />
-            <button
+            <motion.img
+              src="/gosple-icon.png"
+              alt="Gosple"
+              className={styles.logoSmall}
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <motion.button
               className={styles.settingsBtn}
               onClick={() => navigate('/gosple/settings')}
+              whileTap={{ scale: 0.95 }}
             >
               &#x2699;
-            </button>
+            </motion.button>
           </header>
 
           <p className={styles.greeting}>

@@ -12,18 +12,18 @@ export function ArkHopperGameScreen() {
   const gameRef = useRef<Phaser.Game | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { canPlayMannaCatchFree, recordMannaCatchFree, mannaCatch: purchased, purchaseGame } = usePurchaseStore();
+  const { canPlayArkHopperFree, recordArkHopperFree, arkHopper: purchased, purchaseGame } = usePurchaseStore();
   const [showPaywall, setShowPaywall] = useState(false);
 
   const fromStripe = searchParams.get('purchased') === 'true';
 
   useEffect(() => {
     if (fromStripe && !purchased) {
-      purchaseGame('mannaCatch');
+      purchaseGame('arkHopper');
     }
   }, [fromStripe, purchased, purchaseGame]);
 
-  // Reuse mannaCatch free play gate for now (one free play per day)
+  // Free play gate (one free play per day)
   const canPlay = true;
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export function ArkHopperGameScreen() {
     gameRef.current = game;
 
     game.events.on('arkhopper:complete', () => {
-      recordMannaCatchFree();
+      recordArkHopperFree();
     });
 
     game.events.on('arkhopper:back', () => {
@@ -52,7 +52,7 @@ export function ArkHopperGameScreen() {
       game.destroy(true);
       gameRef.current = null;
     };
-  }, [canPlay, navigate, recordMannaCatchFree]);
+  }, [canPlay, navigate, recordArkHopperFree]);
 
   if (showPaywall) {
     return (

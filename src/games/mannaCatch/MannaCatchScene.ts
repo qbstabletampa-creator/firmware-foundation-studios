@@ -9,6 +9,8 @@ import { createBasket, type BasketVisual } from './renderBasket';
 import { createItemVisual, type ItemVisual } from './renderItems';
 import { preloadSprites, createGameSprite, type GameSprite } from '../../utils/spriteHelper';
 import { SPRITE_MAP } from './spriteMap';
+import { SFX, unlockAudio } from './sounds';
+import { useMannaCatchStore } from '../../stores/mannaCatchStore';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -122,6 +124,9 @@ export class MannaCatchScene extends Phaser.Scene {
 
     this.setupInput();
 
+    // Unlock Web Audio on first user interaction
+    unlockAudio();
+
     // Overlay group for verse cards and game over
     this.overlayGroup = this.add.group();
 
@@ -147,6 +152,7 @@ export class MannaCatchScene extends Phaser.Scene {
       .setDepth(100);
 
     backBtn.on('pointerdown', () => {
+      SFX.buttonTap();
       this.game.events.emit('mannaCatch:back');
     });
 
@@ -273,6 +279,11 @@ export class MannaCatchScene extends Phaser.Scene {
 
     const doStep = () => {
       const label = COUNTDOWN_STEPS[step];
+      if (label === 'GO!') {
+        SFX.countdownGo();
+      } else {
+        SFX.countdown();
+      }
       countdownText.setText(label);
       countdownText.setScale(1.5);
       countdownText.setAlpha(1);
@@ -381,30 +392,38 @@ export class MannaCatchScene extends Phaser.Scene {
     switch (event.type) {
       case 'item_caught':
         this.totalItemsCaught++;
+        SFX.catchGood(this.engineState.combo);
         this.onItemCaught(event.item);
         break;
       case 'bad_item_caught':
+        SFX.catchBad();
         this.onBadItemCaught(event.item);
         break;
       case 'item_missed':
         this.onItemMissed(event.item);
         break;
       case 'life_lost':
+        SFX.catchBad();
         this.flashLives();
         break;
       case 'combo':
+        SFX.combo(event.count);
         this.showCombo(event.count);
         break;
       case 'level_complete':
+        SFX.milestone();
         this.showLevelComplete(event.level);
         break;
       case 'powerup_activated':
+        SFX.powerUp();
         this.onPowerUpActivated(event.powerUp);
         break;
       case 'powerup_expired':
+        SFX.powerUpEnd();
         this.onPowerUpExpired(event.type_);
         break;
       case 'game_over':
+        SFX.gameOver();
         // Handled in update loop via phase check
         break;
     }
@@ -569,9 +588,20 @@ export class MannaCatchScene extends Phaser.Scene {
   // HUD updates
   // -----------------------------------------------------------------------
 
+  private prevDisplayScore = 0;
+
   private updateHUD(): void {
     this.levelText.setText('Level ' + this.engineState.level);
-    this.scoreText.setText(String(this.engineState.score));
+    const score = this.engineState.score;
+    if (score !== this.prevDisplayScore) {
+      this.prevDisplayScore = score;
+      this.tweens.add({
+        targets: this.scoreText,
+        scaleX: 1.2, scaleY: 1.2,
+        duration: 100, yoyo: true, ease: 'Back.easeOut',
+      });
+    }
+    this.scoreText.setText(String(score));
     this.livesText.setText(this.heartsString(this.engineState.lives));
   }
 
@@ -809,6 +839,7 @@ export class MannaCatchScene extends Phaser.Scene {
     }
 
     btnBg.on('pointerdown', () => {
+      SFX.buttonTap();
       // Fade out and destroy
       for (const el of elements) {
         this.tweens.add({
@@ -872,6 +903,25 @@ export class MannaCatchScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(202);
 
+    // Check for new high score
+    const prevHighScore = useMannaCatchStore.getState().highScore;
+    const isNewBest = this.engineState.score > prevHighScore && this.engineState.score > 0;
+
+    // "NEW BEST!" text (created off-screen, slides up with card)
+    let newBestText: Phaser.GameObjects.Text | null = null;
+    if (isNewBest) {
+      newBestText = this.add
+        .text(CX, H + cardH - 120, 'NEW BEST!', {
+          fontSize: '28px',
+          fontStyle: 'bold',
+          color: GOLD_HEX,
+          fontFamily: FONT,
+        })
+        .setOrigin(0.5)
+        .setDepth(202);
+    }
+
+    const statsStartY = isNewBest ? -70 : -100;
     const stats = [
       'Level Reached: ' + this.engineState.level,
       'Final Score: ' + this.engineState.score,
@@ -882,7 +932,7 @@ export class MannaCatchScene extends Phaser.Scene {
     const statTexts: Phaser.GameObjects.Text[] = [];
     stats.forEach((stat, i) => {
       const t = this.add
-        .text(CX, H + cardH - 100 + i * 44, stat, {
+        .text(CX, H + cardH + statsStartY + i * 44, stat, {
           fontSize: '24px',
           color: '#2D2D2D',
           fontFamily: FONT,
@@ -924,10 +974,11 @@ export class MannaCatchScene extends Phaser.Scene {
       .setDepth(204);
 
     // Slide all card elements up
-    const slideTargets = [
+    const slideTargets: { obj: Phaser.GameObjects.GameObject & { y: number }; targetY: number }[] = [
       { obj: card, targetY: cardY },
       { obj: title, targetY: cardY - 180 },
-      ...statTexts.map((t, i) => ({ obj: t, targetY: cardY - 100 + i * 44 })),
+      ...(newBestText ? [{ obj: newBestText, targetY: cardY - 120 }] : []),
+      ...statTexts.map((t, i) => ({ obj: t, targetY: cardY + statsStartY + i * 44 })),
       { obj: playBg, targetY: cardY + 130 },
       { obj: playText, targetY: cardY + 130 },
       { obj: backText, targetY: cardY + 200 },
@@ -943,12 +994,25 @@ export class MannaCatchScene extends Phaser.Scene {
       });
     }
 
+    // New high score celebration effects
+    if (isNewBest) {
+      this.time.delayedCall(800, () => {
+        SFX.milestone();
+        // Particle burst around the "NEW BEST!" text
+        this.spawnCatchParticles(CX, cardY - 120, 0xffd700);
+        this.spawnCatchParticles(CX - 60, cardY - 120, GOLD);
+        this.spawnCatchParticles(CX + 60, cardY - 120, GOLD);
+      });
+    }
+
     // Button handlers
     playBg.on('pointerdown', () => {
+      SFX.buttonTap();
       this.scene.restart();
     });
 
     backText.on('pointerdown', () => {
+      SFX.buttonTap();
       this.game.events.emit('mannaCatch:back');
     });
 

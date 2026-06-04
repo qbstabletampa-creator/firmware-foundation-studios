@@ -6,6 +6,9 @@ import { noahVerses, type NoahVerse } from './verses';
 import type { GameState, Card, LevelResult } from './types';
 import { preloadSprites, createGameSprite, type GameSprite } from '../../utils/spriteHelper';
 import { SPRITE_MAP } from './spriteMap';
+import { NoahSFX, unlockAudio } from './sounds';
+import { SharedSFX } from '../../utils/soundEngine';
+import { useNoahAnimalMatchStore } from '../../stores/noahAnimalMatchStore';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -123,6 +126,7 @@ export class NoahAnimalMatchScene extends Phaser.Scene {
     this.createGrid();
     this.createCursor();
     this.setupInput();
+    unlockAudio();
 
     // Overlay group
     this.overlayGroup = this.add.group();
@@ -180,6 +184,7 @@ export class NoahAnimalMatchScene extends Phaser.Scene {
       .setDepth(100);
 
     backBtn.on('pointerdown', () => {
+      SharedSFX.buttonTap();
       this.game.events.emit('noahanimalmatch:back');
     });
 
@@ -465,6 +470,12 @@ export class NoahAnimalMatchScene extends Phaser.Scene {
       countdownText.setScale(1.5);
       countdownText.setAlpha(1);
 
+      if (label === 'GO!') {
+        SharedSFX.countdownGo();
+      } else {
+        SharedSFX.countdown();
+      }
+
       this.tweens.add({
         targets: countdownText,
         scaleX: 1,
@@ -582,18 +593,22 @@ export class NoahAnimalMatchScene extends Phaser.Scene {
   private handleEvent(event: GameEvent): void {
     switch (event.type) {
       case 'card_flipped':
+        NoahSFX.flip();
         this.onCardFlipped(event.cardIndex);
         break;
       case 'match_found':
+        NoahSFX.match(0);
         this.onMatchFound(event.card1, event.card2, event.points);
         break;
       case 'mismatch':
+        NoahSFX.mismatch();
         this.onMismatch(event.card1, event.card2);
         break;
       case 'mismatch_resolved':
         this.onMismatchResolved(event.card1, event.card2);
         break;
       case 'combo':
+        NoahSFX.combo(event.count);
         this.showCombo(event.count);
         break;
       case 'quick_recall':
@@ -606,12 +621,15 @@ export class NoahAnimalMatchScene extends Phaser.Scene {
         this.showVerseCard();
         break;
       case 'level_complete':
+        NoahSFX.levelComplete();
         this.showLevelComplete(event.result);
         break;
       case 'game_complete':
+        NoahSFX.gameComplete();
         // Handled in update loop
         break;
       case 'perfect_clear':
+        NoahSFX.gameComplete();
         this.showPerfectClear(event.bonus);
         break;
       case 'time_bonus':
@@ -911,8 +929,19 @@ export class NoahAnimalMatchScene extends Phaser.Scene {
   // HUD updates
   // -----------------------------------------------------------------------
 
+  private prevDisplayScore = 0;
+
   private updateHUD(): void {
-    this.scoreText.setText(String(this.cumulativeScore + this.engineState.score));
+    const score = this.cumulativeScore + this.engineState.score;
+    if (score !== this.prevDisplayScore) {
+      this.prevDisplayScore = score;
+      this.tweens.add({
+        targets: this.scoreText,
+        scaleX: 1.2, scaleY: 1.2,
+        duration: 100, yoyo: true, ease: 'Back.easeOut',
+      });
+    }
+    this.scoreText.setText(String(score));
     this.movesText.setText(`Moves: ${this.engineState.moves}`);
 
     // Timer
@@ -1134,6 +1163,7 @@ export class NoahAnimalMatchScene extends Phaser.Scene {
     }
 
     btnBg.on('pointerdown', () => {
+      SharedSFX.buttonTap();
       for (const el of elements) {
         this.tweens.add({
           targets: el,
@@ -1281,6 +1311,7 @@ export class NoahAnimalMatchScene extends Phaser.Scene {
 
     // Button handlers
     nextBg.on('pointerdown', () => {
+      SharedSFX.buttonTap();
       if (isLastLevel) {
         for (const el of allOverlayElements) el.destroy();
         this.paused = false;
@@ -1295,6 +1326,7 @@ export class NoahAnimalMatchScene extends Phaser.Scene {
     });
 
     backText.on('pointerdown', () => {
+      SharedSFX.buttonTap();
       this.game.events.emit('noahanimalmatch:back');
     });
   }
@@ -1347,6 +1379,25 @@ export class NoahAnimalMatchScene extends Phaser.Scene {
 
     const totalScore = this.cumulativeScore + this.engineState.score;
 
+    // Check for new high score
+    const prevHighScore = useNoahAnimalMatchStore.getState().highScore;
+    const isNewBest = totalScore > prevHighScore && totalScore > 0;
+
+    // "NEW BEST!" text (created off-screen, slides up with card)
+    let newBestText: Phaser.GameObjects.Text | null = null;
+    if (isNewBest) {
+      newBestText = this.add
+        .text(CX, H + cardH - 100, 'NEW BEST!', {
+          fontSize: '28px',
+          fontStyle: 'bold',
+          color: GOLD_HEX,
+          fontFamily: FONT,
+        })
+        .setOrigin(0.5)
+        .setDepth(202);
+    }
+
+    const statsStartY = isNewBest ? -40 : -70;
     const stats = [
       `Total Score: ${totalScore}`,
       `Best Combo: ${this.engineState.bestCombo}x`,
@@ -1356,7 +1407,7 @@ export class NoahAnimalMatchScene extends Phaser.Scene {
     const statTexts: Phaser.GameObjects.Text[] = [];
     stats.forEach((stat, i) => {
       const t = this.add
-        .text(CX, H + cardH - 70 + i * 44, stat, {
+        .text(CX, H + cardH + statsStartY + i * 44, stat, {
           fontSize: '24px',
           color: '#2D2D2D',
           fontFamily: FONT,
@@ -1398,11 +1449,12 @@ export class NoahAnimalMatchScene extends Phaser.Scene {
       .setDepth(204);
 
     // Slide all elements up
-    const slideTargets = [
+    const slideTargets: { obj: Phaser.GameObjects.GameObject & { y: number }; targetY: number }[] = [
       { obj: card, targetY: cardY },
       { obj: arkEmoji, targetY: cardY - 200 },
       { obj: title, targetY: cardY - 140 },
-      ...statTexts.map((t, i) => ({ obj: t, targetY: cardY - 70 + i * 44 })),
+      ...(newBestText ? [{ obj: newBestText, targetY: cardY - 100 }] : []),
+      ...statTexts.map((t, i) => ({ obj: t, targetY: cardY + statsStartY + i * 44 })),
       { obj: playBg, targetY: cardY + 100 },
       { obj: playText, targetY: cardY + 100 },
       { obj: backText, targetY: cardY + 175 },
@@ -1429,8 +1481,19 @@ export class NoahAnimalMatchScene extends Phaser.Scene {
       }
     });
 
+    // New high score celebration effects
+    if (isNewBest) {
+      this.time.delayedCall(800, () => {
+        SharedSFX.milestone();
+        this.spawnMatchParticles(CX, cardY - 100, 0xffd700);
+        this.spawnMatchParticles(CX - 80, cardY - 100, GOLD);
+        this.spawnMatchParticles(CX + 80, cardY - 100, GOLD);
+      });
+    }
+
     // Button handlers
     playBg.on('pointerdown', () => {
+      SharedSFX.buttonTap();
       this.currentLevel = 1;
       this.cumulativeScore = 0;
       this.gameCompleteShown = false;
@@ -1438,6 +1501,7 @@ export class NoahAnimalMatchScene extends Phaser.Scene {
     });
 
     backText.on('pointerdown', () => {
+      SharedSFX.buttonTap();
       this.game.events.emit('noahanimalmatch:back');
     });
 

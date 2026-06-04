@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { ScreenShell } from '../components/ScreenShell';
 import { PageHeader } from '../components/PageHeader';
 import { usePreferencesStore } from '../stores/preferencesStore';
@@ -21,12 +22,13 @@ export function MannaCatchSettingsScreen() {
           {toggles.map((t) => (
             <div key={t.label} className={styles.toggleRow}>
               <span className={styles.toggleLabel}>{t.label}</span>
-              <button
+              <motion.button
                 className={`${styles.toggle} ${t.value ? styles.on : ''}`}
                 onClick={t.onToggle}
+                whileTap={{ scale: 0.95 }}
               >
                 <span className={styles.toggleKnob} />
-              </button>
+              </motion.button>
             </div>
           ))}
         </div>

@@ -26,6 +26,22 @@ import { ArkHopperGameScreen } from './screens/ArkHopperGameScreen';
 import { ArkHopperStatsScreen } from './screens/ArkHopperStatsScreen';
 import { ArkHopperMoreScreen } from './screens/ArkHopperMoreScreen';
 import { ArkHopperSettingsScreen } from './screens/ArkHopperSettingsScreen';
+import { LightSnakeListingScreen } from './screens/LightSnakeListingScreen';
+import { LightSnakeSplashScreen } from './screens/LightSnakeSplashScreen';
+import { LightSnakeOnboardingScreen } from './screens/LightSnakeOnboardingScreen';
+import { LightSnakeHomeScreen } from './screens/LightSnakeHomeScreen';
+import { LightSnakeGameScreen } from './screens/LightSnakeGameScreen';
+import { LightSnakeStatsScreen } from './screens/LightSnakeStatsScreen';
+import { LightSnakeMoreScreen } from './screens/LightSnakeMoreScreen';
+import { LightSnakeSettingsScreen } from './screens/LightSnakeSettingsScreen';
+import { BibleBrickBreakerListingScreen } from './screens/BibleBrickBreakerListingScreen';
+import { BibleBrickBreakerSplashScreen } from './screens/BibleBrickBreakerSplashScreen';
+import { BibleBrickBreakerOnboardingScreen } from './screens/BibleBrickBreakerOnboardingScreen';
+import { BibleBrickBreakerHomeScreen } from './screens/BibleBrickBreakerHomeScreen';
+import { BibleBrickBreakerGameScreen } from './screens/BibleBrickBreakerGameScreen';
+import { BibleBrickBreakerStatsScreen } from './screens/BibleBrickBreakerStatsScreen';
+import { BibleBrickBreakerMoreScreen } from './screens/BibleBrickBreakerMoreScreen';
+import { BibleBrickBreakerSettingsScreen } from './screens/BibleBrickBreakerSettingsScreen';
 import { SplashScreen } from './screens/SplashScreen';
 import { OnboardingScreen } from './screens/OnboardingScreen';
 import { HomeScreen } from './screens/HomeScreen';
@@ -114,6 +130,28 @@ export function App() {
       <Route path="/ark-hopper/stats" element={<ProtectedRoute redirectTo="/ark-hopper/onboarding"><ArkHopperStatsScreen /></ProtectedRoute>} />
       <Route path="/ark-hopper/more" element={<ProtectedRoute redirectTo="/ark-hopper/onboarding"><ArkHopperMoreScreen /></ProtectedRoute>} />
       <Route path="/ark-hopper/settings" element={<ProtectedRoute redirectTo="/ark-hopper/onboarding"><ArkHopperSettingsScreen /></ProtectedRoute>} />
+
+      {/* Light Snake */}
+      <Route path="/light-snake" element={<LightSnakeListingScreen />} />
+      {/* Light Snake App */}
+      <Route path="/light-snake/app" element={<LightSnakeSplashScreen />} />
+      <Route path="/light-snake/onboarding" element={<LightSnakeOnboardingScreen />} />
+      <Route path="/light-snake/home" element={<ProtectedRoute redirectTo="/light-snake/onboarding"><LightSnakeHomeScreen /></ProtectedRoute>} />
+      <Route path="/light-snake/play" element={<ProtectedRoute redirectTo="/light-snake/onboarding"><LightSnakeGameScreen /></ProtectedRoute>} />
+      <Route path="/light-snake/stats" element={<ProtectedRoute redirectTo="/light-snake/onboarding"><LightSnakeStatsScreen /></ProtectedRoute>} />
+      <Route path="/light-snake/more" element={<ProtectedRoute redirectTo="/light-snake/onboarding"><LightSnakeMoreScreen /></ProtectedRoute>} />
+      <Route path="/light-snake/settings" element={<ProtectedRoute redirectTo="/light-snake/onboarding"><LightSnakeSettingsScreen /></ProtectedRoute>} />
+
+      {/* Bible Brick Breaker */}
+      <Route path="/bible-brick-breaker" element={<BibleBrickBreakerListingScreen />} />
+      {/* Bible Brick Breaker App */}
+      <Route path="/bible-brick-breaker/app" element={<BibleBrickBreakerSplashScreen />} />
+      <Route path="/bible-brick-breaker/onboarding" element={<BibleBrickBreakerOnboardingScreen />} />
+      <Route path="/bible-brick-breaker/home" element={<ProtectedRoute redirectTo="/bible-brick-breaker/onboarding"><BibleBrickBreakerHomeScreen /></ProtectedRoute>} />
+      <Route path="/bible-brick-breaker/play" element={<ProtectedRoute redirectTo="/bible-brick-breaker/onboarding"><BibleBrickBreakerGameScreen /></ProtectedRoute>} />
+      <Route path="/bible-brick-breaker/stats" element={<ProtectedRoute redirectTo="/bible-brick-breaker/onboarding"><BibleBrickBreakerStatsScreen /></ProtectedRoute>} />
+      <Route path="/bible-brick-breaker/more" element={<ProtectedRoute redirectTo="/bible-brick-breaker/onboarding"><BibleBrickBreakerMoreScreen /></ProtectedRoute>} />
+      <Route path="/bible-brick-breaker/settings" element={<ProtectedRoute redirectTo="/bible-brick-breaker/onboarding"><BibleBrickBreakerSettingsScreen /></ProtectedRoute>} />
 
       {/* Catch-all */}
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,10 +1,27 @@
 # Firmware Foundation Studios Log
 
+## 2026-06-04 -- Elite Upgrade Session 4: Audit + BBB Build + Sprites + iOS
+
+- Ran 9-agent deep audit of all Light Snake + shared infrastructure code. Found 54 issues (4 critical, 15 major).
+- Fixed all bugs via 9 parallel fix agents: iOS audio, stats persistence, memory leaks, paywall bypass, type landmine, WebGL cleanup, verse card crash, shutdown lifecycle.
+- Built Bible Brick Breaker end-to-end (4,116 lines, 25 files). Paddle bounces ball to break bricks revealing Bible verse letters. 3 power-ups, 10 levels, 10 badges, 10 verses about strength.
+- PWA/iOS hardened: viewport-fit=cover, studio-wide manifest (FFS Games, start_url /).
+- AIML API configured ($20 credit). Reve confirmed excellent for claymation sprites at $0.03/gen.
+- Generated 7 sprites via Reve (2 app icons + 5 Light Snake game sprites). Thorn failed, 10 BBB sprites paused.
+- Phase 0 partially done: AIML key live, GameLabs/Sprite Lab/OpusGameLabs researched.
+- tsc: zero errors. 96 files uncommitted.
+- Created pages/phase0-tool-setup.md. Updated session notes, index, phase 4 build log entry.
+
 ## 2026-06-03 -- Macadam onboarding gamification capture
 
 - Added `pages/macadam-onboarding-gamification-capture.md` from César Álvarez's X video and Macadam app listings.
 - Captured the reusable FFS pattern: onboarding should feel like first play, with a warm guide, one tiny choice, instant reward, streak preview, and fast jump into the real game.
 - Linked it to app factory strategy, puzzle UX research, arcade UX research, and Gosple product spec.
+
+## 2026-06-03 -- Gameplay audit wiki page created
+
+- Created `pages/gameplay-audit-june-2026.md` with full breakdown of all 44 issues found and fixed.
+- Added to vault index under Active Build.
 
 ## 2026-06-03 -- Full gameplay audit, 24 bug fixes, production deploy
 

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { scoreGuess, type TileScore } from '../../engines/wordle/wordleEngine';
 import { starterPuzzles, type StarterPuzzle } from '../../engines/wordle/starterPuzzles';
+import { GospleSFX, unlockAudio } from './sounds';
 
 const MAX_ATTEMPTS = 6;
 const TILE_GAP = 10;
@@ -75,6 +76,7 @@ export class GameScene extends Phaser.Scene {
       fontSize: '24px', fontStyle: 'bold', color: '#D4C36A', fontFamily: FONT,
     }).setOrigin(0, 0.5).setInteractive({ useHandCursor: true });
     backBtn.on('pointerdown', () => {
+      GospleSFX.keyTap();
       this.game.events.emit('gosple:back');
     });
 
@@ -91,6 +93,8 @@ export class GameScene extends Phaser.Scene {
 
     this.drawGrid(W);
     this.drawKeyboard(W);
+
+    unlockAudio();
 
     this.input.keyboard!.on('keydown', (e: KeyboardEvent) => {
       if (this.over || this.busy) return;
@@ -186,6 +190,7 @@ export class GameScene extends Phaser.Scene {
         t.text.setText('');
         t.bg.setStrokeStyle(3, C.border);
         this.guesses[this.row][this.col] = '';
+        GospleSFX.keyTap();
       }
       return;
     }
@@ -205,6 +210,7 @@ export class GameScene extends Phaser.Scene {
         targets: [t.bg, t.text], scaleX: 1.08, scaleY: 1.08,
         duration: 50, yoyo: true, ease: 'Quad.easeOut',
       });
+      GospleSFX.keyTap();
       this.col++;
     }
   }
@@ -213,12 +219,18 @@ export class GameScene extends Phaser.Scene {
     const guess = this.guesses[this.row].join('');
     const scores = scoreGuess(this.puzzle.answer, guess);
     this.busy = true;
+    GospleSFX.rowSubmit();
     const isWin = scores.every(s => s === 'correct');
 
     for (let c = 0; c < this.wLen; c++) {
       const tile = this.tiles[this.row][c];
       const score = scores[c];
       this.time.delayedCall(c * FLIP_STAGGER, () => {
+        if (score === 'correct') {
+          GospleSFX.correctLetter(c);
+        } else {
+          GospleSFX.wrongLetter();
+        }
         this.tweens.add({
           targets: [tile.bg, tile.text], scaleY: 0,
           duration: FLIP_MS / 2, ease: 'Quad.easeIn',
@@ -247,6 +259,7 @@ export class GameScene extends Phaser.Scene {
         this.over = true;
         this.won = true;
         this.bounceRow(this.row);
+        GospleSFX.puzzleSolve();
         this.time.delayedCall(500, () => this.showResult());
       } else if (this.row === MAX_ATTEMPTS - 1) {
         this.over = true;
@@ -268,6 +281,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private shakeRow(row: number) {
+    GospleSFX.wrongLetter();
     for (const t of this.tiles[row]) {
       this.tweens.add({ targets: [t.bg, t.text], x: '+=8', duration: 40, yoyo: true, repeat: 2, ease: 'Sine.easeInOut' });
     }
@@ -314,6 +328,7 @@ export class GameScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     btnBg.on('pointerdown', () => {
+      GospleSFX.keyTap();
       this.game.events.emit('gosple:complete', { won: this.won, attempts: this.row + 1 });
     });
 

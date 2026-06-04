@@ -10,15 +10,16 @@ export default defineConfig({
       registerType: 'autoUpdate',
       manifest: {
         name: 'Firmware Foundation Studios',
-        short_name: 'Gosple',
+        short_name: 'FFS Games',
         description: 'Faith-driven games for the whole family',
-        start_url: '/gosple',
+        start_url: '/',
         display: 'standalone',
+        orientation: 'portrait',
         background_color: '#10100E',
         theme_color: '#10100E',
+        categories: ['games', 'entertainment'],
         icons: [
-          { src: '/gosple-icon.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-          { src: '/logo.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: '/logo.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
       },
       workbox: {
