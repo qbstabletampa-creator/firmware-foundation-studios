@@ -114,6 +114,9 @@ export class LightSnakeScene extends Phaser.Scene {
     for (const [key, entry] of Object.entries(SPRITE_MAP)) {
       this.load.image(key, entry.path);
     }
+
+    // Illustrated game-world background (falls back to gradient if missing)
+    this.load.image('bg-night', '/sprites/light-snake/bg-night.png');
   }
 
   create(): void {
@@ -202,12 +205,20 @@ export class LightSnakeScene extends Phaser.Scene {
   // -----------------------------------------------------------------------
 
   private buildBackground(): void {
-    const gfx = this.add.graphics();
-    gfx.setDepth(DEPTH_BG);
-
-    // Dark gradient: deep blue-black at top to dark purple at bottom
-    gfx.fillGradientStyle(BG_DARK_TOP, BG_DARK_TOP, BG_DARK_BOTTOM, BG_DARK_BOTTOM, 1);
-    gfx.fillRect(0, 0, W, H);
+    // Illustrated world background if available, else dark gradient fallback
+    if (this.textures.exists('bg-night')) {
+      const bg = this.add.image(W / 2, H / 2, 'bg-night');
+      bg.setDepth(DEPTH_BG);
+      // Cover the canvas while preserving aspect (crop overflow)
+      const scale = Math.max(W / bg.width, H / bg.height);
+      bg.setScale(scale);
+    } else {
+      const gfx = this.add.graphics();
+      gfx.setDepth(DEPTH_BG);
+      // Dark gradient: deep blue-black at top to dark purple at bottom
+      gfx.fillGradientStyle(BG_DARK_TOP, BG_DARK_TOP, BG_DARK_BOTTOM, BG_DARK_BOTTOM, 1);
+      gfx.fillRect(0, 0, W, H);
+    }
 
     // Scatter faint "stars" for ambiance
     const starGfx = this.add.graphics();

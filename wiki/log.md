@@ -1,5 +1,25 @@
 # Firmware Foundation Studios Log
 
+## 2026-06-04 (evening) -- Visual upgrade pass: AI worlds + sprite alpha fix + test mode
+
+- Fixed Playwright MCP (8 agent instances flipped SSE -> stdio, all connected). Enabled the runtime visual audit.
+- Ran in-browser visual audit of all 6 games. Found the real issues: some sprites exported without alpha (solid bg boxes), and game worlds were flat colors/gradients. The soft-3D art itself was already good.
+- Built the fix pipeline (new page: `pages/visual-upgrade-pipeline.md`): rembg for background removal/resize, Reve-via-AIML for world/texture generation, scene wiring with gradient fallback.
+- Light Snake: 6 sprites bg-removed + resized to transparent 256x256; new AI night-sky world wired.
+- Bible Brick Breaker: new AI starry-temple world.
+- Noah Animal Match: new AI ark-interior world; card colors warmed (CARD_DOWN_COLOR 0x2a4a5e -> 0x6b4a2f, stroke -> 0x9a763d) to match wood. Gameplay verified working in browser (cards flip/reveal, 0 errors).
+- Ark Hopper: AI tiled lane textures (grass/water/path) replacing flat color lanes. Sprite sizes left alone to avoid hitbox regressions.
+- Manna Catch: confirmed working (earlier "blank screen" was a transient init frame). Kept its animated procedural heavenly-light bg. Desert dawn image generated as an alt.
+- Added dev/test mode in `src/stores/purchaseStore.ts`: all games free on dev server, paywall intact in prod. Phone testing at http://192.168.68.50:5173.
+- All games verified 0 console errors, `tsc -b` clean. Originals backed up at `.sprite-backups/`. AIML cost ~$0.24.
+- OPEN: stats-not-saved bug (Pattern 1 static audit) still affects Noah/Manna/Ark -- non-crashing, scores/badges stay 0.
+
+## 2026-06-04 -- Premium mobile app polish capture
+
+- Added `pages/premium-mobile-app-polish-capture.md` from Beto Moedano's X post on why premium apps feel right.
+- Captured the reusable FFS checklist: press states, subtle motion, haptics, keyboard behavior, loading states, and empty states.
+- Connected it to Gosple polish, FFS QA, Elite Upgrade Plan, and AI Gameplan product taste lessons.
+
 ## 2026-06-04 -- Session 5: Sprites, QA Fixes, Splash Unification, Navigation Bug Found
 
 - Committed 120 files from session 4 (was sitting uncommitted on main).

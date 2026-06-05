@@ -4,6 +4,10 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { resolve } from 'path';
 
 export default defineConfig({
+  server: {
+    host: true, // bind to 0.0.0.0 so phones on the LAN / Tailscale can reach the dev server
+    port: 5173,
+  },
   plugins: [
     react(),
     VitePWA({

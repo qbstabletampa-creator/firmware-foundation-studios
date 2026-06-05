@@ -22,7 +22,7 @@ const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
 const GOLD = 0xd4c36a;
 const GOLD_HEX = '#D4C36A';
 const BG_DARK = 0x1b3a4b;
-const CARD_DOWN_COLOR = 0x2a4a5e;
+const CARD_DOWN_COLOR = 0x6b4a2f;
 const CARD_UP_COLOR = 0xfff8e7;
 const VERSE_CARD_BG = 0xfff8e7;
 const OVERLAY_COLOR = 0x000000;
@@ -94,6 +94,9 @@ export class NoahAnimalMatchScene extends Phaser.Scene {
 
   preload(): void {
     preloadSprites(this, SPRITE_MAP);
+
+    // Illustrated game-world background (falls back to gradient if missing)
+    this.load.image('bg-world', '/sprites/noah-animal-match/bg-world.png');
   }
 
   create(): void {
@@ -140,10 +143,16 @@ export class NoahAnimalMatchScene extends Phaser.Scene {
   // -----------------------------------------------------------------------
 
   private createBackground(): void {
-    // 1. Warm gradient background (cream top to sage bottom)
-    const bgGfx = this.add.graphics().setDepth(0);
-    bgGfx.fillGradientStyle(0xfff8e7, 0xfff8e7, 0xe8f5e9, 0xe8f5e9, 1);
-    bgGfx.fillRect(0, 0, W, H);
+    // 1. Illustrated ark-interior world if available, else warm gradient fallback
+    if (this.textures.exists('bg-world')) {
+      const bg = this.add.image(W / 2, H / 2, 'bg-world').setDepth(0);
+      const scale = Math.max(W / bg.width, H / bg.height);
+      bg.setScale(scale);
+    } else {
+      const bgGfx = this.add.graphics().setDepth(0);
+      bgGfx.fillGradientStyle(0xfff8e7, 0xfff8e7, 0xe8f5e9, 0xe8f5e9, 1);
+      bgGfx.fillRect(0, 0, W, H);
+    }
 
     // 2. Golden dust-mote particles (6-8 tiny circles drifting down)
     this.goldenParticles = [];
@@ -276,7 +285,7 @@ export class NoahAnimalMatchScene extends Phaser.Scene {
       // Card background
       const cardBg = this.add
         .rectangle(x, y, this.cardSize, this.cardSize, CARD_DOWN_COLOR)
-        .setStrokeStyle(2, 0x3a6a7e)
+        .setStrokeStyle(2, 0x9a763d)
         .setDepth(30);
 
       // Rounded look with slight corner rounding via stroke
@@ -751,7 +760,7 @@ export class NoahAnimalMatchScene extends Phaser.Scene {
       this.cardTexts[index] = newSprite;
     } else {
       bg.setFillStyle(CARD_DOWN_COLOR);
-      bg.setStrokeStyle(2, 0x3a6a7e);
+      bg.setStrokeStyle(2, 0x9a763d);
 
       // Face-down: show card-back sprite or "?" text
       const spriteSize = Math.floor(this.cardSize * 0.7);

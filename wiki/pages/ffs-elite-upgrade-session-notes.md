@@ -1,6 +1,6 @@
 # FFS Elite Upgrade Session Notes
 
-**Last updated:** 2026-06-04 session 5
+**Last updated:** 2026-06-04 session 6
 **Purpose:** Pickup notes for continuing the elite upgrade plan after /clear
 
 ---
@@ -12,7 +12,36 @@ Phase 1: Full Audit - DONE
 Phase 2: Shared Infrastructure - DONE
 Phase 3: Game Upgrades - 95% (3.4 world tiles unblocked, use Kenney.nl + FLUX)
 Phase 4: New Game Factory - DONE (Light Snake + Bible Brick Breaker, all sprites, QA bugs fixed)
-Phase 5: App Store Prep - NOT STARTED
+Phase 5: App Store Prep - READY (Capacitor initialized, needs Mac for Xcode build)
+
+---
+
+## Session 6 Work (June 4, 2026)
+
+### Splash Bug Fix
+- Removed mounted ref pattern from GameSplashScreen.tsx
+- Root cause: React StrictMode double-mount killed the ref, timers never fired
+- All 6 games now navigate past splash screen correctly
+- Pushed to main, Cloudflare Pages auto-deploying
+
+### Capacitor Setup (App Store Ready)
+- Installed @capacitor/core, @capacitor/cli, @capacitor/ios, @capacitor/android
+- Created capacitor.config.ts (appId: com.firmwarefoundation.studios)
+- Smart service worker: disables in native webview, normal on web
+- Generated 8 icon sizes (48-512px) from logo.png
+- Added safe-area CSS for notched devices
+- Added cap:build, cap:ios, cap:android scripts to package.json
+- iOS and Android native projects initialized
+- npx cap sync verified working
+
+### Deploy
+- All 6 games live at firmwarefoundation.com via Cloudflare Pages
+- Splash bug fix deployed, all games playable end-to-end
+
+### What Needs to Be Done Next
+1. Browser QA all 6 games on live site (firmwarefoundation.com)
+2. When CJ has a Mac + Apple Dev account, run `npm run cap:ios` to build for App Store
+3. Phase 3.4 world tiles: download Kenney tilesets or generate via FLUX
 
 ---
 

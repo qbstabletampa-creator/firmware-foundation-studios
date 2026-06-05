@@ -151,6 +151,9 @@ export class BibleBrickBreakerScene extends Phaser.Scene {
     for (const [key, entry] of Object.entries(SPRITE_MAP)) {
       this.load.image(key, entry.path);
     }
+
+    // Illustrated game-world background (falls back to gradient if missing)
+    this.load.image('bg-world', '/sprites/bible-brick-breaker/bg-world.png');
   }
 
   // -----------------------------------------------------------------------
@@ -203,12 +206,19 @@ export class BibleBrickBreakerScene extends Phaser.Scene {
   // -----------------------------------------------------------------------
 
   private buildBackground(): void {
-    const gfx = this.add.graphics();
-    gfx.setDepth(DEPTH_BG);
-
-    // Dark gradient: deep blue at top to dark purple at bottom
-    gfx.fillGradientStyle(BG_TOP, BG_TOP, BG_BOTTOM, BG_BOTTOM, 1);
-    gfx.fillRect(0, 0, W, H);
+    // Illustrated world background if available, else dark gradient fallback
+    if (this.textures.exists('bg-world')) {
+      const bg = this.add.image(W / 2, H / 2, 'bg-world');
+      bg.setDepth(DEPTH_BG);
+      const scale = Math.max(W / bg.width, H / bg.height);
+      bg.setScale(scale);
+    } else {
+      const gfx = this.add.graphics();
+      gfx.setDepth(DEPTH_BG);
+      // Dark gradient: deep blue at top to dark purple at bottom
+      gfx.fillGradientStyle(BG_TOP, BG_TOP, BG_BOTTOM, BG_BOTTOM, 1);
+      gfx.fillRect(0, 0, W, H);
+    }
 
     // Scatter faint "stars" for ambiance
     const starGfx = this.add.graphics();

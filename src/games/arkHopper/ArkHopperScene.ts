@@ -37,6 +37,14 @@ const LANE_COLORS: Record<string, number> = {
   goal: 0xd4c36a,
 };
 
+// Illustrated lane textures (tiled). Lanes without an entry use the flat color.
+const LANE_TEXTURES: Record<string, string> = {
+  start: 'tex-grass',
+  grass: 'tex-grass',
+  path: 'tex-path',
+  water: 'tex-water',
+};
+
 // Depth layers
 const DEPTH_BG = 10;
 const DEPTH_LANES = 20;
@@ -88,7 +96,7 @@ export class ArkHopperScene extends Phaser.Scene {
   private currentLevel = 1;
 
   // Rendering
-  private laneRects: Phaser.GameObjects.Rectangle[] = [];
+  private laneRects: Phaser.GameObjects.GameObject[] = [];
   private laneItemSprites = new Map<number, GameSprite>();
   private starSprites = new Map<number, GameSprite>();
   private starTweens = new Map<number, Phaser.Tweens.Tween>();
@@ -150,6 +158,11 @@ export class ArkHopperScene extends Phaser.Scene {
 
   preload(): void {
     preloadSprites(this, SPRITE_MAP);
+
+    // Illustrated lane textures (fall back to flat colors if missing)
+    this.load.image('tex-grass', '/sprites/ark-hopper/tex-grass.png');
+    this.load.image('tex-water', '/sprites/ark-hopper/tex-water.png');
+    this.load.image('tex-path', '/sprites/ark-hopper/tex-path.png');
   }
 
   create(): void {
@@ -348,9 +361,17 @@ export class ArkHopperScene extends Phaser.Scene {
       // Lanes render bottom-up: row 0 at bottom, row N at top
       const yPixel = H - (row + 1) * this.cellH;
 
-      const rect = this.add
-        .rectangle(CX, yPixel + this.cellH / 2, W, this.cellH, color)
-        .setDepth(DEPTH_BG);
+      // Use an illustrated tiled texture when available, else flat color
+      const texKey = LANE_TEXTURES[lane.type];
+      const rect: Phaser.GameObjects.Rectangle | Phaser.GameObjects.TileSprite =
+        texKey && this.textures.exists(texKey)
+          ? (this.add
+              .tileSprite(CX, yPixel + this.cellH / 2, W, this.cellH, texKey)
+              .setTileScale(0.2, 0.2)
+              .setDepth(DEPTH_BG) as Phaser.GameObjects.TileSprite)
+          : (this.add
+              .rectangle(CX, yPixel + this.cellH / 2, W, this.cellH, color)
+              .setDepth(DEPTH_BG) as Phaser.GameObjects.Rectangle);
 
       // Add subtle alternating brightness for grass/path
       if (lane.type === 'grass' || lane.type === 'start') {

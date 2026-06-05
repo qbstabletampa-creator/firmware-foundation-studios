@@ -32,6 +32,14 @@ interface PurchaseState {
 const FREE_GOSPLE_LIMIT = 3;
 const FREE_NOAH_LIMIT = 3;
 
+// Test mode: all games free, no paywall. ON automatically during `npm run dev`,
+// or force it in any build via localStorage.setItem('ffs-test-mode','on').
+// Production builds keep the paywall unless the flag is explicitly set.
+const TEST_MODE =
+  import.meta.env.DEV ||
+  (typeof localStorage !== 'undefined' &&
+    localStorage.getItem('ffs-test-mode') === 'on');
+
 export const usePurchaseStore = create<PurchaseState>()(
   persist(
     (set, get): PurchaseState => ({
@@ -61,29 +69,35 @@ export const usePurchaseStore = create<PurchaseState>()(
       recordBibleBrickBreakerFree: () =>
         set({ bibleBrickBreakerLastFreeDate: new Date().toISOString().slice(0, 10) }),
       canPlayGospleFree: () => {
+        if (TEST_MODE) return true;
         const s = get();
         return s.gosple || s.gospleFreeCount < FREE_GOSPLE_LIMIT;
       },
       canPlayMannaCatchFree: () => {
+        if (TEST_MODE) return true;
         const s = get();
         const today = new Date().toISOString().slice(0, 10);
         return s.mannaCatch || s.mannaCatchLastFreeDate !== today;
       },
       canPlayNoahAnimalMatchFree: () => {
+        if (TEST_MODE) return true;
         const s = get();
         return s.noahAnimalMatch || s.noahAnimalMatchFreeCount < FREE_NOAH_LIMIT;
       },
       canPlayArkHopperFree: () => {
+        if (TEST_MODE) return true;
         const s = get();
         const today = new Date().toISOString().slice(0, 10);
         return s.arkHopper || s.arkHopperLastFreeDate !== today;
       },
       canPlayLightSnakeFree: () => {
+        if (TEST_MODE) return true;
         const s = get();
         const today = new Date().toISOString().slice(0, 10);
         return s.lightSnake || s.lightSnakeLastFreeDate !== today;
       },
       canPlayBibleBrickBreakerFree: () => {
+        if (TEST_MODE) return true;
         const s = get();
         const today = new Date().toISOString().slice(0, 10);
         return s.bibleBrickBreaker || s.bibleBrickBreakerLastFreeDate !== today;

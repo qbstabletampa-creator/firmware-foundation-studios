@@ -3,3 +3,8 @@ dist/
 .DS_Store
 *.local
 .env
+
+# Sprite originals backup (kept locally, not in repo)
+.sprite-backups/
+# Stray QA screenshots at repo root
+/test-*.png

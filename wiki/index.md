@@ -26,6 +26,7 @@
 - [Phase 0 Tool Setup](pages/phase0-tool-setup.md) -- AIML API configured, GameLabs/Sprite Lab/OpusGameLabs researched, Reve confirmed as primary sprite model.
 - [Sprite System Build](pages/sprite-system-build.md) -- Full sprite infrastructure, scene refactors, environment polish. ChatGPT claymation style locked. 47/47 game sprites done, icons + tiles remain.
 - [Gameplay Audit - June 2026](pages/gameplay-audit-june-2026.md) -- 6-agent audit of all 4 games. 8 critical, 16 major, 20 minor bugs found and fixed. Deployed June 3.
+- [Visual Upgrade Pipeline](pages/visual-upgrade-pipeline.md) -- How we fix sprite alpha (rembg) and generate AI worlds/textures (Reve via AIML). Per-game art state, test mode, backups, costs. Jun 4 evening.
 
 ## Core Pages
 
@@ -38,6 +39,7 @@
 
 ## Research
 
+- [Premium Mobile App Polish Capture](pages/premium-mobile-app-polish-capture.md) -- Beto Moedano X post on why premium apps feel right: press states, subtle motion, haptics, keyboard behavior, and loading or empty states. Use as a FFS polish checklist.
 - [Macadam Onboarding Gamification Capture](pages/macadam-onboarding-gamification-capture.md) -- X video capture on premium mobile onboarding. Use this for FFS first win flow, mascot guidance, instant rewards, streaks, and reusable onboarding checklist.
 - [AI Agent Game Build Pattern](pages/ai-agent-game-build-pattern.md) -- X capture on the LMAO browser MOBA build. Use this as a pattern for agent lane game builds, placeholder assets, bots, and IP clean prototypes.
 - [Puzzle App UX Research](pages/puzzle-app-ux-research.md) -- Wordle, NYT Games, YouVersion, Bible App for Kids patterns. Applied to Gosple.
