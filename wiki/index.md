@@ -1,7 +1,7 @@
 # Firmware Foundation Studios Wiki
 
 **Summary:** Dedicated vault for Firmware Foundation Studios, CJ's separate public Christian kids game studio.
-**Last Updated:** 2026-06-03
+**Last Updated:** 2026-06-05
 **Sources:** CJ Telegram planning thread, Christian kids game factory capture, charity research.
 **Related:** [[studio-decisions]], [[app-factory-strategy]], [[gosple-product-spec]], [[charity-options]]
 
@@ -28,6 +28,7 @@
 - [Gameplay Audit - June 2026](pages/gameplay-audit-june-2026.md) -- 6-agent audit of all 4 games. 8 critical, 16 major, 20 minor bugs found and fixed. Deployed June 3.
 - [Visual Upgrade Pipeline](pages/visual-upgrade-pipeline.md) -- How we fix sprite alpha (rembg) and generate AI worlds/textures (Reve via AIML). Per-game art state, test mode, backups, costs. Jun 4 evening.
 - [Native Build Readiness](pages/native-build-readiness.md) -- App Store path is Capacitor, NOT Expo Go (Phaser can't run in Expo). Cap 8.4 already set up. Build steps + the test-mode-off-in-prod gotcha.
+- [Onboarding Loop Bug](pages/onboarding-loop-bug.md) -- LIVE BLOCKER (Jun 5). Games loop on onboarding for returning users. Root cause + one-line fix documented. Not yet applied.
 
 ## Core Pages
 
@@ -40,6 +41,8 @@
 
 ## Research
 
+- [Vibe Fighter AI Game Build Capture](pages/vibe-fighter-ai-game-build-capture.md) -- X and YouTube capture on building a Street Fighter style game with AI. Best FFS takeaway is not the clone, it is the workflow: concept art, sprite pipeline, Character Gym, Playground, JSON tuning, then game.
+- [Sorceress AI Game Creation Suite Capture](pages/sorceress-ai-game-creation-suite-capture.md) -- Website capture for Sorceress, an AI game creation suite and WizardGenie browser game engine. Study for FFS art pipelines, asset packaging, pricing, and tool catalog structure. Sandbox before using it in production.
 - [Premium Mobile App Polish Capture](pages/premium-mobile-app-polish-capture.md) -- Beto Moedano X post on why premium apps feel right: press states, subtle motion, haptics, keyboard behavior, and loading or empty states. Use as a FFS polish checklist.
 - [Macadam Onboarding Gamification Capture](pages/macadam-onboarding-gamification-capture.md) -- X video capture on premium mobile onboarding. Use this for FFS first win flow, mascot guidance, instant rewards, streaks, and reusable onboarding checklist.
 - [AI Agent Game Build Pattern](pages/ai-agent-game-build-pattern.md) -- X capture on the LMAO browser MOBA build. Use this as a pattern for agent lane game builds, placeholder assets, bots, and IP clean prototypes.

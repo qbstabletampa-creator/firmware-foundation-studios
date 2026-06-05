@@ -1,5 +1,23 @@
 # Firmware Foundation Studios Log
 
+## 2026-06-05 -- Deployed visual upgrade to live + paywalls OFF + found onboarding loop bug
+
+- Removed paywalls entirely (commit 08a93db): PAYWALLS_OFF flag in purchaseStore.ts makes every canPlay*Free() return true (dev + prod).
+- Built + deployed to Cloudflare Pages via wrangler (manual; auto-deploy broken). Live at firmwarefoundation.com with new AI worlds + paywalls off. Verified Light Snake loads into gameplay on live, no paywall.
+- CJ reported games loop on onboarding on live. ROOT CAUSE FOUND (new page `pages/onboarding-loop-bug.md`): markGameOnboarded(gameId) only fires on the profile-creation step, which is skipped for users who already have a profile -> game never marked onboarded -> ProtectedRoute bounces back to onboarding -> loop. First game works, every game after loops. One-line fix documented (add markGameOnboarded(gameId) to the play-button onClick in GameOnboarding.tsx ~line 387). NOT yet applied per CJ (wants fresh session).
+
+## 2026-06-05 -- Vibe Fighter AI game build capture
+
+- Added `pages/vibe-fighter-ai-game-build-capture.md` from @chongdashu X post, YouTube tutorial transcript, and Vibe Game Dev resources page.
+- Captured the reusable FFS workflow: concept art, anchor image, AI sprite animation, Character Gym, Playground, JSON tuning, then combat loop.
+- Guardrail: borrow the workflow only. Do not copy protected fighting game IP, characters, names, moves, or style.
+
+## 2026-06-05 -- Sorceress AI game creation suite capture
+
+- Added `pages/sorceress-ai-game-creation-suite-capture.md` from sorceress.games.
+- Captured the useful FFS patterns: asset creation studio, WizardGenie browser game engine, sprite, 3D, voxel, tileset, audio, material, publishing, and layout preview lanes.
+- Guardrail: study and sandbox first. Do not move the FFS pipeline into Sorceress without testing license clarity, export ownership, quality, cost, and speed.
+
 ## 2026-06-05 -- Committed visual upgrade + documented native (Capacitor) path
 
 - Committed the visual upgrade work (commit f093c06). gitignored .sprite-backups/ and stray root test-*.png.
