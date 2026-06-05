@@ -386,6 +386,7 @@ export function GameOnboarding({ gameId, gameName, iconSrc, tagline, verse, guid
               whileTap={{ scale: 0.95 }}
               onClick={() => {
                 SharedSFX.countdownGo();
+                markGameOnboarded(gameId);
                 navigate(gamePath, { replace: true });
               }}
             >
