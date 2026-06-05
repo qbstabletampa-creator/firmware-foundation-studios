@@ -32,13 +32,11 @@ interface PurchaseState {
 const FREE_GOSPLE_LIMIT = 3;
 const FREE_NOAH_LIMIT = 3;
 
-// Test mode: all games free, no paywall. ON automatically during `npm run dev`,
-// or force it in any build via localStorage.setItem('ffs-test-mode','on').
-// Production builds keep the paywall unless the flag is explicitly set.
-const TEST_MODE =
-  import.meta.env.DEV ||
-  (typeof localStorage !== 'undefined' &&
-    localStorage.getItem('ffs-test-mode') === 'on');
+// Paywalls are OFF per CJ. All games are free everywhere (dev AND production).
+// Every canPlay*Free() short-circuits to true below.
+// To restore paywalls later, set PAYWALLS_OFF = false.
+const PAYWALLS_OFF = true;
+const TEST_MODE = PAYWALLS_OFF;
 
 export const usePurchaseStore = create<PurchaseState>()(
   persist(
