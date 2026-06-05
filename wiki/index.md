@@ -27,6 +27,7 @@
 - [Sprite System Build](pages/sprite-system-build.md) -- Full sprite infrastructure, scene refactors, environment polish. ChatGPT claymation style locked. 47/47 game sprites done, icons + tiles remain.
 - [Gameplay Audit - June 2026](pages/gameplay-audit-june-2026.md) -- 6-agent audit of all 4 games. 8 critical, 16 major, 20 minor bugs found and fixed. Deployed June 3.
 - [Visual Upgrade Pipeline](pages/visual-upgrade-pipeline.md) -- How we fix sprite alpha (rembg) and generate AI worlds/textures (Reve via AIML). Per-game art state, test mode, backups, costs. Jun 4 evening.
+- [Native Build Readiness](pages/native-build-readiness.md) -- App Store path is Capacitor, NOT Expo Go (Phaser can't run in Expo). Cap 8.4 already set up. Build steps + the test-mode-off-in-prod gotcha.
 
 ## Core Pages
 

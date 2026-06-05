@@ -1,5 +1,11 @@
 # Firmware Foundation Studios Log
 
+## 2026-06-05 -- Committed visual upgrade + documented native (Capacitor) path
+
+- Committed the visual upgrade work (commit f093c06). gitignored .sprite-backups/ and stray root test-*.png.
+- Clarified Expo Go is NOT viable (Phaser can't run in React Native). Confirmed repo uses Capacitor 8.4 (android+ios platforms present, config ready). New page `pages/native-build-readiness.md` with build steps + the test-mode-off-in-prod gotcha.
+- CJ chose: browser testing now (dev URL), Capacitor build later for App Store.
+
 ## 2026-06-04 (evening) -- Visual upgrade pass: AI worlds + sprite alpha fix + test mode
 
 - Fixed Playwright MCP (8 agent instances flipped SSE -> stdio, all connected). Enabled the runtime visual audit.
