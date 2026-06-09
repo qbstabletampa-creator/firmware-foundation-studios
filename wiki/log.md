@@ -228,3 +228,12 @@
 - Created dedicated project vault for Firmware Foundation Studios.
 - Recorded studio decisions, app factory strategy, Gosple direction, build order, and charity research.
 - Linked project back to main wiki and Mission Control.
+
+## 2026-06-09 -- Finish native apps + Shepherd's Trail reskin + Expo Go / install-link
+- Finished Light Snake + Noah to the locked shell standard: Lumen + Ari mascots, name-based onboarding, splash logo bug fixed (was Manna basket), EAS Xcode-15 pin on all 4 apps. (commit 48e5c77)
+- PIVOT: Light Snake -> **Shepherd's Trail** -- shepherd leads a glowing flock of sheep; mascot Eli; full rename (slug/scheme/bundle). Engine untouched. (a12e79d, f360276)
+- New hard rules: Expo Go/dev-build before EAS builds; one SDK (54) across all apps; every app its own EAS project + Expo Go dev server on its own port. Written to ~/.claude/rules/app-build-testing.md, AGENTS.md, native-expo-testing-and-build.md. (1f19b8a)
+- Created EAS projects: shepherds-trail (a3000ec4), noah-animal-match (2b0ff349). Dev servers live: Manna 8081, Shepherd's Trail 8083, Noah 8085 (Tailscale 100.103.56.37).
+- Codified scripts/cut-mascot.py (rembg+alpha130+autocrop). Added wiki/pages/native-expo-testing-and-build.md traps + wiki/pages/ffs-native-apps-state-2026-06-09.md pickup.
+- BLOCKER: install-link (EAS preview build) needs interactive Apple login for new bundle IDs; non-interactive attempt failed at credentials (NO build consumed). Awaiting CJ choice (run interactive vs app-specific password). See pickup page.
+- Pages: ffs-native-apps-state-2026-06-09 (new), native-expo-testing-and-build (updated), app-shell-standard-splash-onboarding (Lumen+Ari added).
