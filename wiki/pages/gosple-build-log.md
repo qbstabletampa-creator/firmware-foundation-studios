@@ -1,10 +1,18 @@
 # Gosple Build Log
 
 **Summary:** Running log of Gosple development milestones and technical decisions.
-**Last Updated:** 2026-05-27
-**Related:** [[gosple-product-spec]], [[app-factory-strategy]], [[studio-decisions]]
+**Last Updated:** 2026-06-08
+**Related:** [[gosple-product-spec]], [[app-factory-strategy]], [[studio-decisions]], [[app-shell-standard-splash-onboarding]]
 
 ---
+
+## 2026-06-08 -- Daily puzzle: mixed letter count + Day 1 reset (CJ request)
+
+File: `src/games/gosple/GameScene.ts` (web build). Typecheck clean. NOT yet deployed (CJ approval + redeploy needed; native `archive/apps/gosple` needs the same change applied before its next EAS build).
+
+- **Mixed letter count per day.** Before: daily puzzle = `starterPuzzles[day % N]`, sequential. Since `starterPuzzles` is grouped by length (26 five-letter words, then six, then seven, eight...), the first ~26 days were ALL 5-letter, then all 6-letter, etc. Now: a deterministic Fisher-Yates shuffle of the puzzle order (fixed seed `0x60591e28`, mulberry32) -> `DAILY_ORDER`, and daily puzzle = `starterPuzzles[DAILY_ORDER[day % N]]`. Same sequence for every player (Wordle-style), but word LENGTH now varies day to day. Engine already supports 5-8 letters.
+- **Day 1 reset.** `GOSPLE_EPOCH` moved `2026-06-02` -> `2026-06-08` so the counter restarts at Day 1. Extracted to one constant used by both `getTodayPuzzle()` and the "Day N" display (was duplicated). NOTE at launch: set `GOSPLE_EPOCH` to the actual App Store launch date so players start on Day 1 on release day.
+- **Elite onboarding:** requested for Gosple too; pending (web `GameOnboarding.tsx` vs native `archive/apps/gosple` onboarding). Must follow the locked [[app-shell-standard-splash-onboarding]] standard (Joy mascot, 3 fun beats, cream theme).
 
 ## 2026-05-27 -- Shared shell template + Gosple wiring + EAS prep
 

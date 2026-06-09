@@ -12,7 +12,7 @@ import { useRouter } from 'expo-router';
 import { verseBank } from '@ffs/verses/verseBank';
 import { getVersesForSession, getVersesForDaily } from '@ffs/verses/selectionEngine';
 import type { Verse } from '@ffs/verses/types';
-import { createInitialState, tick, type GameEvent } from '../src/game/gameEngine';
+import { createInitialState, tick, effectiveBasket, type GameEvent } from '../src/game/gameEngine';
 import { GAME_CONSTANTS } from '../src/game/itemConfig';
 import { createRng, seedFromDate } from '../src/game/prng';
 import { useCatchGameStore } from '../src/game/stores/catchGameStore';
@@ -22,6 +22,7 @@ import BadgeCelebration from '../src/shell/components/BadgeCelebration';
 import { useBadgeStore } from '../src/shell/stores/badgeStore';
 import { useStreakStore } from '../src/shell/stores/streakStore';
 import { colors, radii, spacing, typography } from '../src/shell/theme';
+import GameBackground, { LEVEL_PALETTES } from '../src/shell/components/GameBackground';
 
 const VERSE_THEMES = ['provision', 'bread', 'manna', 'blessing', 'honey'] as const;
 
@@ -140,6 +141,12 @@ export default function GameScreen() {
             setActiveVerse(sessionVerses[idx]);
             setShownVerseIndex(idx + 1);
             isRunning.current = false;
+            // Clear the field so the verse is a clean level break, not a freeze
+            // mid-fall. The next level resumes on an empty board (and a bit faster).
+            if (stateRef.current) {
+              stateRef.current = { ...stateRef.current, items: [], combo: 0 };
+              setGameState(stateRef.current);
+            }
             verseOpacity.setValue(0);
             Animated.timing(verseOpacity, {
               toValue: 1,
@@ -166,6 +173,18 @@ export default function GameScreen() {
 
   const dismissVerse = useCallback(() => {
     setActiveVerse(null);
+    // Start the next level on a clean board: clear items, spawn fresh right away,
+    // reset the frame clock so the pause doesn't cause a big delta jump.
+    if (stateRef.current) {
+      stateRef.current = {
+        ...stateRef.current,
+        items: [],
+        combo: 0,
+        nextSpawnMs: stateRef.current.elapsedMs,
+      };
+      setGameState(stateRef.current);
+    }
+    lastFrameTime.current = 0;
     isRunning.current = true;
   }, []);
 
@@ -272,6 +291,18 @@ export default function GameScreen() {
           <Text style={styles.selectTitle}>Manna Catch</Text>
           <Text style={styles.selectTagline}>Catch the blessings, dodge the thorns.</Text>
 
+          <View style={styles.legend}>
+            <View style={styles.legendCol}>
+              <Text style={styles.legendLabel}>CATCH</Text>
+              <Text style={styles.legendIcons}>🍞 🍯 🍇 ⭐</Text>
+            </View>
+            <View style={styles.legendDivider} />
+            <View style={styles.legendCol}>
+              <Text style={styles.legendLabelBad}>AVOID</Text>
+              <Text style={styles.legendIcons}>🌿 🪨 🐍</Text>
+            </View>
+          </View>
+
           <View style={styles.modeButtons}>
             <Pressable
               style={[styles.modeButton, dailyAlreadyPlayed && styles.modeButtonDisabled]}
@@ -309,7 +340,8 @@ export default function GameScreen() {
   if (!gs) return null;
 
   const wideBasketActive = gs.activePowerUps.some((p) => p.type === 'wide_basket');
-  const currentBasketWidth = wideBasketActive ? gs.basket.width * 2 : gs.basket.width;
+  const renderBasket = effectiveBasket(gs.basket, wideBasketActive, gameWidth);
+  const levelPalette = LEVEL_PALETTES[gs.versesMilestone % LEVEL_PALETTES.length];
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -359,6 +391,9 @@ export default function GameScreen() {
         onResponderGrant={handleTouch}
         onResponderMove={handleTouch}
       >
+        {/* Elite animated background (behind everything) — scene changes per level */}
+        <GameBackground palette={levelPalette} />
+
         {/* Ground glow */}
         <View style={styles.groundGlow} />
 
@@ -387,14 +422,14 @@ export default function GameScreen() {
           style={[
             styles.basket,
             {
-              left: gs.basket.x,
+              left: renderBasket.x,
               bottom: GAME_CONSTANTS.BASKET_BOTTOM_OFFSET,
-              width: currentBasketWidth,
+              width: renderBasket.width,
               height: basketHeight,
             },
           ]}
         >
-          <Text style={[styles.basketIcon, { fontSize: currentBasketWidth * 0.5 }]}>
+          <Text style={[styles.basketIcon, { fontSize: basketHeight * 0.8, lineHeight: basketHeight }]}>
             {'🧺'}
           </Text>
         </View>
@@ -404,11 +439,12 @@ export default function GameScreen() {
       {activeVerse && (
         <Animated.View style={[styles.verseOverlay, { opacity: verseOpacity }]}>
           <View style={styles.verseCard}>
+            <Text style={styles.verseLevel}>Level {gs.versesMilestone + 1}</Text>
             <Text style={styles.verseRef}>{activeVerse.reference}</Text>
             <Text style={styles.verseText}>{activeVerse.text}</Text>
             <Text style={styles.versePrompt}>{activeVerse.kidPrompt}</Text>
             <Pressable style={styles.verseDismiss} onPress={dismissVerse}>
-              <Text style={styles.verseDismissText}>Keep Playing</Text>
+              <Text style={styles.verseDismissText}>Next Level</Text>
             </Pressable>
           </View>
         </Animated.View>
@@ -505,6 +541,25 @@ const styles = StyleSheet.create({
   modeDesc: { color: colors.textSecondary, fontSize: 14, marginTop: spacing.xs },
   highScoreText: { color: colors.gold, fontSize: 16, fontWeight: '700', marginTop: spacing.xl },
 
+  // Good vs bad legend (shown on the play/select screen so players know the rules)
+  legend: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
+    gap: spacing.md,
+  },
+  legendCol: { alignItems: 'center', flex: 1, gap: 4 },
+  legendLabel: { color: colors.gold, fontSize: 12, fontWeight: '900', letterSpacing: 1 },
+  legendLabelBad: { color: colors.hearts, fontSize: 12, fontWeight: '900', letterSpacing: 1 },
+  legendIcons: { fontSize: 20 },
+  legendDivider: { width: 1, alignSelf: 'stretch', backgroundColor: colors.surfaceBorder },
+
   // HUD
   hud: {
     flexDirection: 'row',
@@ -544,7 +599,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 100,
+    height: 160,
     backgroundColor: 'rgba(255, 215, 0, 0.04)',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 215, 0, 0.08)',
@@ -592,6 +647,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.gold,
   },
+  verseLevel: { color: colors.teal, fontSize: 13, fontWeight: '900', letterSpacing: 2, textTransform: 'uppercase', marginBottom: spacing.sm },
   verseRef: { color: colors.gold, ...typography.cardLabel, marginBottom: spacing.sm },
   verseText: { color: colors.textPrimary, ...typography.verse, lineHeight: 26 },
   versePrompt: { color: colors.textSecondary, ...typography.body, marginTop: spacing.md, fontStyle: 'italic' },

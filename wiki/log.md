@@ -1,5 +1,44 @@
 # Firmware Foundation Studios Log
 
+## 2026-06-08 -- Per-game mascots: Scripture (Gosple) + standard refined
+
+- CJ direction: every game keeps the SAME onboarding structure but gets its OWN mascot (unique spin), not one universal buddy. Manna -> Joy (dove). Gosple -> Scripture (gold-haloed leather Bible with a gold cross, waving).
+- Generated Scripture via AIML: FLUX-pro base (.pmloop/mascot/scripture-v1) then reve edit added an embossed gold cross (scripture-v3 approved) + a celebrate pose (scripture-celebrate). Cut transparent via rembg + alpha threshold; installed archive/apps/gosple/assets/scripture-wave.png + scripture-celebrate.png.
+- Wired into gosple OnboardingScreen.tsx via generic constants MASCOT_NAME/MASCOT_WAVE/MASCOT_CELEBRATE (so only 3 lines change per game). tsc clean.
+- Updated [[app-shell-standard-splash-onboarding]]: mascot section now "ONE PER GAME, same structure, unique spin" with the generic-constants pattern.
+
+## 2026-06-08 -- LOCKED: App Shell Standard (splash + onboarding) for every game
+
+- Added `pages/app-shell-standard-splash-onboarding.md` -- the CANONICAL, locked spec every FFS game must inherit. CJ directive: identical splash, look, feel, and onboarding across all apps.
+- Splash spec (matches deployed iOS Gosple exactly): full-screen `lightRays` shader (uRayCount 14, center 0.42, gold #D4C36A, animated intensity/glow), FFS logo 160px at 0.42 (scale 0.85->1->1.15), verse "Romans 8:28" WHITE ITALIC mixed-case at bottom 30%. Two render paths: Skia RadiantSplash (EAS build) + expo-gl RayCanvas/rayShaderSource (Expo Go), same shader.
+- Onboarding spec: mascot Joy (dove) on cream bg, 3 fun beats (Welcome -> meet Joy + optional name -> "Welcome [Name]!" celebration), FORCE_ONBOARDING=__DEV__, CATCH/AVOID legend. Per-game only changes: game logic, GameBackground palette, names/badges, app.json id.
+- Reference impl: archive/apps/manna-catch/src/shell/. Deployed source: archive/apps/gosple/src/shell/.
+
+## 2026-06-08 -- Onboarding UI inspiration research (Mobbin + supplements)
+
+- Added `pages/onboarding-ui-inspiration-mobbin.md` with findings from Appcues, Userpilot, Purchasely, PageFlows, and direct app analysis.
+- Mobbin fully blocked unauthenticated -- documented in the page. All 7 patterns sourced from public alternatives.
+- Covers: 7 specific app patterns (Duolingo, Fastic, Canva, Headspace, Photoroom, Toca Boca, Wise), visual upgrade checklist, celebration spec, kids UI rules, confetti implementation options.
+- Updated wiki index with new page entry.
+
+## 2026-06-08 -- Onboarding elite research for Manna Catch
+
+- Added `pages/onboarding-elite-research.md` with full research and concrete recommendations.
+- Covers: 6 real game examples (Duolingo, Candy Crush, Monument Valley, Subway Surfers, Toca Boca, Calm), distilled principles, recommended 2-screen + coached-first-play flow, exact on-screen copy, "?" help modal spec, RN/Expo Go implementation notes, and anti-patterns.
+- Triggered by CJ feedback: 7-step onboarding is too many steps, game never teaches controls to returning players.
+
+## 2026-06-07 -- Christian App Store hook screenshot growth format
+
+- Added `pages/christian-app-store-hook-screenshot-growth-format.md` after CJ clarified the Adrià Martinez X capture belongs to the Christian App Store and Firmware Foundation Studios, not QB Stable.
+- Captured the reusable format: slide 1 parent or kid benefit hook, slide 2 real game screen, store catalog, App Store listing, or parent trust proof.
+- Guardrail: do not copy fake AI influencer spam. Use real product, real mission, real trust.
+
+## 2026-06-05 -- Roblox Studio MCP game build capture
+
+- Added `pages/roblox-studio-mcp-game-build-capture.md` from AzFlin's X post on Roblox Studio, official Roblox MCP, and a 3D platformer tutorial.
+- Captured the FFS lesson: agents controlling visual game editors can speed up object placement, scene setup, and first playable prototypes.
+- Guardrail: use Roblox as a sandbox signal only unless CJ chooses a separate Roblox platform lane. FFS main path stays PWA and Capacitor.
+
 ## 2026-06-05 -- Deployed visual upgrade to live + paywalls OFF + found onboarding loop bug
 
 - Removed paywalls entirely (commit 08a93db): PAYWALLS_OFF flag in purchaseStore.ts makes every canPlay*Free() return true (dev + prod).

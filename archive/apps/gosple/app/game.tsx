@@ -23,7 +23,10 @@ import { colors, radii, spacing, typography } from '../src/shell/theme';
 
 const MAX_ATTEMPTS = 6;
 const MAX_WORD_LEN = 8;
-const EPOCH = new Date('2026-01-01').getTime();
+// Day 1 of the daily puzzle. RESET 2026-06-08 to restart numbering (was 2026-06-02).
+// At App Store launch, set GOSPLE_EPOCH to the launch date so players start on Day 1.
+const GOSPLE_EPOCH = '2026-06-08';
+const EPOCH = new Date(GOSPLE_EPOCH).getTime();
 const MS_PER_DAY = 86_400_000;
 const FLIP_MS = 300;
 const FLIP_STAGGER_MS = 200;
@@ -43,8 +46,31 @@ function getTodayDateString(): string {
   return `${y}-${m}-${d}`;
 }
 
+// Deterministic shuffle of the puzzle order (fixed seed = same sequence for every
+// player, Wordle-style) so the word LENGTH varies day to day instead of marching
+// through all 5-letter words first, then all 6-letter, etc. Same seed + PRNG as
+// the web build (src/games/gosple/GameScene.ts) so web and native stay in sync.
+function gospleDailyOrder(n: number, seed: number): number[] {
+  let a = seed >>> 0;
+  const rng = () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const order = Array.from({ length: n }, (_, i) => i);
+  for (let i = n - 1; i > 0; i -= 1) {
+    const j = Math.floor(rng() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return order;
+}
+const DAILY_ORDER = gospleDailyOrder(starterPuzzles.length, 0x60591e28);
+
 function getTodayPuzzleIndex(): number {
-  return Math.floor((Date.now() - EPOCH) / MS_PER_DAY) % starterPuzzles.length;
+  const day = Math.floor((Date.now() - EPOCH) / MS_PER_DAY);
+  const idx = ((day % starterPuzzles.length) + starterPuzzles.length) % starterPuzzles.length;
+  return DAILY_ORDER[idx];
 }
 
 function buildLetterMap(rows: GuessRow[]): Map<string, LetterStatus> {

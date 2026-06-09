@@ -1,7 +1,7 @@
 export type ItemType =
   | 'manna' | 'honey' | 'grapes' | 'pomegranate' | 'figs'
   | 'star' | 'scroll'
-  | 'thorn' | 'stone';
+  | 'thorn' | 'stone' | 'snake';
 
 export type ItemCategory = 'good' | 'bad';
 

@@ -71,6 +71,25 @@ function basketRect(
   return { basketY, basketHeight };
 }
 
+/**
+ * Resolve the basket's on-screen rect, accounting for the wide-basket power-up
+ * and clamping so the (possibly widened) basket stays fully on screen. Shared by
+ * the collision check and the renderer (game.tsx) so the catch zone and the
+ * drawn basket always match, even with the power-up active near a screen edge.
+ */
+export function effectiveBasket(
+  basket: { x: number; width: number },
+  wideActive: boolean,
+  gameWidth: number,
+): { x: number; width: number } {
+  const width = wideActive
+    ? basket.width * GAME_CONSTANTS.WIDE_BASKET_MULTIPLIER
+    : basket.width;
+  const center = basket.x + basket.width / 2;
+  const x = Math.max(0, Math.min(gameWidth - width, center - width / 2));
+  return { x, width };
+}
+
 // ---------------------------------------------------------------------------
 // Tick -- the heart of the game engine
 // ---------------------------------------------------------------------------
@@ -122,6 +141,11 @@ export function tick(
   // -- 1. Move items ----------------------------------------------------------
   const itemSize = Math.round(gameWidth * GAME_CONSTANTS.ITEM_SIZE_RATIO);
   const { basketY, basketHeight } = basketRect(gameWidth, gameHeight);
+  const catchBasket = effectiveBasket(
+    state.basket,
+    hasPowerUp(state, 'wide_basket'),
+    gameWidth,
+  );
 
   const survivingItems: FallingItem[] = [];
 
@@ -148,7 +172,7 @@ export function tick(
 
     // -- 3. Collision with basket -------------------------------------------
     if (
-      checkItemBasketCollision(movedItem, state.basket, basketY, basketHeight)
+      checkItemBasketCollision(movedItem, catchBasket, basketY, basketHeight)
     ) {
       if (movedItem.category === 'good') {
         score += movedItem.points;
@@ -227,11 +251,13 @@ export function tick(
   }
   activePowerUps = nextPowerUps;
 
-  // -- 7. Verse milestones --------------------------------------------------
-  const milestonePts = GAME_CONSTANTS.VERSE_MILESTONE_POINTS;
-  const newMilestone = Math.floor(score / milestonePts);
-  if (newMilestone > versesMilestone) {
-    versesMilestone = newMilestone;
+  // -- 7. Verse milestones (escalating: each level needs more points than the last) ---
+  // Cumulative points to REACH level m = sum of gaps, gap(i) = BASE + (i-1)*STEP.
+  const cumulativeForLevel = (m: number) =>
+    m * GAME_CONSTANTS.VERSE_BASE_POINTS +
+    (GAME_CONSTANTS.VERSE_POINTS_STEP * (m - 1) * m) / 2;
+  if (score >= cumulativeForLevel(versesMilestone + 1)) {
+    versesMilestone += 1;
     events.push({ type: 'verse_milestone', milestone: versesMilestone });
   }
 

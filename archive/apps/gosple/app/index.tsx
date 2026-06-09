@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Platform, View, StyleSheet } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useProfileStore } from '../src/shell/stores/profileStore';
+import { FORCE_ONBOARDING } from '../src/shell/devConfig';
 
 const SplashComponent =
   Platform.OS === 'web'
@@ -36,7 +37,7 @@ export default function IndexScreen() {
     );
   }
 
-  if (hasCompletedOnboarding) {
+  if (hasCompletedOnboarding && !FORCE_ONBOARDING) {
     return <Redirect href="/(tabs)/home" />;
   }
 

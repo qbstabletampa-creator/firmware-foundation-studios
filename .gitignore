@@ -8,3 +8,4 @@ dist/
 .sprite-backups/
 # Stray QA screenshots at repo root
 /test-*.png
+.pmloop/

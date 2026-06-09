@@ -22,7 +22,7 @@ const ITEMS: MoreItem[] = [
 
 export default function MoreTab() {
   const router = useRouter();
-  const currentProfile = useProfileStore((s) => s.currentProfile);
+  const name = useProfileStore((s) => s.name);
   const unlock = useParentGateStore((s) => s.unlock);
 
   const [gateVisible, setGateVisible] = useState(false);
@@ -65,11 +65,11 @@ export default function MoreTab() {
             <View style={styles.profileLeft}>
               <View style={styles.profileAvatar}>
                 <Text style={styles.profileAvatarText}>
-                  {(currentProfile ?? 'F')[0]}
+                  {(name ?? 'P')[0].toUpperCase()}
                 </Text>
               </View>
               <View>
-                <Text style={styles.profileName}>{currentProfile ?? 'Family'}</Text>
+                <Text style={styles.profileName}>{name ?? 'Player'}</Text>
                 <Text style={styles.profileHint}>Tap to change</Text>
               </View>
             </View>

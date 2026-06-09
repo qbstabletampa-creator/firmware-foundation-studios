@@ -60,8 +60,11 @@ export function spawnItem(
   const x = rng() * maxX;
 
   const elapsedSec = state.elapsedMs / 1000;
+  // Each verse advances a level (state.versesMilestone) and speeds things up a
+  // little. Items clear between levels, so new items spawn at the new level pace.
+  const levelMult = 1 + state.versesMilestone * GAME_CONSTANTS.LEVEL_SPEED_STEP;
   const speed = Math.min(
-    GAME_CONSTANTS.BASE_SPEED + elapsedSec * GAME_CONSTANTS.SPEED_RAMP_PER_SECOND,
+    (GAME_CONSTANTS.BASE_SPEED + elapsedSec * GAME_CONSTANTS.SPEED_RAMP_PER_SECOND) * levelMult,
     GAME_CONSTANTS.MAX_SPEED,
   );
 

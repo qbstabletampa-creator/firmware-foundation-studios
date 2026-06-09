@@ -27,10 +27,38 @@ const KB_ROWS = [
   ['Z','X','C','V','B','N','M','DEL'],
 ];
 
+// Day 1 of the daily puzzle. RESET 2026-06-08 to restart numbering (was 2026-06-02).
+// At App Store launch, set this to the launch date so players start on Day 1.
+const GOSPLE_EPOCH = '2026-06-08';
+
+// Deterministic shuffle of the puzzle order (fixed seed = same sequence for every
+// player, Wordle-style) so the word LENGTH varies day to day instead of marching
+// through all 5-letter words first, then all 6-letter, etc.
+function gospleDailyOrder(n: number, seed: number): number[] {
+  let a = seed >>> 0;
+  const rng = () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const order = Array.from({ length: n }, (_, i) => i);
+  for (let i = n - 1; i > 0; i -= 1) {
+    const j = Math.floor(rng() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return order;
+}
+const DAILY_ORDER = gospleDailyOrder(starterPuzzles.length, 0x60591e28);
+
+function gospleDayIndex(): number {
+  return Math.floor((Date.now() - new Date(GOSPLE_EPOCH).getTime()) / 86400000);
+}
+
 function getTodayPuzzle(): StarterPuzzle {
-  const epoch = new Date('2026-06-02').getTime();
-  const day = Math.floor((Date.now() - epoch) / 86400000);
-  return starterPuzzles[((day % starterPuzzles.length) + starterPuzzles.length) % starterPuzzles.length];
+  const day = gospleDayIndex();
+  const idx = ((day % starterPuzzles.length) + starterPuzzles.length) % starterPuzzles.length;
+  return starterPuzzles[DAILY_ORDER[idx]];
 }
 
 type Tile = { bg: Phaser.GameObjects.Rectangle; text: Phaser.GameObjects.Text };
@@ -69,8 +97,7 @@ export class GameScene extends Phaser.Scene {
     const W = 750;
     const cx = W / 2;
 
-    const epoch = new Date('2026-06-02').getTime();
-    const day = Math.floor((Date.now() - epoch) / 86400000) + 1;
+    const day = gospleDayIndex() + 1;
 
     const backBtn = this.add.text(30, 44, '← Back', {
       fontSize: '24px', fontStyle: 'bold', color: '#D4C36A', fontFamily: FONT,

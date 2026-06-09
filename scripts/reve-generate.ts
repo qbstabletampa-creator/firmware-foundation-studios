@@ -174,7 +174,8 @@ async function main(): Promise<void> {
   };
 
   if (args.type === "edit" && args.input) {
-    body.image = imageToBase64(args.input);
+    // AIML edit endpoint expects image_url (a URL or a base64 data URI), not a raw `image` field.
+    body.image_url = `data:image/png;base64,${imageToBase64(args.input)}`;
   }
 
   const startTime = Date.now();

@@ -1,7 +1,7 @@
 # Firmware Foundation Studios Wiki
 
 **Summary:** Dedicated vault for Firmware Foundation Studios, CJ's separate public Christian kids game studio.
-**Last Updated:** 2026-06-05
+**Last Updated:** 2026-06-07
 **Sources:** CJ Telegram planning thread, Christian kids game factory capture, charity research.
 **Related:** [[studio-decisions]], [[app-factory-strategy]], [[gosple-product-spec]], [[charity-options]]
 
@@ -14,6 +14,10 @@
 3. If a skill exists for the task, use it. If you skip it and the code is wrong, that's on you.
 
 ---
+
+## Standards (LOCKED -- every app inherits these)
+
+- [App Shell Standard: Splash + Onboarding](pages/app-shell-standard-splash-onboarding.md) -- CANONICAL. The EXACT splash (full-screen lightRays shader, FFS logo, white italic "Romans 8:28") and onboarding (Joy mascot, cream 3-beat flow, FORCE_ONBOARDING) every FFS game must ship. Do not redesign per game. Matches deployed iOS Gosple.
 
 ## Active Build
 
@@ -41,6 +45,8 @@
 
 ## Research
 
+- [Christian App Store Hook Screenshot Growth Format](pages/christian-app-store-hook-screenshot-growth-format.md) -- Adrià Martinez X capture adapted to Firmware Foundation Studios: slide 1 parent or kid hook, slide 2 real app/game screenshot or store listing proof.
+- [Roblox Studio MCP Game Build Capture](pages/roblox-studio-mcp-game-build-capture.md) -- AzFlin X capture on completing Roblox core curriculum and using official Roblox MCP in Claude Code to automate tedious Studio work. Useful for FFS prototype labs, agent controlled editors, and simple progression loop thinking.
 - [Vibe Fighter AI Game Build Capture](pages/vibe-fighter-ai-game-build-capture.md) -- X and YouTube capture on building a Street Fighter style game with AI. Best FFS takeaway is not the clone, it is the workflow: concept art, sprite pipeline, Character Gym, Playground, JSON tuning, then game.
 - [Sorceress AI Game Creation Suite Capture](pages/sorceress-ai-game-creation-suite-capture.md) -- Website capture for Sorceress, an AI game creation suite and WizardGenie browser game engine. Study for FFS art pipelines, asset packaging, pricing, and tool catalog structure. Sandbox before using it in production.
 - [Premium Mobile App Polish Capture](pages/premium-mobile-app-polish-capture.md) -- Beto Moedano X post on why premium apps feel right: press states, subtle motion, haptics, keyboard behavior, and loading or empty states. Use as a FFS polish checklist.
@@ -48,3 +54,5 @@
 - [AI Agent Game Build Pattern](pages/ai-agent-game-build-pattern.md) -- X capture on the LMAO browser MOBA build. Use this as a pattern for agent lane game builds, placeholder assets, bots, and IP clean prototypes.
 - [Puzzle App UX Research](pages/puzzle-app-ux-research.md) -- Wordle, NYT Games, YouVersion, Bible App for Kids patterns. Applied to Gosple.
 - [Arcade Game UX Research](pages/arcade-ux-research.md) -- Subway Surfers, Fruit Ninja, Angry Birds, Temple Run, Crossy Road, Flappy Bird, Doodle Jump. Applies to all factory games.
+- [Onboarding Elite Research](pages/onboarding-elite-research.md) -- Manna Catch specific. 6 real game examples (Duolingo, Candy Crush, Monument Valley, Subway Surfers, Toca Boca, Calm), distilled principles, recommended 2-screen + coached-first-play flow, "?" help modal spec, and anti-patterns. Jun 8 2026.
+- [Onboarding UI Inspiration -- Mobbin Research](pages/onboarding-ui-inspiration-mobbin.md) -- 7 specific app patterns (Duolingo, Fastic, Canva, Headspace, Photoroom, Toca Boca, Wise) with exact Manna Catch application notes. Visual upgrade checklist: typography, gradients, motion, button styling, celebration spec, kids tap targets. Mobbin access note. Jun 8 2026.

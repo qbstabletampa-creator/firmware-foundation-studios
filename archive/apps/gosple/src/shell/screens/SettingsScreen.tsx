@@ -64,7 +64,7 @@ export default function SettingsScreen({
         </View>
 
         <View style={styles.profileCard}>
-          <Text style={styles.profileLabel}>Profile</Text>
+          <Text style={styles.profileLabel}>Name</Text>
           <View style={styles.profileRow}>
             <Text style={styles.profileValue}>{currentProfile}</Text>
             <Pressable

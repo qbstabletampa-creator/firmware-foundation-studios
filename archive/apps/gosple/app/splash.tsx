@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import { Platform } from 'react-native';
 import { useProfileStore } from '../src/shell/stores/profileStore';
+import { FORCE_ONBOARDING } from '../src/shell/devConfig';
 
 const SplashComponent =
   Platform.OS === 'web'
@@ -13,7 +14,7 @@ export default function SplashRoute() {
   const hasCompletedOnboarding = useProfileStore((s) => s.hasCompletedOnboarding);
 
   const handleComplete = useCallback(() => {
-    if (hasCompletedOnboarding) {
+    if (hasCompletedOnboarding && !FORCE_ONBOARDING) {
       router.replace('/(tabs)/home');
     } else {
       router.replace('/onboarding');

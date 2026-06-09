@@ -1,0 +1,11 @@
+{
+  "name": "ffs-archive-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/manna-catch",
+    "apps/noah",
+    "apps/light-snake",
+    "packages/*"
+  ]
+}

@@ -16,7 +16,7 @@ export default function SettingsRoute() {
   const toggleHaptics = usePreferencesStore((s) => s.toggleHaptics);
   const toggleNotifications = usePreferencesStore((s) => s.toggleNotifications);
 
-  const currentProfile = useProfileStore((s) => s.currentProfile);
+  const name = useProfileStore((s) => s.name);
 
   const isUnlocked = useParentGateStore((s) => s.isUnlocked);
   const checkExpiry = useParentGateStore((s) => s.checkExpiry);
@@ -55,7 +55,7 @@ export default function SettingsRoute() {
         soundEnabled={soundEnabled}
         hapticsEnabled={hapticsEnabled}
         notificationsEnabled={notificationsEnabled}
-        currentProfile={currentProfile ?? 'Family'}
+        currentProfile={name ?? 'Player'}
         onToggleSound={toggleSound}
         onToggleHaptics={toggleHaptics}
         onToggleNotifications={toggleNotifications}
