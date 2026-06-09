@@ -19,7 +19,8 @@ Run from the app dir (e.g. `archive/apps/gosple`):
 EXPO_NO_DEPENDENCY_VALIDATION=1 REACT_NATIVE_PACKAGER_HOSTNAME=<tailscale-ip> npx expo start --go --port <PORT>
 ```
 - Get the CURRENT tailscale IP first: `tailscale ip -4` (it changes; was 100.103.56.37 on 2026-06-08). The OLD .38 in CLAUDE.md is stale.
-- Ports: 8081 manna, 8082 gosple, 8083 light-snake, etc. One per app; check the port is free first (see [[app-shell-standard-splash-onboarding]] / port-discipline rule).
+- Ports (one app = one port; HARD RULE, see `~/.claude/rules/app-build-testing.md` + port-discipline): **8081 Manna, 8082 Gosple, 8083 Shepherd's Trail, 8084 Noah**, next free for each new app. Check the port is free first; never clobber another running dev server.
+- Every app must have its OWN EAS project (`eas init --force` under firmfoundationstudios) so Expo Go can load it — Manna, Shepherd's Trail, Noah all have their own projectId. Gosple too. An app with no projectId can't be opened cleanly in Expo Go.
 - Phone needs Tailscale connected. Load `exp://<ip>:<port>` (Enter URL manually in Expo Go) or scan the QR.
 
 ## Trap 1: monorepo metro config (Expo Go "Unable to resolve ./node_modules/expo-router/entry")
