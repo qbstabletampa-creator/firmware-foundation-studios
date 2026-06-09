@@ -34,7 +34,10 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "router": {}
+      "router": {},
+      "eas": {
+        "projectId": "a3000ec4-206d-41ca-b77c-928575419763"
+      }
     },
     "owner": "firmfoundationstudios"
   }
