@@ -3,20 +3,18 @@ import { useCallback } from 'react';
 import OnboardingScreen from '../src/shell/screens/OnboardingScreen';
 import { useProfileStore } from '../src/shell/stores/profileStore';
 
-type Profile = 'Kid' | 'Teen' | 'Parent' | 'Family';
-
 export default function OnboardingRoute() {
   const router = useRouter();
-  const setProfile = useProfileStore((s) => s.setProfile);
+  const setName = useProfileStore((s) => s.setName);
   const completeOnboarding = useProfileStore((s) => s.completeOnboarding);
 
   const handleComplete = useCallback(
-    (profile: Profile) => {
-      setProfile(profile);
+    (name: string) => {
+      setName(name);
       completeOnboarding();
       router.replace('/(tabs)/home');
     },
-    [setProfile, completeOnboarding, router],
+    [setName, completeOnboarding, router],
   );
 
   return <OnboardingScreen gameName="Light Snake" onComplete={handleComplete} />;

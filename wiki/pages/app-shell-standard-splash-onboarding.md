@@ -44,6 +44,11 @@ Premium, fun, fast. It should feel "legit," like a top app, not a form. (Referen
 Every game has the SAME onboarding structure but its OWN mascot character, generated in the same warm studio art family (gold halo, rosy cheeks, friendly eyes, premium app-mascot style). Mascots so far:
 - **Manna Catch -> Joy** (a chubby gold-haloed dove with an olive branch).
 - **Gosple -> Scripture** (a gold-haloed leather Bible with a gold cross on the cover, waving).
+- **Light Snake -> Lumen** (a cute glowing cream-white cartoon snake coiled up, gold halo, waving). Added 2026-06-09.
+- **Noah Animal Match -> Ari** (a friendly golden lion cub with a little gold mane, gold halo, waving). Added 2026-06-09.
+- **Art family (LOCKED look):** soft 2D storybook cartoon, gentle warm dark-brown outline, soft cel shading, thin floating gold halo ring, rosy pink cheeks, big friendly eyes, little rounded white cartoon hands. Joy + Scripture define it. (NOTE: a first Lumen pass came out 3D-clay and was rejected for not matching the 2D family — match Joy/Scripture, not a glossy 3D render.)
+- **Mascot names Lumen + Ari are Stable's picks (2026-06-09), easy to rename:** change `MASCOT_NAME` + the two `MASCOT_*` requires + the asset filenames. Flagged to CJ.
+- **Cut recipe is now a script:** `python scripts/cut-mascot.py <in> <out> [thresh=130]` (rembg + alpha<130 + autocrop). Generate the mascot on a flat MID-TONE bg (pale mint works) so rembg gets a clean edge; a white bg leaves a white fringe and a black bg leaves dark crud near the halo.
 - New games get their own themed mascot (generate via the `/aiml` skill or `scripts/reve-generate.ts`, cut transparent with rembg, threshold alpha <130 to kill the halo haze).
 - Each app holds two transparent poses in its `assets/`: `<mascot>-wave.png` (greeting) + `<mascot>-celebrate.png` (arms up). In `OnboardingScreen.tsx` use generic constants `MASCOT_NAME`, `MASCOT_WAVE`, `MASCOT_CELEBRATE` so only those three lines change per game. Source art lives in `.pmloop/mascot/`.
 - Mascots are white/light-bodied, so ALWAYS show them on the LIGHT cream onboarding background (no transparency fringe).

@@ -28,7 +28,7 @@ export default function SplashRoute() {
 
   return (
     <SplashComponent
-      logoSource={require('../assets/logo.png')}
+      logoSource={require('../assets/ffs-logo.png')}
       studioName="Romans 8:28"
       onComplete={handleComplete}
     />

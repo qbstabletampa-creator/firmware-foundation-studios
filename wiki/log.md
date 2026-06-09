@@ -1,5 +1,13 @@
 # Firmware Foundation Studios Log
 
+## 2026-06-08 -- Session close: committed everything; EAS build + Expo Go traps
+
+- Committed all session work to git main (7895cca): Manna polish, Joy + Scripture mascots, locked splash/onboarding standard, Gosple Scripture onboarding + daily changes (web + native), Noah + Light Snake ports.
+- Manna Catch = ship-ready. Gosple native = Scripture onboarding + mixed-letter/Day-1 daily changes done.
+- EAS preview build of Gosple iOS FAILED: Xcode Swift `'weak' must be a mutable variable` (toolchain newer than May). Fix = pin eas.json image to Xcode 15. Used 1 build.
+- Gosple Expo Go: fixed real bug (metro.config.js missing monorepo resolution). Online `expo start` crashes intermittently on undici "Body already read" in dep validation -> use `EXPO_NO_DEPENDENCY_VALIDATION=1`. New cheat sheet: [[native-expo-testing-and-build]].
+- INFRA: MC projects.json wiped to [] by a test suite hitting LIVE data (recovered 147->163). Box socket exhaustion from expo churn.
+
 ## 2026-06-08 -- Per-game mascots: Scripture (Gosple) + standard refined
 
 - CJ direction: every game keeps the SAME onboarding structure but gets its OWN mascot (unique spin), not one universal buddy. Manna -> Joy (dove). Gosple -> Scripture (gold-haloed leather Bible with a gold cross, waving).
