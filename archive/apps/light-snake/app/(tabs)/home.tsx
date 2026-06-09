@@ -40,7 +40,7 @@ export default function HomeTab() {
   return (
     <>
       <HomeScreen
-        gameName="Light Snake"
+        gameName="Shepherd's Trail"
         tagline="Carry the light. Avoid the thorns."
         logoSource={require('../../assets/logo.png')}
         currentStreak={currentStreak}

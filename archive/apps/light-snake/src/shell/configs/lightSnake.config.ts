@@ -2,10 +2,10 @@ import { GameConfig } from '../config';
 
 export const lightSnakeConfig: GameConfig = {
   id: 'light-snake',
-  name: 'Light Snake',
+  name: "Shepherd's Trail",
   studioName: 'Firmware Foundation Studios',
   version: '1.0.0',
-  bundleId: 'com.firmwarefoundation.lightsnake',
+  bundleId: 'com.firmwarefoundation.shepherdstrail',
   description: 'Guide the light through the dark. Gather bread, fish, and lamps while you grow.',
   tagline: 'Carry the light. Avoid the thorns.',
   price: '$2.99',

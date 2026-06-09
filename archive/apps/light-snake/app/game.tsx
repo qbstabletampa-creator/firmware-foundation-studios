@@ -24,7 +24,7 @@ import {
 } from '../src/game/gameEngine';
 import { createRng, seedFromDate } from '../src/game/prng';
 import { useLightSnakeGameStore } from '../src/game/stores/lightSnakeGameStore';
-import { spriteForFood, LANTERN, THORN } from '../src/game/spriteMap';
+import { spriteForFood, SHEPHERD, SHEEP, THORN } from '../src/game/spriteMap';
 import { HapticsManager } from '../src/shell/sound/HapticsManager';
 import BadgeCelebration from '../src/shell/components/BadgeCelebration';
 import { useBadgeStore } from '../src/shell/stores/badgeStore';
@@ -338,7 +338,7 @@ export default function GameScreen() {
           <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
             <Text style={styles.backArrow}>{'<'}</Text>
           </Pressable>
-          <Text style={styles.selectTitle}>Light Snake</Text>
+          <Text style={styles.selectTitle}>Shepherd's Trail</Text>
           <Text style={styles.selectTagline}>Carry the light. Avoid the thorns.</Text>
 
           <View style={styles.modeButtons}>
@@ -533,13 +533,13 @@ function Board({ gs }: { gs: GameState }) {
             />
           ))}
 
-          {/* Snake body (head drawn last / on top via zIndex) */}
+          {/* The flock: shepherd leads (head, on top), each trailing segment is a glowing sheep. */}
           {gs.snake.map((seg, i) => {
             const isHead = i === 0;
             return isHead ? (
               <Image
                 key="head"
-                source={LANTERN}
+                source={SHEPHERD}
                 style={[
                   styles.cellItem,
                   {
@@ -553,19 +553,20 @@ function Board({ gs }: { gs: GameState }) {
                 resizeMode="contain"
               />
             ) : (
-              <View
+              <Image
                 key={`seg-${i}`}
+                source={SHEEP}
                 style={[
-                  styles.snakeSeg,
+                  styles.cellItem,
                   {
-                    left: seg.x * cell + cell * 0.12,
-                    top: seg.y * cell + cell * 0.12,
-                    width: cell * 0.76,
-                    height: cell * 0.76,
-                    borderRadius: cell * 0.38,
-                    opacity: Math.max(0.35, 1 - i * 0.04),
+                    left: seg.x * cell,
+                    top: seg.y * cell,
+                    width: cell,
+                    height: cell,
+                    opacity: Math.max(0.45, 1 - i * 0.035),
                   },
                 ]}
+                resizeMode="contain"
               />
             );
           })}

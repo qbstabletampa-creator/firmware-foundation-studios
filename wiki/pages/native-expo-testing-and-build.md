@@ -7,6 +7,11 @@
 
 ---
 
+## HARD RULE (CJ, 2026-06-09): Expo Go / dev build BEFORE any EAS build
+Every FFS app must be testable in **Expo Go** (like Manna Catch) or as a **development build** so CJ can open it on his phone and test for FREE before we ever spend an EAS preview/production build. We never build-to-find-out. Order: runs in Expo Go -> `tsc` + `expo export` clean -> CJ opens it on his phone -> only then an EAS build. Mirrored in the global rules: `~/.claude/rules/app-build-testing.md`.
+
+---
+
 ## Expo Go on CJ's phone (LAN is broken on the box -> use Tailscale)
 
 Run from the app dir (e.g. `archive/apps/gosple`):

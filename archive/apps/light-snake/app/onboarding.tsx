@@ -17,5 +17,5 @@ export default function OnboardingRoute() {
     [setName, completeOnboarding, router],
   );
 
-  return <OnboardingScreen gameName="Light Snake" onComplete={handleComplete} />;
+  return <OnboardingScreen gameName="Shepherd's Trail" onComplete={handleComplete} />;
 }

@@ -23,8 +23,8 @@ export default function PurchaseRoute() {
 
   return (
     <PurchaseScreen
-      gameName="Light Snake"
-      description="Unlock the full Light Snake experience."
+      gameName="Shepherd's Trail"
+      description="Unlock the full Shepherd's Trail experience."
       onPurchase={handlePurchase}
       onRestore={handleRestore}
       onBack={handleBack}

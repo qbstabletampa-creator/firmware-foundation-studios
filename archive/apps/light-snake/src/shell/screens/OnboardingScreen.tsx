@@ -20,12 +20,12 @@ type OnboardingScreenProps = {
   onComplete: (name: string) => void;
 };
 
-const MASCOT_NAME = 'Lumen';
-const MASCOT_WAVE = require('../../../assets/lumen-wave.png');
-const MASCOT_CELEBRATE = require('../../../assets/lumen-celebrate.png');
+const MASCOT_NAME = 'Eli';
+const MASCOT_WAVE = require('../../../assets/shepherd-wave.png');
+const MASCOT_CELEBRATE = require('../../../assets/shepherd-celebrate.png');
 
-// Warm light theme (Macadam-style bright onboarding). Cream bg means Lumen's
-// light body blends in cleanly with no transparency fringe.
+// Warm light theme (Macadam-style bright onboarding). Cream bg means Eli the
+// shepherd reads cleanly with no transparency fringe.
 const CREAM = '#FBF5E8';
 const INK = '#221C10';
 const INK2 = '#6B5E45';
@@ -34,7 +34,7 @@ const GOLD_DEEP = '#B8993A';
 const CARD = '#FFFFFF';
 const BORDER = '#E8DEC4';
 
-const DECOR = ['✨', '💡', '⭐', '🌟', '🟢', '🔆'];
+const DECOR = ['🐑', '🐏', '✨', '🌟', '🏮', '💛'];
 const { height: SCREEN_H } = Dimensions.get('window');
 
 function FallingDecor() {
@@ -166,7 +166,7 @@ export default function OnboardingScreen({ gameName, onComplete }: OnboardingScr
               <Animated.Image source={MASCOT_WAVE} style={[styles.joyBig, { transform: [{ translateY: joyFloat }] }]} resizeMode="contain" />
               <Text style={styles.welcome}>Welcome to</Text>
               <Text style={styles.title}>{gameName}</Text>
-              <Text style={styles.promise}>Guide the light.{'\n'}Follow His Word.{'\n'}Grow your glow.</Text>
+              <Text style={styles.promise}>Lead the flock.{'\n'}Follow the light.{'\n'}Gather them home.</Text>
             </View>
           )}
 
@@ -198,7 +198,7 @@ export default function OnboardingScreen({ gameName, onComplete }: OnboardingScr
                 <Animated.Image source={MASCOT_CELEBRATE} style={[styles.joyBig, { transform: [{ scale: cheerScale }] }]} resizeMode="contain" />
               </View>
               <Text style={styles.welcomeName}>Welcome, {displayName}!</Text>
-              <Text style={styles.welcomeSub}>Let's light the way!</Text>
+              <Text style={styles.welcomeSub}>Let's gather the flock!</Text>
             </View>
           )}
         </Animated.View>

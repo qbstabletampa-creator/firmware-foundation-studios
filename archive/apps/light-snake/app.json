@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Light Snake",
-    "slug": "light-snake",
-    "scheme": "lightsnake",
+    "name": "Shepherd's Trail",
+    "slug": "shepherds-trail",
+    "scheme": "shepherdstrail",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -18,7 +18,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.firmwarefoundation.lightsnake",
+      "bundleIdentifier": "com.firmwarefoundation.shepherdstrail",
       "buildNumber": "1",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false

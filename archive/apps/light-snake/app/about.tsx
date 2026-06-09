@@ -9,5 +9,5 @@ export default function AboutRoute() {
     router.back();
   }, [router]);
 
-  return <AboutScreen gameName="Light Snake" version="1.0.0" onBack={handleBack} />;
+  return <AboutScreen gameName="Shepherd's Trail" version="1.0.0" onBack={handleBack} />;
 }

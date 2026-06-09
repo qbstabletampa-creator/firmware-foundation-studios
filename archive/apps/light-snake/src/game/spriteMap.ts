@@ -12,6 +12,9 @@ import type { FoodItem } from './gameEngine';
 
 export const LANTERN: ImageSourcePropType = require('../../assets/sprites/lantern.png');
 export const LIGHT_TRAIL: ImageSourcePropType = require('../../assets/sprites/light-trail.png');
+// Shepherd's Trail: the head is the shepherd, each trailing segment is a glowing sheep.
+export const SHEPHERD: ImageSourcePropType = require('../../assets/sprites/shepherd.png');
+export const SHEEP: ImageSourcePropType = require('../../assets/sprites/sheep.png');
 export const THORN: ImageSourcePropType = require('../../assets/sprites/thorn.png');
 export const BG_NIGHT: ImageSourcePropType = require('../../assets/sprites/bg-night.png');
 
