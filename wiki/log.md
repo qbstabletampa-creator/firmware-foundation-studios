@@ -1,5 +1,15 @@
 # Firmware Foundation Studios Log
 
+## 2026-06-10 -- Headless Apple lane + install builds delivered + preflight Action (Stable pmloop, pt 2)
+
+- HEADLESS APPLE LANE PROVEN end to end. App-specific passwords CANNOT create signing credentials (Apple restriction) -- ASC API key can: `eas-headless` 7ZF97YMSGA, .p8 at ~/.apple-keys/, EXPO_ASC_* + EXPO_APPLE_TEAM_ID=4M8ZQ6KADQ (COMPANY_OR_ORGANIZATION, The Qb Stable LLC) in ~/.env.integrations. First-time credential prompts (cert reuse, device pick) still need a TTY: built a remote-control PTY rig at C:/Users/rodge/.eas-pty/driver.js (node-pty; answers via in.txt, output via out.log). After one-time setup, builds are pure --non-interactive.
+- BURNED 3 BUILDS on the 6/9 Xcode-15.4 image pin: SDK 54 RN requires Xcode >= 16.1, pod install dies. Pins removed from ALL 4 apps. NEVER pin ios.image without a successful build proving it.
+- NEW: `.github/workflows/ios-preflight.yml` -- prebuild + pod install on free GitHub macOS runners (repo is PUBLIC = unlimited). Proven green on light-snake AND gosple. Run before every EAS build: `gh workflow run ios-preflight -f app=<dir>`. Mandatory pipeline (phone -> headless gates -> preflight -> EAS) written into ~/.claude/rules/app-build-testing.md.
+- DELIVERED: ShepTrail b5f3d6fb / Noah 48b4968f / Manna 3aac33e1 preview builds FINISHED on EAS default images. Install links emailed (subject: FFS install links) + texted.
+- Gosple: SDK 56 builds fine on default image (preflight green); pin removed; cleared for App Store UPDATE build (sounds, daily-puzzle fix, board persistence, price-from-config) -- awaiting CJ go. Clarified: App Store accepts any SDK; only Expo Go is pinned to SDK 54.
+- Mac Mini ruled out as build box (2014 Intel i5, macOS 12 max, no Xcode 16).
+
+
 ## 2026-06-10 -- Art completion pass + dev-server CI fix (Stable pmloop)
 
 - Finished the three art items the rebooted-killed agent owed: Ari (Noah lion) wave+celebrate regenerated from one base via Reve edit (structurally consistent, 5 gens); Joy (Manna dove) wave pose regenerated from celebrate source to kill the style drift (1 gen) + on-dark previews refreshed; Shepherd's Trail bread/fish/lamp rethemed to family style + real 1024 opaque app icon (shepherd + lantern + glowing sheep on navy, adaptive-icon too; 5 gens). Gosple joy-*.png finding: never referenced by code, already deleted in 0a78c81, no action.
