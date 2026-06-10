@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import GivebackScreen from '../src/shell/screens/GivebackScreen';
+import { gospleConfig } from '../src/shell/configs/gosple.config';
 
 export default function GivebackRoute() {
   const router = useRouter();
@@ -9,5 +10,11 @@ export default function GivebackRoute() {
     router.back();
   }, [router]);
 
-  return <GivebackScreen onBack={handleBack} />;
+  return (
+    <GivebackScreen
+      monthA={gospleConfig.giveback.monthA}
+      monthB={gospleConfig.giveback.monthB}
+      onBack={handleBack}
+    />
+  );
 }

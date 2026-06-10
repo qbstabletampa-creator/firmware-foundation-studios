@@ -3,11 +3,9 @@ import { Pressable, SafeAreaView, ScrollView, StyleSheet, Switch, Text, View } f
 type SettingsScreenProps = {
   soundEnabled: boolean;
   hapticsEnabled: boolean;
-  notificationsEnabled: boolean;
   currentProfile: string;
   onToggleSound: () => void;
   onToggleHaptics: () => void;
-  onToggleNotifications: () => void;
   onChangeProfile: () => void;
   onBack: () => void;
 };
@@ -16,11 +14,12 @@ type ToggleRowProps = {
   label: string;
   value: boolean;
   onToggle: () => void;
+  last?: boolean;
 };
 
-function ToggleRow({ label, value, onToggle }: ToggleRowProps) {
+function ToggleRow({ label, value, onToggle, last }: ToggleRowProps) {
   return (
-    <View style={styles.toggleRow}>
+    <View style={[styles.toggleRow, last && styles.toggleRowLast]}>
       <Text style={styles.toggleLabel}>{label}</Text>
       <Switch
         value={value}
@@ -35,11 +34,9 @@ function ToggleRow({ label, value, onToggle }: ToggleRowProps) {
 export default function SettingsScreen({
   soundEnabled,
   hapticsEnabled,
-  notificationsEnabled,
   currentProfile,
   onToggleSound,
   onToggleHaptics,
-  onToggleNotifications,
   onChangeProfile,
   onBack,
 }: SettingsScreenProps) {
@@ -59,8 +56,10 @@ export default function SettingsScreen({
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.toggleCard}>
           <ToggleRow label="Sound" value={soundEnabled} onToggle={onToggleSound} />
-          <ToggleRow label="Haptics" value={hapticsEnabled} onToggle={onToggleHaptics} />
-          <ToggleRow label="Notifications" value={notificationsEnabled} onToggle={onToggleNotifications} />
+          {/* Notifications toggle hidden: the preference is plumbed in the store
+              but the app schedules no notifications yet, so a live switch would
+              be a dead control. Re-add the row here when notifications ship. */}
+          <ToggleRow label="Haptics" value={hapticsEnabled} onToggle={onToggleHaptics} last />
         </View>
 
         <View style={styles.profileCard}>
@@ -130,6 +129,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#E8E4DC',
+  },
+  toggleRowLast: {
+    borderBottomWidth: 0,
   },
   toggleLabel: {
     color: '#1A1A1A',

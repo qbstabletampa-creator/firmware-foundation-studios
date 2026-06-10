@@ -138,7 +138,9 @@ export default function HomeScreen({
         <Image source={logoSource} style={styles.smallLogo} resizeMode="contain" />
         <Pressable
           onPress={onSettings}
-          hitSlop={12}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Settings"
           style={({ pressed }) => [styles.gearButton, pressed && styles.pressed]}
         >
           <Text style={styles.gearIcon}>{'⚙'}</Text>
@@ -230,7 +232,13 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   gearButton: {
-    padding: spacing.xs,
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    // Pull the 44pt target back to the edge so the larger hit area doesn't
+    // visually shift the gear inward.
+    marginRight: -spacing.sm,
   },
   gearIcon: {
     fontSize: 24,

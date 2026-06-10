@@ -11,10 +11,8 @@ export default function SettingsRoute() {
 
   const soundEnabled = usePreferencesStore((s) => s.soundEnabled);
   const hapticsEnabled = usePreferencesStore((s) => s.hapticsEnabled);
-  const notificationsEnabled = usePreferencesStore((s) => s.notificationsEnabled);
   const toggleSound = usePreferencesStore((s) => s.toggleSound);
   const toggleHaptics = usePreferencesStore((s) => s.toggleHaptics);
-  const toggleNotifications = usePreferencesStore((s) => s.toggleNotifications);
 
   const name = useProfileStore((s) => s.name);
 
@@ -54,11 +52,9 @@ export default function SettingsRoute() {
       <SettingsScreen
         soundEnabled={soundEnabled}
         hapticsEnabled={hapticsEnabled}
-        notificationsEnabled={notificationsEnabled}
         currentProfile={name ?? 'Player'}
         onToggleSound={toggleSound}
         onToggleHaptics={toggleHaptics}
-        onToggleNotifications={toggleNotifications}
         onChangeProfile={handleChangeProfile}
         onBack={handleBack}
       />

@@ -3,6 +3,7 @@ import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'rea
 type PurchaseScreenProps = {
   gameName: string;
   description: string;
+  price: string;
   onPurchase: () => void;
   onRestore: () => void;
   onBack: () => void;
@@ -17,6 +18,7 @@ const TRUST_BADGES: { icon: string; label: string }[] = [
 export default function PurchaseScreen({
   gameName,
   description,
+  price,
   onPurchase,
   onRestore,
   onBack,
@@ -38,7 +40,7 @@ export default function PurchaseScreen({
         <Text style={styles.description}>{description}</Text>
 
         <View style={styles.priceBlock}>
-          <Text style={styles.price}>$4.99</Text>
+          <Text style={styles.price}>{price}</Text>
           <Text style={styles.priceSubtext}>one-time purchase</Text>
         </View>
 

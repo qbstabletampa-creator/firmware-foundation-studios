@@ -13,21 +13,23 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import { starterPuzzles } from '../src/content/starterPuzzles';
 import { normalizeGuess, scoreGuess, TileScore } from '../src/game/wordleEngine';
+import {
+  getDayNumber,
+  getDisplayDay,
+  getTodayDateString,
+  getTodayPuzzle,
+} from '../src/game/dailyPuzzle';
 import { HapticsManager } from '../src/shell/sound/HapticsManager';
+import { SoundManager } from '../src/shell/sound/SoundManager';
 import BadgeCelebration from '../src/shell/components/BadgeCelebration';
 import { useBadgeStore } from '../src/shell/stores/badgeStore';
 import { useStreakStore } from '../src/shell/stores/streakStore';
+import { useDailyBoardStore } from '../src/shell/stores/dailyBoardStore';
 import { colors, radii, spacing, typography } from '../src/shell/theme';
 
 const MAX_ATTEMPTS = 6;
 const MAX_WORD_LEN = 8;
-// Day 1 of the daily puzzle. RESET 2026-06-08 to restart numbering (was 2026-06-02).
-// At App Store launch, set GOSPLE_EPOCH to the launch date so players start on Day 1.
-const GOSPLE_EPOCH = '2026-06-08';
-const EPOCH = new Date(GOSPLE_EPOCH).getTime();
-const MS_PER_DAY = 86_400_000;
 const FLIP_MS = 300;
 const FLIP_STAGGER_MS = 200;
 
@@ -37,41 +39,6 @@ type GuessRow = { guess: string; scores: TileScore[] };
 const KB_ROW_1 = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'];
 const KB_ROW_2 = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'];
 const KB_ROW_3 = ['Z', 'X', 'C', 'V', 'B', 'N', 'M'];
-
-function getTodayDateString(): string {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-// Deterministic shuffle of the puzzle order (fixed seed = same sequence for every
-// player, Wordle-style) so the word LENGTH varies day to day instead of marching
-// through all 5-letter words first, then all 6-letter, etc. Same seed + PRNG as
-// the web build (src/games/gosple/GameScene.ts) so web and native stay in sync.
-function gospleDailyOrder(n: number, seed: number): number[] {
-  let a = seed >>> 0;
-  const rng = () => {
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-  const order = Array.from({ length: n }, (_, i) => i);
-  for (let i = n - 1; i > 0; i -= 1) {
-    const j = Math.floor(rng() * (i + 1));
-    [order[i], order[j]] = [order[j], order[i]];
-  }
-  return order;
-}
-const DAILY_ORDER = gospleDailyOrder(starterPuzzles.length, 0x60591e28);
-
-function getTodayPuzzleIndex(): number {
-  const day = Math.floor((Date.now() - EPOCH) / MS_PER_DAY);
-  const idx = ((day % starterPuzzles.length) + starterPuzzles.length) % starterPuzzles.length;
-  return DAILY_ORDER[idx];
-}
 
 function buildLetterMap(rows: GuessRow[]): Map<string, LetterStatus> {
   const map = new Map<string, LetterStatus>();
@@ -109,17 +76,34 @@ export default function GameScreen() {
   const newlyUnlocked = useBadgeStore((s) => s.newlyUnlocked);
   const clearNewlyUnlocked = useBadgeStore((s) => s.clearNewlyUnlocked);
   const [celebratingBadge, setCelebratingBadge] = useState<typeof newlyUnlocked[number] | null>(null);
-  const puzzle = useMemo(() => starterPuzzles[getTodayPuzzleIndex()], []);
+
+  // One source of truth for "today": day number, puzzle, and date string all
+  // come from the same local-calendar helper, so the word, hasPlayedToday, and
+  // streak agree and roll over together at LOCAL midnight.
+  const today = useMemo(() => getTodayDateString(), []);
+  const dayNumber = useMemo(() => getDayNumber(), []);
+  const displayDay = useMemo(() => getDisplayDay(), []);
+  const puzzle = useMemo(() => getTodayPuzzle(), []);
   const wordLength = puzzle.answer.length;
 
+  const loadForDay = useDailyBoardStore((s) => s.loadForDay);
+  const saveBoard = useDailyBoardStore((s) => s.save);
+
+  // Restore today's board ONCE on mount. If today is already completed we lock
+  // the solved/locked board (verse + share state) instead of dealing a fresh one.
+  const restored = useRef(loadForDay(dayNumber)).current;
+
   const [currentGuess, setCurrentGuess] = useState('');
-  const [rows, setRows] = useState<GuessRow[]>([]);
+  const [rows, setRows] = useState<GuessRow[]>(restored.rows);
   const [message, setMessage] = useState('');
-  const [gameRecorded, setGameRecorded] = useState(false);
+  const [gameRecorded, setGameRecorded] = useState(restored.completed);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  const [revealedTiles, setRevealedTiles] = useState<boolean[][]>([]);
+  // Tiles in restored rows are already revealed (no flip replay on resume).
+  const [revealedTiles, setRevealedTiles] = useState<boolean[][]>(
+    restored.rows.map((r) => r.guess.split('').map(() => true)),
+  );
 
   const flipAnims = useRef(
     Array.from({ length: MAX_ATTEMPTS }, () =>
@@ -139,17 +123,26 @@ export default function GameScreen() {
     Array.from({ length: MAX_WORD_LEN }, () => new Animated.Value(1)),
   ).current;
 
-  const verseOpacity = useRef(new Animated.Value(0)).current;
+  // Verse is already visible on a restored completed board (no fade replay).
+  const verseOpacity = useRef(new Animated.Value(restored.completed ? 1 : 0)).current;
 
   const solved = rows.some((row) => row.guess === puzzle.answer);
   const gameOver = solved || rows.length >= MAX_ATTEMPTS;
   const letterMap = useMemo(() => buildLetterMap(rows), [rows]);
 
   useEffect(() => {
+    // Don't pop the how-to modal over an already-completed board on resume.
+    if (restored.completed) return;
     AsyncStorage.getItem('@ffs/howtoplay').then((val) => {
       if (val !== 'seen') setShowHowToPlay(true);
     });
-  }, []);
+  }, [restored.completed]);
+
+  // Persist the board on every change so killing the app mid-game never loses
+  // progress. Keyed by day number; a new day resets via loadForDay on mount.
+  useEffect(() => {
+    saveBoard(dayNumber, rows, currentGuess, solved, gameOver);
+  }, [saveBoard, dayNumber, rows, currentGuess, solved, gameOver]);
 
   const dismissHowToPlay = useCallback(() => {
     setShowHowToPlay(false);
@@ -208,6 +201,7 @@ export default function GameScreen() {
   );
 
   const triggerVerseReveal = useCallback(() => {
+    SoundManager.play('verse');
     Animated.timing(verseOpacity, { toValue: 1, duration: 600, useNativeDriver: true }).start();
   }, [verseOpacity]);
 
@@ -215,6 +209,7 @@ export default function GameScreen() {
     const normalized = normalizeGuess(currentGuess);
     if (normalized.length !== wordLength) {
       setMessage(`Use ${wordLength} letters`);
+      SoundManager.play('thorn'); // soft uh-oh on invalid word
       triggerShake();
       return;
     }
@@ -229,11 +224,15 @@ export default function GameScreen() {
     setCurrentGuess('');
     animateFlip(rowIndex, () => {
       if (didWin) {
+        // subtle correct-row ding, then the win celebration chime.
+        SoundManager.play('catch');
+        SoundManager.play('levelup');
         HapticsManager.success();
         setMessage('You got it!');
         triggerBounce(rowIndex);
         setTimeout(triggerVerseReveal, 400);
       } else if (nextRows.length >= MAX_ATTEMPTS) {
+        SoundManager.play('gameover'); // gentle loss
         setMessage(`The word was ${puzzle.answer}`);
         setTimeout(triggerVerseReveal, 300);
       } else {
@@ -246,11 +245,13 @@ export default function GameScreen() {
     (key: string) => {
       if (gameOver || isAnimating) return;
       if (key === 'BACKSPACE') {
+        SoundManager.play('tap');
         HapticsManager.light();
         setCurrentGuess((prev) => prev.slice(0, -1));
         return;
       }
       if (key === 'ENTER') { submitCurrentGuess(); return; }
+      SoundManager.play('tap'); // quiet key tap
       HapticsManager.light();
       setCurrentGuess((prev) => {
         if (prev.length >= wordLength) return prev;
@@ -265,20 +266,19 @@ export default function GameScreen() {
 
   useEffect(() => {
     if (gameOver && !gameRecorded) {
-      recordPlay(solved, getTodayDateString());
+      // recordPlay returns the updated totals so badge events read consistent
+      // values (no fragile getState() right after set()).
+      const result = recordPlay(solved, today);
       if (solved) {
         processEvent({ type: 'game_won' });
         processEvent({ type: 'game_won_in', guesses: rows.length });
       }
-      const totalPlayed = useStreakStore.getState().totalGamesPlayed;
-      const totalWon = useStreakStore.getState().totalGamesWon;
-      const streak = useStreakStore.getState().currentStreak;
-      processEvent({ type: 'games_played', count: totalPlayed });
-      if (solved) processEvent({ type: 'games_won', count: totalWon });
-      processEvent({ type: 'streak_reached', streak });
+      processEvent({ type: 'games_played', count: result.totalGamesPlayed });
+      if (solved) processEvent({ type: 'games_won', count: result.totalGamesWon });
+      processEvent({ type: 'streak_reached', streak: result.currentStreak });
       setGameRecorded(true);
     }
-  }, [gameOver, gameRecorded, solved, rows.length, recordPlay, processEvent]);
+  }, [gameOver, gameRecorded, solved, rows.length, recordPlay, processEvent, today]);
 
   useEffect(() => {
     if (newlyUnlocked.length > 0 && gameRecorded && !celebratingBadge) {
@@ -300,7 +300,7 @@ export default function GameScreen() {
           <Text style={styles.backArrow}>{'←'}</Text>
         </Pressable>
         <Text style={styles.headerTitle}>Gosple</Text>
-        <Text style={styles.headerDay}>Day {Math.floor((Date.now() - EPOCH) / MS_PER_DAY) + 1}</Text>
+        <Text style={styles.headerDay}>Day {displayDay}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} bounces={false}>

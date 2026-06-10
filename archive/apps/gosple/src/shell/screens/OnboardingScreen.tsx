@@ -24,7 +24,7 @@ const MASCOT_NAME = 'Scripture';
 const MASCOT_WAVE = require('../../../assets/scripture-wave.png');
 const MASCOT_CELEBRATE = require('../../../assets/scripture-celebrate.png');
 
-// Warm light theme (Macadam-style bright onboarding). Cream bg means Joy's
+// Warm light theme (Macadam-style bright onboarding). Cream bg means Scripture's
 // white body blends in cleanly with no transparency fringe.
 const CREAM = '#FBF5E8';
 const INK = '#221C10';
@@ -83,7 +83,7 @@ function FallingDecor() {
   );
 }
 
-// Warm sunny glow behind Joy for the celebration (reads on cream, unlike gold rays).
+// Warm sunny glow behind Scripture for the celebration (reads on cream, unlike gold rays).
 function WarmGlow() {
   const discs = [
     { r: 170, o: 0.16 },
@@ -141,7 +141,7 @@ export default function OnboardingScreen({ gameName, onComplete }: OnboardingScr
     }
   }, [step, cheer]);
 
-  const joyFloat = bounce.interpolate({ inputRange: [0, 1], outputRange: [0, -14] });
+  const mascotFloat = bounce.interpolate({ inputRange: [0, 1], outputRange: [0, -14] });
   const cheerScale = cheer.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] });
 
   const displayName = name.trim() || 'Player';
@@ -163,7 +163,7 @@ export default function OnboardingScreen({ gameName, onComplete }: OnboardingScr
         <Animated.View style={[styles.content, { opacity: stepOpacity }]}>
           {step === 0 && (
             <View style={styles.center}>
-              <Animated.Image source={MASCOT_WAVE} style={[styles.joyBig, { transform: [{ translateY: joyFloat }] }]} resizeMode="contain" />
+              <Animated.Image source={MASCOT_WAVE} style={[styles.mascotBig, { transform: [{ translateY: mascotFloat }] }]} resizeMode="contain" />
               <Text style={styles.welcome}>Welcome to</Text>
               <Text style={styles.title}>{gameName}</Text>
               <Text style={styles.promise}>A word a day.{'\n'}Learn God's Word.{'\n'}Grow your streak.</Text>
@@ -172,7 +172,7 @@ export default function OnboardingScreen({ gameName, onComplete }: OnboardingScr
 
           {step === 1 && (
             <View style={styles.center}>
-              <Animated.Image source={MASCOT_WAVE} style={[styles.joyMid, { transform: [{ translateY: joyFloat }] }]} resizeMode="contain" />
+              <Animated.Image source={MASCOT_WAVE} style={[styles.mascotMid, { transform: [{ translateY: mascotFloat }] }]} resizeMode="contain" />
               <View style={styles.bubble}>
                 <Text style={styles.bubbleText}>Hi! I'm {MASCOT_NAME}. What can I call you?</Text>
               </View>
@@ -195,7 +195,7 @@ export default function OnboardingScreen({ gameName, onComplete }: OnboardingScr
             <View style={styles.center}>
               <View style={styles.celebrateWrap}>
                 <WarmGlow />
-                <Animated.Image source={MASCOT_CELEBRATE} style={[styles.joyBig, { transform: [{ scale: cheerScale }] }]} resizeMode="contain" />
+                <Animated.Image source={MASCOT_CELEBRATE} style={[styles.mascotBig, { transform: [{ scale: cheerScale }] }]} resizeMode="contain" />
               </View>
               <Text style={styles.welcomeName}>Welcome, {displayName}!</Text>
               <Text style={styles.welcomeSub}>Let's grow in God's Word.</Text>
@@ -242,8 +242,8 @@ const styles = StyleSheet.create({
   content: { flex: 1, justifyContent: 'center', paddingHorizontal: 28 },
   center: { alignItems: 'center', width: '100%' },
 
-  joyBig: { width: 210, height: 210, marginBottom: 12 },
-  joyMid: { width: 140, height: 140, marginBottom: 12 },
+  mascotBig: { width: 210, height: 210, marginBottom: 12 },
+  mascotMid: { width: 140, height: 140, marginBottom: 12 },
 
   celebrateWrap: { alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   glowWrap: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },

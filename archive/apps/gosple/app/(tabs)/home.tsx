@@ -3,14 +3,7 @@ import { useCallback, useState } from 'react';
 import { ParentGate } from '../../src/shell/components/ParentGate';
 import HomeScreen from '../../src/shell/screens/HomeScreen';
 import { useStreakStore } from '../../src/shell/stores/streakStore';
-
-function getTodayDateString(): string {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
+import { getTodayDateString } from '../../src/game/dailyPuzzle';
 
 export default function HomeTab() {
   const router = useRouter();

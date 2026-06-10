@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import PurchaseScreen from '../src/shell/screens/PurchaseScreen';
 import { usePurchaseStore } from '../src/shell/stores/purchaseStore';
+import { gospleConfig } from '../src/shell/configs/gosple.config';
 
 export default function PurchaseRoute() {
   const router = useRouter();
@@ -23,8 +24,9 @@ export default function PurchaseRoute() {
 
   return (
     <PurchaseScreen
-      gameName="Gosple"
+      gameName={gospleConfig.name}
       description="Unlock the full Gosple experience."
+      price={gospleConfig.price}
       onPurchase={handlePurchase}
       onRestore={handleRestore}
       onBack={handleBack}
