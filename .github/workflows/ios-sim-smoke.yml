@@ -32,6 +32,11 @@ jobs:
         working-directory: archive
         run: npm ci --no-audit --no-fund
 
+      # gosple is standalone (own lockfile, not in the archive workspace)
+      - name: Install standalone app deps
+        working-directory: archive/apps/${{ github.event.inputs.app }}
+        run: if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; fi
+
       - name: Prebuild native iOS project
         working-directory: archive/apps/${{ github.event.inputs.app }}
         env:
