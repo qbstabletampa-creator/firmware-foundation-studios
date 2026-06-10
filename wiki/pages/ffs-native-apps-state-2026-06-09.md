@@ -57,7 +57,7 @@ The Xcode-15 image pin is already in each `eas.json`, so the `weak let` Swift er
 
 ## Other open items / decisions for CJ
 - **Mascot names**: Eli (shepherd), Ari (Noah lion), are Stable's picks — CJ to confirm/rename (change `MASCOT_NAME` + 2 requires + asset filenames).
-- **Ari** wave vs celebrate poses have a slight mane-style mismatch (minor; reroll if CJ wants tighter).
+- **Ari** mane-style mismatch resolved 2026-06-10: both poses regenerated from the same base (ari-base-v5-raw.png) via Reve EDIT. Wave = ari-wave-v5b, celebrate = ari-celebrate-v5d, both cut and installed. Consistent mane, halo, cheeks confirmed.
 - **Folder rename**: Shepherd's Trail still lives in `archive/apps/light-snake` internally (invisible to users). Optional cleanup = `git mv` + path fixes; leave unless CJ asks.
 - **Push**: all session commits are LOCAL on `main`, not pushed. CJ to decide.
 - **Noah onboarding** done but never opened on a phone yet.

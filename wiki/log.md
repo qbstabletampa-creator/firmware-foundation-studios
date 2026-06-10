@@ -1,5 +1,16 @@
 # Firmware Foundation Studios Log
 
+## 2026-06-10 -- Art completion pass + dev-server CI fix (Stable pmloop)
+
+- Finished the three art items the rebooted-killed agent owed: Ari (Noah lion) wave+celebrate regenerated from one base via Reve edit (structurally consistent, 5 gens); Joy (Manna dove) wave pose regenerated from celebrate source to kill the style drift (1 gen) + on-dark previews refreshed; Shepherd's Trail bread/fish/lamp rethemed to family style + real 1024 opaque app icon (shepherd + lantern + glowing sheep on navy, adaptive-icon too; 5 gens). Gosple joy-*.png finding: never referenced by code, already deleted in 0a78c81, no action.
+- Lamp needed a reject + re-brief (first version had no dark outline; redone to match bread/fish). PM gate: every image visually reviewed before accept.
+- Subagent lesson: parallel AIML generations can hang forever on Reve CDN stalls (first Shepherd's Trail agent froze 46 min, 0 output, killed). Rule for art briefs: generate SEQUENTIALLY with a hard timeout per call, retry once, then FLUX/schnell fallback.
+- ROOT CAUSE + FIX, dev servers dead after every reboot: PS7 `$env:CI = ''` CREATES an empty-string var (PS5.1 deleted it); expo getenv throws GetEnv.NoBoolean at metro boot, so the logon task silently killed all servers. Launcher now uses `Remove-Item Env:CI`. All 4 servers up + advertising Tailscale (8081 Manna, 8082 Gosple, 8083 Shepherd's Trail, 8085 Noah). Saved to global memory (ps7-empty-env-var).
+- Verified: tsc --noEmit + expo export --platform ios clean for noah, manna-catch, light-snake. Gosple untouched this pass (art-free).
+- Gosple price: CJ confirmed ASC tier $2.99; config already reads $2.99. Item closed.
+- archive/package-lock.json committed: legit leftover recording last night's expo-audio install.
+
+
 ## 2026-06-08 -- Session close: committed everything; EAS build + Expo Go traps
 
 - Committed all session work to git main (7895cca): Manna polish, Joy + Scripture mascots, locked splash/onboarding standard, Gosple Scripture onboarding + daily changes (web + native), Noah + Light Snake ports.

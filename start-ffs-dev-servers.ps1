@@ -91,7 +91,9 @@ foreach ($app in $reg.apps) {
     Log "START $($app.name) on $tsIp`:$($app.port)"
     $env:EXPO_NO_DEPENDENCY_VALIDATION = '1'
     $env:REACT_NATIVE_PACKAGER_HOSTNAME = $tsIp
-    $env:CI = ''
+    # PS7 quirk: $env:CI = '' CREATES an empty var (PS5.1 deleted it); expo's getenv
+    # throws "GetEnv.NoBoolean" on empty CI. Remove it outright so children never see it.
+    Remove-Item Env:CI -ErrorAction SilentlyContinue
     $outLog = Join-Path $RepoRoot ".pmloop\dev-server-$($app.name).log"
     # Detached, hidden, output to per-app log. cmd /c so npx resolves on PATH.
     Start-Process -FilePath 'cmd.exe' `
