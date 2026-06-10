@@ -1,0 +1,91 @@
+# iOS simulator smoke test: compile the REAL native app (Release, simulator),
+# launch it, and capture screenshots. This catches launch crashes / black screens
+# that Expo Go can never see (Expo Go skips native branches like the Skia splash),
+# for FREE — before burning a paid EAS build. Born 2026-06-10 after all three
+# install builds black-screened on CJ's phone.
+#
+# Trigger: gh workflow run ios-sim-smoke -f app=<dir>
+# Fetch screenshots: gh run download <run-id> -n sim-screens-<app>
+name: ios-sim-smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "App dir under archive/apps"
+        required: true
+
+jobs:
+  smoke:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: archive/package-lock.json
+
+      - name: Install workspace deps
+        working-directory: archive
+        run: npm ci --no-audit --no-fund
+
+      - name: Prebuild native iOS project
+        working-directory: archive/apps/${{ github.event.inputs.app }}
+        env:
+          EXPO_NO_DEPENDENCY_VALIDATION: "1"
+        run: npx expo prebuild --platform ios --no-install
+
+      - name: pod install
+        working-directory: archive/apps/${{ github.event.inputs.app }}/ios
+        run: pod install
+
+      - name: Build Release for simulator
+        working-directory: archive/apps/${{ github.event.inputs.app }}/ios
+        run: |
+          WORKSPACE=$(ls -d *.xcworkspace | head -1)
+          SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list -json | python3 -c "import json,sys; print(json.load(sys.stdin)['workspace']['schemes'][0])")
+          echo "workspace=$WORKSPACE scheme=$SCHEME"
+          xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" \
+            -configuration Release -sdk iphonesimulator \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO \
+            -destination 'generic/platform=iOS Simulator' build | tail -40
+
+      - name: Launch in simulator + screenshots
+        working-directory: archive/apps/${{ github.event.inputs.app }}/ios
+        run: |
+          APP_PATH=$(ls -d build/Build/Products/Release-iphonesimulator/*.app | head -1)
+          BUNDLE_ID=$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$APP_PATH/Info.plist")
+          echo "app=$APP_PATH bundle=$BUNDLE_ID"
+          DEVICE=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(dev['udid'] for k in d for dev in d[k] if 'iPhone' in dev['name']))")
+          xcrun simctl boot "$DEVICE" || true
+          xcrun simctl bootstatus "$DEVICE" -b
+          xcrun simctl install "$DEVICE" "$APP_PATH"
+          xcrun simctl launch "$DEVICE" "$BUNDLE_ID"
+          mkdir -p ../sim-screens
+          sleep 4;  xcrun simctl io "$DEVICE" screenshot ../sim-screens/t04-splash.png
+          sleep 6;  xcrun simctl io "$DEVICE" screenshot ../sim-screens/t10-postsplash.png
+          sleep 10; xcrun simctl io "$DEVICE" screenshot ../sim-screens/t20-home.png
+          # fail loudly if the app process died
+          xcrun simctl spawn "$DEVICE" launchctl list | grep -q "$BUNDLE_ID" || { echo "::error::App process not running at t+20s (crashed?)"; exit 1; }
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sim-screens-${{ github.event.inputs.app }}
+          path: archive/apps/${{ github.event.inputs.app }}/sim-screens/
+
+      - name: Upload crash logs if any
+        if: failure()
+        run: |
+          mkdir -p crashlogs && cp -r ~/Library/Logs/DiagnosticReports/* crashlogs/ 2>/dev/null || true
+          ls crashlogs/ || echo "no crash logs"
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crashlogs-${{ github.event.inputs.app }}
+          path: crashlogs/
+          if-no-files-found: ignore

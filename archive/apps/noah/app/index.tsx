@@ -5,14 +5,10 @@ import Constants from 'expo-constants';
 import { useProfileStore } from '../src/shell/stores/profileStore';
 import { FORCE_ONBOARDING } from '../src/shell/devConfig';
 
-// Skia (RadiantSplash) is not bundled in Expo Go. Use the plain splash on web
-// and in Expo Go; keep the Skia splash for real dev/EAS builds.
-const usesPlainSplash =
-  Platform.OS === 'web' || Constants.executionEnvironment === 'storeClient';
-
-const SplashComponent = usesPlainSplash
-  ? require('../src/shell/screens/SplashScreen').default
-  : require('../src/shell/screens/RadiantSplashScreen').default;
+// The GL splash (SplashScreen + RayCanvas) is the ONLY splash. The Skia branch
+// (RadiantSplashScreen) never ran on any phone before the 2026-06-10 install builds
+// and black-screened all three apps at launch. Do not re-add an untested branch.
+const SplashComponent = require('../src/shell/screens/SplashScreen').default;
 
 export default function IndexScreen() {
   const [hydrated, setHydrated] = useState(false);
