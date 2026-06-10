@@ -1,0 +1,68 @@
+# iOS native pre-flight: catches pod-install / native-config failures for FREE
+# (public repo = unlimited GitHub-hosted macOS minutes) BEFORE burning an EAS build.
+# This is the exact phase that killed 3 paid builds on 2026-06-10 (Xcode pin too old
+# for SDK 54's React Native). Run it green before every `eas build`.
+#
+# Trigger from the box:  gh workflow run ios-preflight -f app=<dir|all>
+# Watch:                 gh run watch  (or gh run list --workflow=ios-preflight)
+name: ios-preflight
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "App dir under archive/apps (or 'all')"
+        required: false
+        default: "all"
+
+jobs:
+  matrix-setup:
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.set.outputs.apps }}
+    steps:
+      - id: set
+        run: |
+          if [ "${{ github.event.inputs.app }}" = "all" ] || [ -z "${{ github.event.inputs.app }}" ]; then
+            echo 'apps=["manna-catch","light-snake","noah","gosple"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'apps=["${{ github.event.inputs.app }}"]' >> "$GITHUB_OUTPUT"
+          fi
+
+  preflight:
+    needs: matrix-setup
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJSON(needs.matrix-setup.outputs.apps) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: archive/package-lock.json
+
+      - name: Install workspace deps
+        working-directory: archive
+        run: npm ci --no-audit --no-fund
+
+      - name: expo-doctor (advisory)
+        working-directory: archive/apps/${{ matrix.app }}
+        run: npx expo-doctor || echo "::warning::expo-doctor reported issues for ${{ matrix.app }} (non-blocking)"
+
+      - name: Prebuild native iOS project
+        working-directory: archive/apps/${{ matrix.app }}
+        env:
+          EXPO_NO_DEPENDENCY_VALIDATION: "1"
+        run: npx expo prebuild --platform ios --no-install
+
+      - name: pod install (the gate that costs EAS builds when it fails)
+        working-directory: archive/apps/${{ matrix.app }}/ios
+        run: pod install
+
+      - name: Report toolchain
+        if: always()
+        run: xcodebuild -version && pod --version
