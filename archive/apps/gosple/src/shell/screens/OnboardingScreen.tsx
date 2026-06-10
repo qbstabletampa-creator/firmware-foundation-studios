@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   mascotMid: { width: 140, height: 140, marginBottom: 12 },
 
   celebrateWrap: { alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
-  glowWrap: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  glowWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
 
   welcome: { color: INK2, fontSize: 18, fontWeight: '700', letterSpacing: 0.5 },
   title: { color: INK, fontSize: 46, fontWeight: '900', marginTop: 2, marginBottom: 20, textAlign: 'center' },

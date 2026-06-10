@@ -1,13 +1,12 @@
 import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
-import { Platform } from 'react-native';
 import { useProfileStore } from '../src/shell/stores/profileStore';
 import { FORCE_ONBOARDING } from '../src/shell/devConfig';
 
-const SplashComponent =
-  Platform.OS === 'web'
-    ? require('../src/shell/screens/SplashScreen').default
-    : require('../src/shell/screens/RadiantSplashScreen').default;
+// The GL splash is the ONLY splash (see app/index.tsx). The Skia branch
+// black-screened the 2026-06-10 install builds; expo-router evaluates every
+// route module at launch in production, so this file must not require it.
+const SplashComponent = require('../src/shell/screens/SplashScreen').default;
 
 export default function SplashRoute() {
   const router = useRouter();

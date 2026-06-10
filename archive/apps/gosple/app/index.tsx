@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Platform, View, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useProfileStore } from '../src/shell/stores/profileStore';
 import { FORCE_ONBOARDING } from '../src/shell/devConfig';
 
-const SplashComponent =
-  Platform.OS === 'web'
-    ? require('../src/shell/screens/SplashScreen').default
-    : require('../src/shell/screens/RadiantSplashScreen').default;
+// The GL splash (SplashScreen + RayCanvas) is the ONLY splash. The Skia branch
+// (RadiantSplashScreen) never ran on any phone before the 2026-06-10 install builds
+// and black-screened all three apps at launch. Do not re-add an untested branch.
+const SplashComponent = require('../src/shell/screens/SplashScreen').default;
 
 export default function IndexScreen() {
   const [hydrated, setHydrated] = useState(false);
