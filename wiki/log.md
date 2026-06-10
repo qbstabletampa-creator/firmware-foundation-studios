@@ -1,5 +1,23 @@
 # Firmware Foundation Studios Log
 
+## 2026-06-10 -- INCIDENT: install builds black-screened; root causes fixed; sim-smoke rig (Stable, pt 3)
+
+- CJ tested the 3 install builds: ALL black-screened at launch, Noah had Manna's icon, native splashes wrong. Four distinct bugs found:
+  1. **Skia splash never ran anywhere before these builds.** app/index.tsx picked RadiantSplashScreen (Skia) for standalone builds, plain GL SplashScreen for Expo Go -- every phone test was Expo Go, so the EAS path was untested and crashed. FIX: GL splash is now the ONLY splash in manna/light-snake/noah. LESSON: Expo Go passing does NOT validate the EAS build's code paths; never ship a branch only standalone builds execute.
+  2. Noah icon.png was a byte-copy of Manna's (1376296 bytes). FIX: real Ari+animals icon (641080 bytes) + adaptive.
+  3. Noah + light-snake splash-icon.png (native launch splash) were the Manna BASKET; standard is the FFS logo (manna had it right). FIX: copied the logo splash to both.
+  4. Gosple preview build died at npm ci EUSAGE: gosple is STANDALONE (not in archive workspaces, own package-lock.json) and the 6/9 sound commit added expo-audio without updating gosple's lockfile. FIX: npm install in gosple, lockfile synced, npm ci --dry-run green.
+- NEW free verification rig: `.github/workflows/ios-sim-smoke.yml` -- compiles Release for iOS simulator on free macOS runners, boots sim, launches app, screenshots t+4/10/20s, fails if process dies, uploads crash logs. Run 1 failed on the harness itself (xcodebuild exit masked by pipe) -- fixed with pipefail + Pods-scheme exclusion + log artifact. Run 27295328567 (manna) IN FLIGHT at closeout.
+- RULE for pickup: NO rebuilds until sim-smoke screenshots show splash -> home alive. Then rebuild all 4 headless and resend links.
+- Credits: Starter $19/mo, 600/4500 used (13%), errored builds were not billed.
+
+
+## 2026-06-10 -- Christian Roblox safe kids market scan
+
+- Added `pages/christian-roblox-safe-kids-market-scan-2026-06-10.md` from CJ's capture asking whether anyone is building safe Christian Roblox for kids.
+- Direct answer: fragments exist, but no clean public match for a parent trusted Christian Roblox ecosystem.
+- Connected it to app factory strategy, Roblox Studio MCP, game build order, and studio decisions.
+
 ## 2026-06-10 -- Headless Apple lane + install builds delivered + preflight Action (Stable pmloop, pt 2)
 
 - HEADLESS APPLE LANE PROVEN end to end. App-specific passwords CANNOT create signing credentials (Apple restriction) -- ASC API key can: `eas-headless` 7ZF97YMSGA, .p8 at ~/.apple-keys/, EXPO_ASC_* + EXPO_APPLE_TEAM_ID=4M8ZQ6KADQ (COMPANY_OR_ORGANIZATION, The Qb Stable LLC) in ~/.env.integrations. First-time credential prompts (cert reuse, device pick) still need a TTY: built a remote-control PTY rig at C:/Users/rodge/.eas-pty/driver.js (node-pty; answers via in.txt, output via out.log). After one-time setup, builds are pure --non-interactive.
