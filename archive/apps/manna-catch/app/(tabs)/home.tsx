@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { ParentGate } from '../../src/shell/components/ParentGate';
 import HomeScreen from '../../src/shell/screens/HomeScreen';
 import { useStreakStore } from '../../src/shell/stores/streakStore';
+import { useProfileStore } from '../../src/shell/stores/profileStore';
 
 function getTodayDateString(): string {
   const now = new Date();
@@ -16,6 +17,7 @@ export default function HomeTab() {
   const router = useRouter();
   const currentStreak = useStreakStore((s) => s.currentStreak);
   const lastPlayedDate = useStreakStore((s) => s.lastPlayedDate);
+  const playerName = useProfileStore((s) => s.name);
   const hasPlayedToday = lastPlayedDate === getTodayDateString();
 
   const [gateVisible, setGateVisible] = useState(false);
@@ -45,6 +47,7 @@ export default function HomeTab() {
         logoSource={require('../../assets/logo.png')}
         currentStreak={currentStreak}
         hasPlayedToday={hasPlayedToday}
+        playerName={playerName}
         onPlay={handlePlay}
         onSettings={handleSettings}
       />

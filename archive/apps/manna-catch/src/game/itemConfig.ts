@@ -23,7 +23,7 @@ export const ITEM_DEFS: ItemDef[] = [
   { type: 'figs',        category: 'good', icon: '🫒', points: 8,  weight: 12, unlockScore: 75  },
   { type: 'star',        category: 'good', icon: '⭐', points: 20, weight: 5,  unlockScore: 100 },
   { type: 'scroll',      category: 'good', icon: '📜', points: 15, weight: 8,  unlockScore: 50  },
-  { type: 'thorn',       category: 'bad',  icon: '🌿', points: 0,  weight: 18, unlockScore: 0   },
+  { type: 'thorn',       category: 'bad',  icon: '🌵', points: 0,  weight: 18, unlockScore: 0   },
   { type: 'stone',       category: 'bad',  icon: '🪨', points: 0,  weight: 12, unlockScore: 30  },
   { type: 'snake',       category: 'bad',  icon: '🐍', points: 0,  weight: 11, unlockScore: 40  },
 ];

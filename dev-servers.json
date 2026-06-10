@@ -1,0 +1,9 @@
+{
+  "comment": "FFS Expo Go dev server registry. Source of truth for ports. Launcher: start-ffs-dev-servers.ps1 (Task Scheduler logon task FFS-DevServers-Logon). Ports 8081-8089 are reserved for Expo/Metro per ~/.claude/rules/port-discipline.md.",
+  "apps": [
+    { "name": "manna-catch", "displayName": "Manna Catch", "dir": "archive/apps/manna-catch", "port": 8081 },
+    { "name": "gosple", "displayName": "Gosple", "dir": "archive/apps/gosple", "port": 8082 },
+    { "name": "light-snake", "displayName": "Shepherd's Trail", "dir": "archive/apps/light-snake", "port": 8083 },
+    { "name": "noah", "displayName": "Noah Animal Match", "dir": "archive/apps/noah", "port": 8085 }
+  ]
+}

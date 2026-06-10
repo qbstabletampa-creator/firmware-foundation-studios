@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { HapticsManager } from '../sound/HapticsManager';
+import { SoundManager } from '../sound/SoundManager';
 import { colors, radii, shadows, spacing, typography } from '../theme';
 
 type HomeScreenProps = {
@@ -20,15 +21,17 @@ type HomeScreenProps = {
   logoSource: ImageSourcePropType;
   currentStreak: number;
   hasPlayedToday: boolean;
+  /** Player's display name. Empty/null falls back to a generic greeting. */
+  playerName?: string | null;
   onPlay: () => void;
   onSettings: () => void;
 };
 
-function getGreeting(): string {
+function getGreeting(name?: string | null): string {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning!';
-  if (hour < 17) return 'Good afternoon!';
-  return 'Good evening!';
+  const timeOfDay = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const trimmed = name?.trim();
+  return trimmed ? `${timeOfDay}, ${trimmed}!` : `${timeOfDay}!`;
 }
 
 export default function HomeScreen({
@@ -37,6 +40,7 @@ export default function HomeScreen({
   logoSource,
   currentStreak,
   hasPlayedToday,
+  playerName,
   onPlay,
   onSettings,
 }: HomeScreenProps) {
@@ -129,6 +133,7 @@ export default function HomeScreen({
 
   const handlePlay = () => {
     HapticsManager.medium();
+    SoundManager.play('tap');
     onPlay();
   };
 
@@ -147,7 +152,7 @@ export default function HomeScreen({
 
       <ScrollView contentContainerStyle={styles.scroll} bounces={false}>
         <Animated.Text style={[styles.greeting, { opacity: greetingOpacity }]}>
-          {getGreeting()}
+          {getGreeting(playerName)}
         </Animated.Text>
 
         <Animated.View style={{ opacity: titleOpacity, transform: [{ translateY: titleTranslateY }] }}>
@@ -321,7 +326,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   playButtonText: {
-    color: colors.textPrimary,
+    color: colors.background,
     fontSize: 20,
     fontWeight: '900',
     letterSpacing: 1.5,

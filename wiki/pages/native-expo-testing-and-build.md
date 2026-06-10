@@ -14,14 +14,19 @@ Every FFS app must be testable in **Expo Go** (like Manna Catch) or as a **devel
 
 ## Expo Go on CJ's phone (LAN is broken on the box -> use Tailscale)
 
-Run from the app dir (e.g. `archive/apps/gosple`):
+**AUTOMATED 2026-06-09.** All dev servers are now managed by the launcher at the repo root:
+- **Registry (source of truth for ports):** `dev-servers.json` — 8081 Manna, 8082 Gosple, 8083 Shepherd's Trail, **8085 Noah** (8084 abandoned to a stale TIME_WAIT).
+- **Launcher:** `start-ffs-dev-servers.ps1` — resolves the Tailscale IP fresh each run, skips ports already serving (port discipline), starts the rest hidden/detached, then probes every manifest and asserts it advertises the Tailscale IP. Logs to `.pmloop/dev-servers.log` + per-app logs.
+- **Reboot-proof:** Task Scheduler logon task **`FFS-DevServers-Logon`** (1 min delay so Tailscale is up) runs the launcher at every logon. Nobody restarts servers by hand anymore.
+- **New app = one command:** `.\start-ffs-dev-servers.ps1 -Add -Name <app> -Dir archive/apps/<app>` — picks the next free 808x port, writes the registry, starts the server. After that it's permanent. (First-ever start of a brand-new EAS project must be online so Expo caches the dev codesigning cert under `~/.expo/codesigning/<projectId>/`.)
+- **`-Restart`** stops only the registry's own node servers (never other processes on a port) and relaunches — use after a Tailscale IP change or dependency install.
+
+Manual fallback (what the launcher does per app, from the app dir):
 ```
-EXPO_NO_DEPENDENCY_VALIDATION=1 REACT_NATIVE_PACKAGER_HOSTNAME=<tailscale-ip> npx expo start --go --port <PORT>
+EXPO_NO_DEPENDENCY_VALIDATION=1 REACT_NATIVE_PACKAGER_HOSTNAME=$(tailscale ip -4 | head -1) npx expo start --go --port <PORT>
 ```
-- Get the CURRENT tailscale IP first: `tailscale ip -4` (it changes; was 100.103.56.37 on 2026-06-08). The OLD .38 in CLAUDE.md is stale.
-- Ports (one app = one port; HARD RULE, see `~/.claude/rules/app-build-testing.md` + port-discipline): **8081 Manna, 8082 Gosple, 8083 Shepherd's Trail, 8084 Noah**, next free for each new app. Check the port is free first; never clobber another running dev server.
 - Every app must have its OWN EAS project (`eas init --force` under firmfoundationstudios) so Expo Go can load it — Manna, Shepherd's Trail, Noah all have their own projectId. Gosple too. An app with no projectId can't be opened cleanly in Expo Go.
-- Phone needs Tailscale connected. Load `exp://<ip>:<port>` (Enter URL manually in Expo Go) or scan the QR.
+- Phone needs Tailscale connected. iOS Expo Go has NO manual-URL field (Android only): the games appear in the **Development servers** list on the Home tab (pull to refresh) because the phone shares the tailnet, or scan the QR / tap an `exp://` link.
 
 ## Trap 1: monorepo metro config (Expo Go "Unable to resolve ./node_modules/expo-router/entry")
 node_modules is hoisted to `archive/node_modules` (npm workspace). Each app's `metro.config.js` MUST add the monorepo resolution or the Expo Go dev server can't find the entry point:

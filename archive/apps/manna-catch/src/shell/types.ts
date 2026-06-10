@@ -14,8 +14,7 @@ export type ScreenName =
   | 'settings'
   | 'about'
   | 'privacy'
-  | 'giveback'
-  | 'purchase';
+  | 'giveback';
 
 export type RewardEventType =
   | 'game_complete'

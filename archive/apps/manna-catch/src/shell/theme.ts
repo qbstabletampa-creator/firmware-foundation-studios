@@ -7,7 +7,7 @@ export const colors = {
   textSecondary: '#B0B0A8',
   textMuted: '#6A6A64',
 
-  gold: '#FFD700',
+  gold: '#D4C36A',
   goldMuted: '#C5A600',
 
   correct: '#00E676',
@@ -59,14 +59,14 @@ export const radii = { sm: 8, md: 10, lg: 12, xl: 18 };
 
 export const shadows = {
   card: {
-    shadowColor: '#FFD700',
+    shadowColor: '#D4C36A',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 4,
   },
   button: {
-    shadowColor: '#FFD700',
+    shadowColor: '#D4C36A',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 6,

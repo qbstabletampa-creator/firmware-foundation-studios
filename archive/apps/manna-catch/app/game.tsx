@@ -18,6 +18,7 @@ import { createRng, seedFromDate } from '../src/game/prng';
 import { useCatchGameStore } from '../src/game/stores/catchGameStore';
 import type { GameMode, GameState } from '../src/game/types';
 import { HapticsManager } from '../src/shell/sound/HapticsManager';
+import { SoundManager } from '../src/shell/sound/SoundManager';
 import BadgeCelebration from '../src/shell/components/BadgeCelebration';
 import { useBadgeStore } from '../src/shell/stores/badgeStore';
 import { useStreakStore } from '../src/shell/stores/streakStore';
@@ -41,6 +42,7 @@ const MAX_GAME_WIDTH = 500;
 export default function GameScreen() {
   const router = useRouter();
   const [areaSize, setAreaSize] = useState({ w: 0, h: 0 });
+  const [selectSize, setSelectSize] = useState({ w: 0, h: 0 });
   const recordPlay = useStreakStore((s) => s.recordPlay);
   const processEvent = useBadgeStore((s) => s.processEvent);
   const newlyUnlocked = useBadgeStore((s) => s.newlyUnlocked);
@@ -53,6 +55,11 @@ export default function GameScreen() {
   const [sessionVerses, setSessionVerses] = useState<Verse[]>([]);
   const [shownVerseIndex, setShownVerseIndex] = useState(0);
   const [activeVerse, setActiveVerse] = useState<Verse | null>(null);
+  // Verses the player actually got to read. A verse overlay pauses the game,
+  // so a verse is "read" the moment it is presented. Tracked separately from
+  // shownVerseIndex (which also doubles as the verse-selection pointer) so the
+  // game-over stat never counts a verse that was queued but never displayed.
+  const [versesReadCount, setVersesReadCount] = useState(0);
   const [celebratingBadge, setCelebratingBadge] = useState<typeof newlyUnlocked[number] | null>(null);
   const [itemsCaughtThisGame, setItemsCaughtThisGame] = useState(0);
   const [tookDamage, setTookDamage] = useState(false);
@@ -71,15 +78,24 @@ export default function GameScreen() {
   const basketWidth = gameWidth * GAME_CONSTANTS.BASKET_WIDTH_RATIO;
   const basketHeight = gameWidth * GAME_CONSTANTS.BASKET_HEIGHT_RATIO;
 
+  // The game area drives gameWidth/gameHeight. The select screen used to share
+  // this same handler, so the two layouts fought over one areaSize during the
+  // select <-> playing transition. They now have separate handlers/state.
   const onAreaLayout = useCallback((e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
     setAreaSize({ w: width, h: height });
+  }, []);
+
+  const onSelectLayout = useCallback((e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout;
+    setSelectSize({ w: width, h: height });
   }, []);
 
   const todayStr = getTodayDateString();
   const dailyAlreadyPlayed = catchStore.hasDailyScore(todayStr);
 
   const startGame = useCallback((mode: GameMode) => {
+    SoundManager.play('tap');
     setGameMode(mode);
 
     const seenIds = catchStore.seenVerseIds;
@@ -97,6 +113,7 @@ export default function GameScreen() {
     rngRef.current = rng;
     setSessionVerses(verses);
     setShownVerseIndex(0);
+    setVersesReadCount(0);
     setActiveVerse(null);
     setItemsCaughtThisGame(0);
     setTookDamage(false);
@@ -115,15 +132,50 @@ export default function GameScreen() {
     verseOpacity.setValue(0);
   }, [catchStore, todayStr, basketWidth, gameWidth]);
 
+  const handleGameOver = useCallback((finalState: GameState) => {
+    // A "win" = completed the daily challenge, or set a new personal best score
+    // in free play. Read the previous high score BEFORE recordScore() bumps it.
+    const prevHighScore = useCatchGameStore.getState().highScore;
+    const isWin = gameMode === 'daily' || finalState.score > prevHighScore;
+
+    recordPlay(isWin, todayStr);
+    catchStore.recordScore(finalState.score);
+    catchStore.recordCombo(finalState.bestCombo);
+    catchStore.recordItemsCaught(itemsCaughtThisGame);
+    catchStore.recordGamePlayed();
+
+    if (gameMode === 'daily') {
+      catchStore.recordDailyScore(todayStr, finalState.score);
+    }
+
+    // Only mark verses the player actually read (overlay shown) as seen.
+    const verseIds = sessionVerses.slice(0, versesReadCount).map((v) => v.id);
+    if (verseIds.length > 0) {
+      catchStore.addSeenVerseIds(verseIds);
+    }
+
+    processEvent({ type: 'score_reached', score: finalState.score });
+    processEvent({ type: 'combo_reached', combo: finalState.bestCombo });
+    processEvent({ type: 'streak_reached', streak: useStreakStore.getState().currentStreak });
+    processEvent({ type: 'games_played', count: catchStore.totalGamesPlayed });
+    processEvent({ type: 'verses_seen', count: catchStore.seenVerseIds.length });
+
+    if (gameMode === 'daily' && !tookDamage) {
+      processEvent({ type: 'no_damage_daily' });
+    }
+  }, [gameMode, todayStr, itemsCaughtThisGame, tookDamage, sessionVerses, versesReadCount, recordPlay, processEvent, catchStore]);
+
   const handleEvents = useCallback((events: GameEvent[]) => {
     for (const ev of events) {
       switch (ev.type) {
         case 'item_caught':
           HapticsManager.light();
+          SoundManager.play('catch');
           setItemsCaughtThisGame((c) => c + 1);
           break;
         case 'bad_item_caught':
           HapticsManager.medium();
+          SoundManager.play('thorn');
           setTookDamage(true);
           break;
         case 'life_lost':
@@ -140,6 +192,12 @@ export default function GameScreen() {
           if (idx < sessionVerses.length) {
             setActiveVerse(sessionVerses[idx]);
             setShownVerseIndex(idx + 1);
+            // The verse is now on screen and the game is paused, so the player
+            // can actually read it — count it.
+            setVersesReadCount((c) => c + 1);
+            HapticsManager.success();
+            // Level-up chime when the verse/level-break overlay appears.
+            SoundManager.play('levelup');
             isRunning.current = false;
             // Clear the field so the verse is a clean level break, not a freeze
             // mid-fall. The next level resumes on an empty board (and a bit faster).
@@ -159,6 +217,13 @@ export default function GameScreen() {
         case 'game_over': {
           isRunning.current = false;
           HapticsManager.medium();
+          SoundManager.play('gameover');
+          // Record the result here, directly off the final state available in
+          // this event branch. (Previously this ran in a [screenMode] effect
+          // that closed over stale state.)
+          if (stateRef.current) {
+            handleGameOver(stateRef.current);
+          }
           Animated.timing(gameOverOpacity, {
             toValue: 1,
             duration: 500,
@@ -169,9 +234,11 @@ export default function GameScreen() {
         }
       }
     }
-  }, [sessionVerses, verseOpacity, gameOverOpacity]);
+  }, [sessionVerses, verseOpacity, gameOverOpacity, handleGameOver]);
 
   const dismissVerse = useCallback(() => {
+    // Soft verse chime as the player closes the verse to start the next level.
+    SoundManager.play('verse');
     setActiveVerse(null);
     // Start the next level on a clean board: clear items, spawn fresh right away,
     // reset the frame clock so the pause doesn't cause a big delta jump.
@@ -187,41 +254,6 @@ export default function GameScreen() {
     lastFrameTime.current = 0;
     isRunning.current = true;
   }, []);
-
-  const handleGameOver = useCallback(() => {
-    if (!gameState) return;
-
-    recordPlay(true, todayStr);
-    catchStore.recordScore(gameState.score);
-    catchStore.recordCombo(gameState.bestCombo);
-    catchStore.recordItemsCaught(itemsCaughtThisGame);
-    catchStore.recordGamePlayed();
-
-    if (gameMode === 'daily') {
-      catchStore.recordDailyScore(todayStr, gameState.score);
-    }
-
-    const verseIds = sessionVerses.slice(0, shownVerseIndex).map((v) => v.id);
-    if (verseIds.length > 0) {
-      catchStore.addSeenVerseIds(verseIds);
-    }
-
-    processEvent({ type: 'score_reached', score: gameState.score });
-    processEvent({ type: 'combo_reached', combo: gameState.bestCombo });
-    processEvent({ type: 'streak_reached', streak: useStreakStore.getState().currentStreak });
-    processEvent({ type: 'games_played', count: catchStore.totalGamesPlayed });
-    processEvent({ type: 'verses_seen', count: catchStore.seenVerseIds.length });
-
-    if (gameMode === 'daily' && !tookDamage) {
-      processEvent({ type: 'no_damage_daily' });
-    }
-  }, [gameState, gameMode, todayStr, itemsCaughtThisGame, tookDamage, sessionVerses, shownVerseIndex, recordPlay, processEvent, catchStore]);
-
-  useEffect(() => {
-    if (screenMode === 'gameover' && gameState) {
-      handleGameOver();
-    }
-  }, [screenMode]);
 
   useEffect(() => {
     if (newlyUnlocked.length > 0 && screenMode === 'gameover' && !celebratingBadge) {
@@ -284,7 +316,7 @@ export default function GameScreen() {
   if (screenMode === 'select') {
     return (
       <SafeAreaView style={styles.screen}>
-        <View style={styles.selectContainer} onLayout={onAreaLayout}>
+        <View style={styles.selectContainer} onLayout={onSelectLayout}>
           <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
             <Text style={styles.backArrow}>{'<'}</Text>
           </Pressable>
@@ -299,7 +331,7 @@ export default function GameScreen() {
             <View style={styles.legendDivider} />
             <View style={styles.legendCol}>
               <Text style={styles.legendLabelBad}>AVOID</Text>
-              <Text style={styles.legendIcons}>🌿 🪨 🐍</Text>
+              <Text style={styles.legendIcons}>🌵 🪨 🐍</Text>
             </View>
           </View>
 
@@ -408,6 +440,10 @@ export default function GameScreen() {
                 top: item.y,
                 width: item.width,
                 height: item.height,
+                // Cheap juice: each item tumbles slowly as it falls. Derived
+                // from its spawn rotation plus its fall distance, so no extra
+                // per-frame state — it just reads off y each render.
+                transform: [{ rotate: `${item.rotation + item.y * 0.25}deg` }],
               },
             ]}
           >
@@ -468,7 +504,7 @@ export default function GameScreen() {
                 <Text style={styles.goStatLabel}>Caught</Text>
               </View>
               <View style={styles.goStatBox}>
-                <Text style={styles.goStatValue}>{shownVerseIndex}</Text>
+                <Text style={styles.goStatValue}>{versesReadCount}</Text>
                 <Text style={styles.goStatLabel}>Verses</Text>
               </View>
             </View>
@@ -476,6 +512,7 @@ export default function GameScreen() {
             <Pressable
               style={styles.playAgainButton}
               onPress={() => {
+                SoundManager.play('tap');
                 setScreenMode('select');
                 setGameState(null);
                 stateRef.current = null;
@@ -486,7 +523,10 @@ export default function GameScreen() {
 
             <Pressable
               style={styles.homeButton}
-              onPress={() => router.back()}
+              onPress={() => {
+                SoundManager.play('tap');
+                router.back();
+              }}
             >
               <Text style={styles.homeButtonText}>Home</Text>
             </Pressable>
@@ -569,7 +609,7 @@ const styles = StyleSheet.create({
     height: 60,
     backgroundColor: 'rgba(16, 16, 14, 0.85)',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 215, 0, 0.12)',
+    borderBottomColor: 'rgba(212, 195, 106, 0.12)',
   },
   hudLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
   hudScore: { color: colors.gold, ...typography.score },
@@ -600,15 +640,15 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 160,
-    backgroundColor: 'rgba(255, 215, 0, 0.04)',
+    backgroundColor: 'rgba(212, 195, 106, 0.04)',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 215, 0, 0.08)',
+    borderTopColor: 'rgba(212, 195, 106, 0.08)',
   },
   fallingItem: {
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#FFD700',
+    shadowColor: '#D4C36A',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 6,
@@ -619,11 +659,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 215, 0, 0.12)',
+    backgroundColor: 'rgba(212, 195, 106, 0.12)',
     borderRadius: radii.lg,
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 215, 0, 0.35)',
-    shadowColor: '#FFD700',
+    borderColor: 'rgba(212, 195, 106, 0.35)',
+    shadowColor: '#D4C36A',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 16,
@@ -632,7 +672,7 @@ const styles = StyleSheet.create({
 
   // Verse Overlay
   verseOverlay: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(16, 16, 14, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -663,7 +703,7 @@ const styles = StyleSheet.create({
 
   // Game Over
   gameOverOverlay: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(16, 16, 14, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',

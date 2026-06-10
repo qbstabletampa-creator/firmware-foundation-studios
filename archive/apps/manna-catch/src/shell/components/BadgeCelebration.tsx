@@ -168,7 +168,7 @@ export default function BadgeCelebration({ badge, onDismiss }: BadgeCelebrationP
     ]).start(onDismiss);
   };
 
-  const particleColors = [colors.gold, '#FFD700', '#FFA500', colors.correct, '#FFFFFF'];
+  const particleColors = [colors.gold, colors.goldMuted, '#FFA500', colors.correct, '#FFFFFF'];
 
   return (
     <Modal visible={badge !== null} transparent animationType="none">
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   buttonText: {
-    color: colors.textPrimary,
+    color: colors.background,
     fontSize: 17,
     fontWeight: '800',
   },

@@ -11,7 +11,7 @@ export const mannaCatchConfig: GameConfig = {
   price: '$2.99',
   profiles: ['Kid', 'Teen', 'Parent', 'Family'],
   splash: {
-    primaryColor: '#FFD700',
+    primaryColor: '#D4C36A',
     rayCount: 14,
     backgroundColor: '#10100E',
     duration: 2500,
