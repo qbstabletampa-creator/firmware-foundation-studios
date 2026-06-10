@@ -102,3 +102,11 @@ npx serve dist -l <free port 8090+> -s    # do NOT pipe serve through head: the 
 Then a Playwright agent (testing instances 3201-3204) plays: real input events only (auto-play loop via run_code is fine), asserts the core loop (objects render at real sizes, scoring works, verse overlay fires and dismisses), screenshots as evidence. Manna proof run: basket 98px, 257 points via real catches, Deut 8:8 overlay, Next Level resumed.
 Known web-lane noise (harmless, web-only): doubled `assets/assets/` image 404s in the static export, 3 residual non-fatal import.meta console errors, useNativeDriver warning.
 Known debt: manna `src/game/gameEngine.test.ts` is stale (pre-6/8 geometry + 50/100/150 verse thresholds; 6 tests fail against the current engine constants). Refresh before trusting vitest as a gate.
+
+## Session log 2026-06-10 PM: all 4 apps gameplay-verified + published (Claude PM loop)
+- MANNA: Trap 10 fix (`8dedd20`) published 20:36Z. Agent played to 257 pts, Deut 8:8 overlay, basket 98px.
+- NOAH: first publish + channel created, 21:01Z. Agent cleared L1-L3, Psalm 65:9 overlay, 0 console errors. CONTENT NOTE for CJ/Quill: Noah's verse set is bread/provision themed (Ex 16, Matt 6:11, John 6:35) — reads carried-over from a harvest game; ark/covenant verses would fit better. Code is fine.
+- LIGHT SNAKE: channel from 19:25Z already serves audited-clean code; agent live-verified board/sprites/movement/eating (4/5), verse path source+bundle-verified (same pattern as manna, threshold 50). Two bot lanes couldn't survive to 50 pts — human reaches it trivially. UX edge worth a look: a stray tap during the 3-2-1 countdown can pre-arm a direction (observed insta-crash at 0). Web-only nit: keyboard arrows not bound (d-pad/swipe only).
+- GOSPLE: SDK 56 -> 54 migration (`10a4958`), published 21:42Z + channel created. Whole fleet now SDK 54 = one Expo Go. Agent QA 5/5 (full Wordle loop, Eph 5:4 reveal).
+- Verification evidence archived: `.pmloop/verify-2026-06-10/` (24 screenshots).
+- Known debt: manna gameEngine.test.ts stale (6 fails, old geometry/thresholds); web-lane assets/assets 404s (export quirk, native unaffected).
