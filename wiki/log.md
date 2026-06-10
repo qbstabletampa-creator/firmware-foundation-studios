@@ -276,3 +276,9 @@
 - Codified scripts/cut-mascot.py (rembg+alpha130+autocrop). Added wiki/pages/native-expo-testing-and-build.md traps + wiki/pages/ffs-native-apps-state-2026-06-09.md pickup.
 - BLOCKER: install-link (EAS preview build) needs interactive Apple login for new bundle IDs; non-interactive attempt failed at credentials (NO build consumed). Awaiting CJ choice (run interactive vs app-specific password). See pickup page.
 - Pages: ffs-native-apps-state-2026-06-09 (new), native-expo-testing-and-build (updated), app-shell-standard-splash-onboarding (Lumen+Ari added).
+
+## 2026-06-10 (PM) — Stable
+- Sim-smoke harness fixed (scheme picker, gosple standalone deps, gosple Xcode/Swift 6.2). All 4 apps GREEN: compile + boot to home in simulator on 3f879ed.
+- Killed all remaining Skia splash paths (gosple index.tsx + app/splash.tsx in all 4 apps). GL splash is the only splash, verified live on CJ's phone.
+- NEW HARD RULE: EAS Update publish lane = the testing loop (no build-to-test, no install links). Manna published + channel created; CJ's first test caught the zero-width game-area deadlock (Trap 9), fixed + republished same hour.
+- Pages: native-expo-testing-and-build.md (Traps 6-9, publish lane, stale Trap 4 pin note corrected).

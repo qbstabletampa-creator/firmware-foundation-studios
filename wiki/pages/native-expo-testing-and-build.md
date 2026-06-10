@@ -67,3 +67,22 @@ Killing the Skia splash in `app/index.tsx` was not enough. `app/splash.tsx` (lef
 
 ## Trap 8: SDK 56 (gosple) needs Swift tools 6.2 -> newer Xcode than SDK 54 apps
 Gosple sim-smoke died in the ExpoModulesJSI xcframework script: "package 'apple' is using Swift tools version 6.2.0 but the installed version is 6.1.0". GH macos-15 default Xcode 16.4 = Swift 6.1. The workflow now runs `sudo xcode-select -s $(ls -d /Applications/Xcode_*.app | sort -V | tail -1)` for gosple only; SDK 54 apps stay on the default (matches their EAS image). When the fleet migrates to SDK 56, that select becomes unconditional.
+
+## THE WAY (CJ hard rule, 2026-06-10): EAS Update publish lane
+Every app is published to Expo's servers and lives in Expo Go permanently. Test loop = `eas update` -> CJ opens Expo Go -> fix -> republish. No preview builds for testing, no install links. ONE production EAS build per app, at store submission. Full rule: `~/.claude/rules/app-build-testing.md`.
+
+Per app (already configured in app.json: runtimeVersion sdkVersion policy + updates.url):
+```
+cd archive/apps/<app>
+npx eas-cli update --branch preview --message "<what changed>" --non-interactive
+npx eas-cli channel:create preview   # one-time per app (manna done 6/10)
+```
+Verify Expo serves it before telling CJ ready (createdAt must match the publish):
+```
+curl -s "https://u.expo.dev/<projectId>?channel-name=preview" -H "expo-runtime-version: exposdk:54.0.0" -H "expo-platform: ios" -H "expo-protocol-version: 1" -H "accept: multipart/mixed" | grep -o "\"createdAt\":\"[^\"]*\""
+```
+ProjectIds: manna `d5b4265a-aab0-461a-a76d-e91f0af94d24` | gosple `919a2ce7-1a11-48fe-a5a7-ea7382682019` (SDK 56 -> runtime exposdk:56.0.0) | light-snake `a3000ec4-206d-41ca-b77c-928575419763` | noah `2b0ff349-a7bd-4ce1-b68f-ca0b0d63ced7`.
+Updates apply on the NEXT launch: force-close Expo Go, open the app, close, open again. Expo Go shares AsyncStorage between dev-server and published variants of the same project (CJ kept his 720 high score + completed-onboarding flag).
+
+## Trap 9: onLayout on a view whose size depends on the measurement (zero-width deadlock)
+Manna `app/game.tsx` set the game area `width` from `areaSize.w`, measured by that same view's `onLayout`. Width starts 0 -> onLayout reports 0 -> locked at 0 forever: black play field, HUD alive, score stuck at 0 (engine early-returns on gameWidth 0). Shipped in `a827be5` when select/game layout handlers were split (select screen used to seed the size). Caught by CJ's first Expo Go published-update test, fixed in `2ffb600`: a full-width WRAPPER carries onLayout, the inner game box gets the measured width. Pattern rule: never attach the measuring onLayout to the view being sized by the measurement.
