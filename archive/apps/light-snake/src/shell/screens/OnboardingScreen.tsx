@@ -83,7 +83,7 @@ function FallingDecor() {
   );
 }
 
-// Warm sunny glow behind Lumen for the celebration (reads on cream, unlike gold rays).
+// Warm sunny glow behind Eli for the celebration (reads on cream, unlike gold rays).
 function WarmGlow() {
   const discs = [
     { r: 170, o: 0.16 },

@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
+  AppState,
   Image,
+  ImageSourcePropType,
   LayoutChangeEvent,
   PanResponder,
   Pressable,
@@ -26,6 +28,7 @@ import { createRng, seedFromDate } from '../src/game/prng';
 import { useLightSnakeGameStore } from '../src/game/stores/lightSnakeGameStore';
 import { spriteForFood, SHEPHERD, SHEEP, THORN } from '../src/game/spriteMap';
 import { HapticsManager } from '../src/shell/sound/HapticsManager';
+import { SoundManager } from '../src/shell/sound/SoundManager';
 import BadgeCelebration from '../src/shell/components/BadgeCelebration';
 import { useBadgeStore } from '../src/shell/stores/badgeStore';
 import { useStreakStore } from '../src/shell/stores/streakStore';
@@ -37,7 +40,7 @@ const VERSE_THEMES: VerseTheme[] = ['light', 'truth', 'hope', 'faith', 'trust', 
 const GRID_COLS = 15;
 const GRID_ROWS = 20;
 const COUNTDOWN_FROM = 3;
-const MIN_SWIPE = 18;
+const MIN_SWIPE = 26;
 const MAX_BOARD_WIDTH = 460;
 
 type GameMode = 'daily' | 'freeplay';
@@ -79,9 +82,18 @@ export default function GameScreen() {
   const itemTally = useRef({ bread: 0, fish: 0, lamp: 0 });
   const thornsSeen = useRef(0);
 
+  // Resume-from-background gate: when the app is sent to the background mid-run
+  // we stop the loop and surface a "Tap to continue" overlay instead of
+  // resuming instantly under the player's thumb.
+  const [resumePending, setResumePending] = useState(false);
+
   const rngRef = useRef<() => number>(() => Math.random());
   const lastFrameTime = useRef(0);
   const isRunning = useRef(false);
+  // Explicit pause gate. The loop advances ONLY when paused is false AND
+  // isRunning is true. verse_milestone and AppState-background both set this,
+  // so the freeze no longer depends on isRunning timing relative to handleEvents.
+  const paused = useRef(false);
   const stateRef = useRef<GameState | null>(null);
   const committedRef = useRef(false);
 
@@ -94,6 +106,7 @@ export default function GameScreen() {
   // --- start a run ----------------------------------------------------------
   const startGame = useCallback(
     (mode: GameMode) => {
+      SoundManager.play('tap');
       const seenIds = store.seenVerseIds;
       let verses: Verse[];
       let rng: () => number;
@@ -122,6 +135,8 @@ export default function GameScreen() {
       setCountdown(COUNTDOWN_FROM);
       lastFrameTime.current = 0;
       isRunning.current = false; // engine stays in 'countdown' until countdown ends
+      paused.current = false;
+      setResumePending(false);
       overlayOpacity.setValue(0);
       verseOpacity.setValue(0);
     },
@@ -196,10 +211,13 @@ export default function GameScreen() {
         switch (ev.type) {
           case 'food_eaten': {
             HapticsManager.light();
+            SoundManager.play('catch');
             itemTally.current[ev.item.type] += 1;
             break;
           }
           case 'combo': {
+            // Haptic only on combo. The 'catch' SFX already fires on the same
+            // eat tick (food_eaten) — a second chime here would stack on it.
             if (ev.count >= 3) HapticsManager.success();
             break;
           }
@@ -216,7 +234,9 @@ export default function GameScreen() {
             if (idx < sessionVerses.length) {
               setActiveVerse(sessionVerses[idx]);
               setShownVerseIndex((prev) => prev + 1);
+              paused.current = true; // explicit freeze while the verse is shown
               isRunning.current = false;
+              SoundManager.play('levelup');
               verseOpacity.setValue(0);
               Animated.timing(verseOpacity, {
                 toValue: 1,
@@ -228,7 +248,9 @@ export default function GameScreen() {
           }
           case 'game_over': {
             isRunning.current = false;
-            HapticsManager.success();
+            paused.current = false;
+            HapticsManager.warning();
+            SoundManager.play('gameover');
             if (stateRef.current) commitResult(stateRef.current);
             setScreenMode('gameover');
             overlayOpacity.setValue(0);
@@ -246,7 +268,9 @@ export default function GameScreen() {
   );
 
   const dismissVerse = useCallback(() => {
+    SoundManager.play('verse');
     setActiveVerse(null);
+    paused.current = false;
     if (stateRef.current && stateRef.current.phase === 'playing') {
       lastFrameTime.current = 0;
       isRunning.current = true;
@@ -274,7 +298,7 @@ export default function GameScreen() {
     let rafId: number;
     const loop = (now: number) => {
       rafId = requestAnimationFrame(loop);
-      if (!isRunning.current || !stateRef.current) return;
+      if (paused.current || !isRunning.current || !stateRef.current) return;
       if (lastFrameTime.current === 0) {
         lastFrameTime.current = now;
         return;
@@ -289,6 +313,37 @@ export default function GameScreen() {
     rafId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafId);
   }, [updateState]);
+
+  // --- background / foreground -------------------------------------------------
+  // Leaving the app mid-run must not let the flock keep moving in the dark, and
+  // returning must not drop the player straight back into motion. On background
+  // we stop the loop; on foreground we show a "Tap to continue" resume gate
+  // (only while an actual run is in progress, not on the verse/over overlays).
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next === 'active') return;
+      const playingNow =
+        isRunning.current &&
+        stateRef.current?.phase === 'playing' &&
+        !activeVerse;
+      if (playingNow) {
+        isRunning.current = false;
+        paused.current = true;
+        setResumePending(true);
+      }
+    });
+    return () => sub.remove();
+  }, [activeVerse]);
+
+  const resumeFromBackground = useCallback(() => {
+    SoundManager.play('tap');
+    setResumePending(false);
+    paused.current = false;
+    if (stateRef.current && stateRef.current.phase === 'playing') {
+      lastFrameTime.current = 0;
+      isRunning.current = true;
+    }
+  }, []);
 
   // --- input ----------------------------------------------------------------
   const queueDirection = useCallback((dir: Direction) => {
@@ -316,6 +371,7 @@ export default function GameScreen() {
   );
 
   const playAgain = useCallback(() => {
+    SoundManager.play('tap');
     setScreenMode('select');
     setGameState(null);
     stateRef.current = null;
@@ -335,11 +391,18 @@ export default function GameScreen() {
     return (
       <SafeAreaView style={styles.screen}>
         <View style={styles.selectContainer}>
-          <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backButton}>
+          <Pressable
+            onPress={() => {
+              SoundManager.play('tap');
+              router.back();
+            }}
+            hitSlop={12}
+            style={styles.backButton}
+          >
             <Text style={styles.backArrow}>{'<'}</Text>
           </Pressable>
           <Text style={styles.selectTitle}>Shepherd's Trail</Text>
-          <Text style={styles.selectTagline}>Carry the light. Avoid the thorns.</Text>
+          <Text style={styles.selectTagline}>Gather the flock. Avoid the thorns.</Text>
 
           <View style={styles.modeButtons}>
             <Pressable
@@ -357,7 +420,7 @@ export default function GameScreen() {
             <Pressable style={styles.modeButton} onPress={() => startGame('freeplay')}>
               <Text style={styles.modeIcon}>{'🔦'}</Text>
               <Text style={styles.modeLabel}>Free Play</Text>
-              <Text style={styles.modeDesc}>Grow the light. Beat your high score.</Text>
+              <Text style={styles.modeDesc}>Grow your flock. Beat your high score.</Text>
             </Pressable>
           </View>
 
@@ -385,7 +448,7 @@ export default function GameScreen() {
           <Text style={styles.hudLevelName}>Speed {speedLevel(gs.speed)}</Text>
         </View>
         <View style={styles.hudRight}>
-          <Text style={styles.hudItems}>{gs.itemsEaten} 🍞</Text>
+          <Text style={styles.hudItems}>{gs.itemsEaten} 🐑</Text>
         </View>
       </View>
 
@@ -400,7 +463,7 @@ export default function GameScreen() {
             <Text style={styles.countdownText}>
               {countdown > 0 ? countdown : 'GO!'}
             </Text>
-            <Text style={styles.countdownHint}>Swipe to steer the light</Text>
+            <Text style={styles.countdownHint}>Swipe to lead the flock</Text>
           </View>
         )}
       </View>
@@ -436,11 +499,27 @@ export default function GameScreen() {
         </Animated.View>
       )}
 
+      {/* Resume-from-background overlay */}
+      {resumePending && screenMode === 'playing' && (
+        <Pressable
+          style={styles.resumeOverlay}
+          onPress={resumeFromBackground}
+          accessibilityRole="button"
+          accessibilityLabel="Tap to continue"
+        >
+          <Text style={styles.resumeTitle}>Paused</Text>
+          <Text style={styles.resumeHint}>Tap to continue</Text>
+        </Pressable>
+      )}
+
       {/* Game over overlay */}
       {screenMode === 'gameover' && (
         <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
           <View style={styles.resultCard}>
-            <Text style={styles.resultTitle}>The Light Fades</Text>
+            <Text style={styles.resultTitle}>The flock scatters!</Text>
+            <Text style={styles.resultSubline}>
+              Eli never gives up. Round them up again!
+            </Text>
             <Text style={styles.resultScore}>{gs.score}</Text>
             <Text style={styles.resultLabel}>Points</Text>
             <View style={styles.resultStats}>
@@ -458,7 +537,10 @@ export default function GameScreen() {
             </Pressable>
             <Pressable
               style={styles.secondaryButton}
-              onPress={() => router.back()}
+              onPress={() => {
+                SoundManager.play('tap');
+                router.back();
+              }}
               accessibilityRole="button"
               accessibilityLabel="Home"
             >
@@ -480,7 +562,82 @@ export default function GameScreen() {
 }
 
 // ---------------------------------------------------------------------------
-// Board: renders the grid, snake, food, and thorns.
+// Memoized board cells.
+//
+// Each cell is a small React.memo component so a re-render of the Board only
+// touches cells whose props actually changed. Combined with content-stable keys
+// (grid position, not array index) this means growing the flock adds one new
+// cell instead of re-keying and re-mounting the whole trail every tick.
+// ---------------------------------------------------------------------------
+const SpriteCell = memo(function SpriteCell({
+  source,
+  left,
+  top,
+  size,
+  opacity,
+  zIndex,
+}: {
+  source: ImageSourcePropType;
+  left: number;
+  top: number;
+  size: number;
+  opacity?: number;
+  zIndex?: number;
+}) {
+  return (
+    <Image
+      source={source}
+      style={[styles.cellItem, { left, top, width: size, height: size, opacity, zIndex }]}
+      resizeMode="contain"
+    />
+  );
+});
+
+// A stray sheep waiting to be gathered. Rendered as the sheep sprite but pulsing
+// and slightly smaller than a flock segment, so it reads as "not yet yours" —
+// eating it grows the flock (the trail already grows on eat).
+const StraySheep = memo(function StraySheep({
+  source,
+  left,
+  top,
+  size,
+}: {
+  source: ImageSourcePropType;
+  left: number;
+  top: number;
+  size: number;
+}) {
+  const pulse = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 650, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 650, useNativeDriver: true }),
+      ]),
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [pulse]);
+
+  const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.82, 0.96] });
+  const glow = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] });
+
+  return (
+    <Animated.View
+      style={[
+        styles.cellItem,
+        styles.strayGlow,
+        { left, top, width: size, height: size, opacity: glow, transform: [{ scale }] },
+      ]}
+      pointerEvents="none"
+    >
+      <Image source={source} style={styles.strayImage} resizeMode="contain" />
+    </Animated.View>
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Board: renders the grid, flock, stray sheep (food), and thorns.
 // ---------------------------------------------------------------------------
 function Board({ gs }: { gs: GameState }) {
   const [areaW, setAreaW] = useState(0);
@@ -507,69 +664,53 @@ function Board({ gs }: { gs: GameState }) {
     <View style={styles.boardWrap} onLayout={onLayout}>
       {cell > 0 && (
         <View style={[styles.board, { width: boardW, height: boardH }]}>
-          {/* Thorns */}
-          {gs.thorns.map((t, i) => (
-            <Image
-              key={`thorn-${i}`}
+          {/* Thorns — keyed by grid position so a thorn that stays put is stable. */}
+          {gs.thorns.map((t) => (
+            <SpriteCell
+              key={`thorn-${t.pos.x}-${t.pos.y}`}
               source={THORN}
-              style={[
-                styles.cellItem,
-                { left: t.pos.x * cell, top: t.pos.y * cell, width: cell, height: cell },
-              ]}
-              resizeMode="contain"
+              left={t.pos.x * cell}
+              top={t.pos.y * cell}
+              size={cell}
             />
           ))}
 
-          {/* Food */}
-          {gs.food.map((f, i) => (
-            <Image
-              key={`food-${i}`}
-              source={spriteForFood(f.type)}
-              style={[
-                styles.cellItem,
-                { left: f.pos.x * cell, top: f.pos.y * cell, width: cell, height: cell },
-              ]}
-              resizeMode="contain"
+          {/* Stray sheep to gather (food). Pulses + smaller so it stands apart
+              from the flock; eating it grows your flock. */}
+          {gs.food.map((f) => (
+            <StraySheep
+              key={`stray-${f.pos.x}-${f.pos.y}`}
+              source={SHEEP}
+              left={f.pos.x * cell}
+              top={f.pos.y * cell}
+              size={cell}
             />
           ))}
 
-          {/* The flock: shepherd leads (head, on top), each trailing segment is a glowing sheep. */}
-          {gs.snake.map((seg, i) => {
-            const isHead = i === 0;
-            return isHead ? (
-              <Image
+          {/* The flock: shepherd Eli leads (head, on top), each trailing segment
+              is a glowing sheep. Keyed by grid position so growth only adds the
+              new lead cell instead of re-keying the whole trail every tick. */}
+          {gs.snake.map((seg, i) =>
+            i === 0 ? (
+              <SpriteCell
                 key="head"
                 source={SHEPHERD}
-                style={[
-                  styles.cellItem,
-                  {
-                    left: seg.x * cell,
-                    top: seg.y * cell,
-                    width: cell,
-                    height: cell,
-                    zIndex: 5,
-                  },
-                ]}
-                resizeMode="contain"
+                left={seg.x * cell}
+                top={seg.y * cell}
+                size={cell}
+                zIndex={5}
               />
             ) : (
-              <Image
-                key={`seg-${i}`}
+              <SpriteCell
+                key={`seg-${seg.x}-${seg.y}`}
                 source={SHEEP}
-                style={[
-                  styles.cellItem,
-                  {
-                    left: seg.x * cell,
-                    top: seg.y * cell,
-                    width: cell,
-                    height: cell,
-                    opacity: Math.max(0.45, 1 - i * 0.035),
-                  },
-                ]}
-                resizeMode="contain"
+                left={seg.x * cell}
+                top={seg.y * cell}
+                size={cell}
+                opacity={Math.max(0.45, 1 - i * 0.035)}
               />
-            );
-          })}
+            ),
+          )}
         </View>
       )}
     </View>
@@ -674,14 +815,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   cellItem: { position: 'absolute' },
-  snakeSeg: {
-    position: 'absolute',
-    backgroundColor: 'rgba(255, 224, 130, 0.92)',
+  strayGlow: {
+    alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#FFE082',
-    shadowOpacity: 0.8,
-    shadowRadius: 6,
+    shadowOpacity: 0.9,
+    shadowRadius: 8,
     shadowOffset: { width: 0, height: 0 },
   },
+  strayImage: { width: '100%', height: '100%' },
 
   // Countdown
   countdownOverlay: {
@@ -743,6 +885,16 @@ const styles = StyleSheet.create({
   },
   verseDismissText: { color: colors.background, fontSize: 16, fontWeight: '800' },
 
+  // Resume overlay
+  resumeOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(6, 10, 30, 0.88)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  resumeTitle: { color: colors.gold, fontSize: 34, fontWeight: '900', marginBottom: spacing.sm },
+  resumeHint: { color: colors.textSecondary, fontSize: 16, fontWeight: '700' },
+
   // Result overlay
   overlay: {
     ...StyleSheet.absoluteFillObject,
@@ -761,7 +913,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.gold,
   },
-  resultTitle: { color: colors.textPrimary, fontSize: 26, fontWeight: '900', marginBottom: spacing.sm, textAlign: 'center' },
+  resultTitle: { color: colors.textPrimary, fontSize: 26, fontWeight: '900', marginBottom: spacing.xs, textAlign: 'center' },
+  resultSubline: { color: colors.textSecondary, fontSize: 14, fontWeight: '600', marginBottom: spacing.md, textAlign: 'center' },
   resultScore: { color: colors.gold, fontSize: 52, fontWeight: '900' },
   resultLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '700', textTransform: 'uppercase', marginBottom: spacing.lg },
   resultStats: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.xl },

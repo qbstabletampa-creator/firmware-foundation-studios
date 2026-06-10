@@ -6,8 +6,8 @@ export const lightSnakeConfig: GameConfig = {
   studioName: 'Firmware Foundation Studios',
   version: '1.0.0',
   bundleId: 'com.firmwarefoundation.shepherdstrail',
-  description: 'Guide the light through the dark. Gather bread, fish, and lamps while you grow.',
-  tagline: 'Carry the light. Avoid the thorns.',
+  description: 'Lead Eli and his flock through the dark. Gather every stray sheep while you grow.',
+  tagline: 'Gather the flock. Avoid the thorns.',
   price: '$2.99',
   profiles: ['Kid', 'Teen', 'Parent', 'Family'],
   splash: {

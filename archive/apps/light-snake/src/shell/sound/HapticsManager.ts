@@ -17,8 +17,13 @@ function success(): void {
   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 }
 
+function warning(): void {
+  if (!enabled) return;
+  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+}
+
 function setEnabled(value: boolean): void {
   enabled = value;
 }
 
-export const HapticsManager = { light, medium, success, setEnabled };
+export const HapticsManager = { light, medium, success, warning, setEnabled };

@@ -73,6 +73,9 @@ const SPEED_INCREMENT = 0.5;
 /** Items eaten per speed increase. */
 const ITEMS_PER_SPEED_UP = 5;
 
+/** Hard cap on the speed multiplier so high scores stay kid-playable. */
+const MAX_SPEED = 3.0;
+
 /** Combo window in ms: eat within this time to keep combo alive. */
 const COMBO_WINDOW_MS = 2000;
 
@@ -411,8 +414,13 @@ export function tick(
     const prevSpeedLevel = Math.floor((itemsEaten - 1) / ITEMS_PER_SPEED_UP);
     const newSpeedLevel = Math.floor(itemsEaten / ITEMS_PER_SPEED_UP);
     if (newSpeedLevel > prevSpeedLevel) {
-      speed = 1 + newSpeedLevel * SPEED_INCREMENT;
-      events.push({ type: 'speed_up', speed });
+      const uncapped = 1 + newSpeedLevel * SPEED_INCREMENT;
+      const next = Math.min(uncapped, MAX_SPEED);
+      // Only emit a speed_up when we actually got faster (not once capped).
+      if (next > speed) {
+        speed = next;
+        events.push({ type: 'speed_up', speed });
+      }
     }
 
     // Build a temporary state to use for spawning (reflects the updated snake/food/thorns).
