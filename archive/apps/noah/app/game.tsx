@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Image,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { verseBank } from '@ffs/verses/verseBank';
 import { getVersesForSession, getVersesForDaily } from '@ffs/verses/selectionEngine';
@@ -22,9 +22,10 @@ import { getLevelConfig } from '../src/game/collisionEngine';
 import { GAME_CONSTANTS } from '../src/game/itemConfig';
 import { createRng, seedFromDate } from '../src/game/prng';
 import { useNoahGameStore } from '../src/game/stores/noahGameStore';
-import type { GameState, LevelResult, StarRating } from '../src/game/types';
+import type { Card as GameCard, GameState, LevelResult, StarRating } from '../src/game/types';
 import { CARD_BACK, spriteForAnimal } from '../src/game/spriteMap';
 import { HapticsManager } from '../src/shell/sound/HapticsManager';
+import { SoundManager } from '../src/shell/sound/SoundManager';
 import BadgeCelebration from '../src/shell/components/BadgeCelebration';
 import { useBadgeStore } from '../src/shell/stores/badgeStore';
 import { useStreakStore } from '../src/shell/stores/streakStore';
@@ -64,6 +65,7 @@ export default function GameScreen() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [level, setLevel] = useState(1);
   const [cumulativeScore, setCumulativeScore] = useState(0);
+  const [showQuitConfirm, setShowQuitConfirm] = useState(false);
 
   const [sessionVerses, setSessionVerses] = useState<Verse[]>([]);
   const [shownVerseIndex, setShownVerseIndex] = useState(0);
@@ -75,6 +77,10 @@ export default function GameScreen() {
   const lastFrameTime = useRef(0);
   const isRunning = useRef(false);
   const stateRef = useRef<GameState | null>(null);
+  // Session-cumulative verse counter. The engine's verseMilestone resets per
+  // level, so we keep our own running index here to walk through ALL session
+  // verses across the run instead of repeating the first few every level.
+  const verseCursor = useRef(0);
 
   const verseOpacity = useRef(new Animated.Value(0)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
@@ -103,6 +109,7 @@ export default function GameScreen() {
       setGameMode(mode);
       setCumulativeScore(0);
       setShownVerseIndex(0);
+      verseCursor.current = 0;
 
       const seenIds = noahStore.seenVerseIds;
       let verses: Verse[];
@@ -130,12 +137,15 @@ export default function GameScreen() {
         switch (ev.type) {
           case 'card_flipped':
             HapticsManager.light();
+            SoundManager.play('tap');
             break;
           case 'match_found':
             HapticsManager.success();
+            SoundManager.play('catch');
             break;
           case 'mismatch':
             HapticsManager.medium();
+            SoundManager.play('thorn');
             break;
           case 'combo':
             if (ev.count >= 3) HapticsManager.success();
@@ -144,11 +154,15 @@ export default function GameScreen() {
             HapticsManager.light();
             break;
           case 'verse_milestone': {
-            const idx = ev.milestone - 1;
+            // Walk the session verse list cumulatively, not by the engine's
+            // per-level milestone number (which resets each level).
+            const idx = verseCursor.current;
             if (idx < sessionVerses.length) {
+              verseCursor.current = idx + 1;
               setActiveVerse(sessionVerses[idx]);
               setShownVerseIndex((prev) => Math.max(prev, idx + 1));
               isRunning.current = false;
+              SoundManager.play('levelup');
               verseOpacity.setValue(0);
               Animated.timing(verseOpacity, {
                 toValue: 1,
@@ -161,12 +175,14 @@ export default function GameScreen() {
           case 'level_complete': {
             isRunning.current = false;
             HapticsManager.success();
+            SoundManager.play('levelup');
             setLastResult(ev.result);
             break;
           }
           case 'game_complete': {
             isRunning.current = false;
             HapticsManager.success();
+            SoundManager.play('gameover');
             break;
           }
         }
@@ -176,6 +192,7 @@ export default function GameScreen() {
   );
 
   const dismissVerse = useCallback(() => {
+    SoundManager.play('verse');
     setActiveVerse(null);
     // Only resume if the level is still in play.
     if (stateRef.current && stateRef.current.phase === 'playing') {
@@ -208,12 +225,16 @@ export default function GameScreen() {
       }
 
       if (isGameComplete) {
+        // recordGamePlayed is the single source of truth for per-completed-game
+        // counts; read the freshly-incremented value from the store rather than
+        // the stale snapshot so the games_played badge event matches the stat.
         noahStore.recordGamePlayed();
+        const gamesPlayed = useNoahGameStore.getState().totalGamesPlayed;
         processEvent({
           type: 'streak_reached',
           streak: useStreakStore.getState().currentStreak,
         });
-        processEvent({ type: 'games_played', count: noahStore.totalGamesPlayed });
+        processEvent({ type: 'games_played', count: gamesPlayed });
         if (gameMode === 'daily') noahStore.recordDailyScore(todayStr, total);
       }
     },
@@ -262,12 +283,25 @@ export default function GameScreen() {
   }, [newlyUnlocked, screenMode, celebratingBadge]);
 
   // --- game loop ------------------------------------------------------------
-  const updateState = useCallback(
-    (newState: GameState, events: GameEvent[]) => {
-      setGameState(newState);
-      if (events.length > 0) handleEvents(events);
+  // PERF: tick() advances elapsedMs every frame, but the HUD shows no live
+  // timer, so a per-frame setGameState would re-render the whole board at 60fps
+  // for nothing. We keep the advancing state in stateRef and only push it into
+  // React state when something VISIBLE changed (events fired, or phase / flip /
+  // card / preview-banner state moved).
+  const visualChanged = useCallback(
+    (prev: GameState | null, next: GameState): boolean => {
+      if (!prev) return true;
+      if (prev.phase !== next.phase) return true;
+      if (prev.flipPhase !== next.flipPhase) return true;
+      if (prev.cards !== next.cards) return true;
+      if (prev.score !== next.score) return true;
+      if (prev.combo !== next.combo) return true;
+      if (prev.matches !== next.matches) return true;
+      // While previewing, the "Memorize!" banner is up; the board doesn't
+      // depend on the countdown value, so no per-frame render is needed.
+      return false;
     },
-    [handleEvents],
+    [],
   );
 
   useEffect(() => {
@@ -282,13 +316,18 @@ export default function GameScreen() {
       const deltaMs = now - lastFrameTime.current;
       lastFrameTime.current = now;
 
-      const result = tick(stateRef.current, deltaMs);
+      const prev = stateRef.current;
+      const result = tick(prev, deltaMs);
       stateRef.current = result.state;
-      updateState(result.state, result.events);
+
+      if (result.events.length > 0) handleEvents(result.events);
+      if (result.events.length > 0 || visualChanged(prev, result.state)) {
+        setGameState(result.state);
+      }
     };
     rafId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafId);
-  }, [updateState]);
+  }, [handleEvents, visualChanged]);
 
   const handleCardPress = useCallback(
     (cardIndex: number) => {
@@ -303,16 +342,46 @@ export default function GameScreen() {
   );
 
   const nextLevel = useCallback(() => {
+    SoundManager.play('tap');
     setLastResult(null);
     startLevel(level + 1, rngRef.current);
   }, [level, startLevel]);
 
   const playAgain = useCallback(() => {
+    SoundManager.play('tap');
     setLastResult(null);
     setScreenMode('select');
     setGameState(null);
     stateRef.current = null;
   }, []);
+
+  const goHome = useCallback(() => {
+    SoundManager.play('tap');
+    router.back();
+  }, [router]);
+
+  // --- quit / pause ---------------------------------------------------------
+  const openQuitConfirm = useCallback(() => {
+    SoundManager.play('tap');
+    isRunning.current = false;
+    setShowQuitConfirm(true);
+  }, []);
+
+  const cancelQuit = useCallback(() => {
+    SoundManager.play('tap');
+    setShowQuitConfirm(false);
+    // Resume only if a verse overlay isn't holding the loop and we're mid-play.
+    if (stateRef.current && stateRef.current.phase === 'playing' && !activeVerse) {
+      lastFrameTime.current = 0;
+      isRunning.current = true;
+    }
+  }, [activeVerse]);
+
+  const confirmQuit = useCallback(() => {
+    SoundManager.play('tap');
+    setShowQuitConfirm(false);
+    router.back();
+  }, [router]);
 
   // --- SELECT screen --------------------------------------------------------
   if (screenMode === 'select') {
@@ -360,7 +429,7 @@ export default function GameScreen() {
   const showFaceUp = gs.phase === 'preview';
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
       {/* HUD */}
       <View style={styles.hud}>
         <View style={styles.hudLeft}>
@@ -375,13 +444,27 @@ export default function GameScreen() {
           <Text style={styles.hudMatches}>
             {gs.matches}/{gs.totalPairs}
           </Text>
+          <Pressable
+            onPress={openQuitConfirm}
+            hitSlop={12}
+            style={styles.quitButton}
+            accessibilityRole="button"
+            accessibilityLabel="Pause and quit"
+          >
+            <Text style={styles.quitIcon}>{'✕'}</Text>
+          </Pressable>
         </View>
       </View>
 
       {/* Board area */}
       <View style={styles.boardArea}>
         <GameBackground palette={NOAH_PALETTE} />
-        <Board gs={gs} cfg={cfg} showFaceUp={showFaceUp} onPress={handleCardPress} />
+        <Board
+          cards={gs.cards}
+          cols={cfg.cols}
+          showFaceUp={showFaceUp}
+          onPress={handleCardPress}
+        />
         {gs.phase === 'preview' && (
           <View style={styles.previewBanner} pointerEvents="none">
             <Text style={styles.previewText}>Memorize!</Text>
@@ -403,6 +486,22 @@ export default function GameScreen() {
         </Animated.View>
       )}
 
+      {/* Quit / pause confirm overlay */}
+      {showQuitConfirm && (
+        <View style={styles.overlay}>
+          <View style={styles.resultCard}>
+            <Text style={styles.resultTitle}>Paused</Text>
+            <Text style={styles.quitPrompt}>Leave this game and go home?</Text>
+            <Pressable style={styles.primaryButton} onPress={cancelQuit}>
+              <Text style={styles.primaryButtonText}>Keep Playing</Text>
+            </Pressable>
+            <Pressable style={styles.secondaryButton} onPress={confirmQuit}>
+              <Text style={styles.secondaryButtonText}>Quit to Home</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+
       {/* Level up overlay */}
       {screenMode === 'levelup' && lastResult && (
         <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
@@ -419,7 +518,7 @@ export default function GameScreen() {
             <Pressable style={styles.primaryButton} onPress={nextLevel}>
               <Text style={styles.primaryButtonText}>Next Level</Text>
             </Pressable>
-            <Pressable style={styles.secondaryButton} onPress={() => router.back()}>
+            <Pressable style={styles.secondaryButton} onPress={goHome}>
               <Text style={styles.secondaryButtonText}>Home</Text>
             </Pressable>
           </View>
@@ -444,7 +543,7 @@ export default function GameScreen() {
             <Pressable style={styles.primaryButton} onPress={playAgain}>
               <Text style={styles.primaryButtonText}>Play Again</Text>
             </Pressable>
-            <Pressable style={styles.secondaryButton} onPress={() => router.back()}>
+            <Pressable style={styles.secondaryButton} onPress={goHome}>
               <Text style={styles.secondaryButtonText}>Home</Text>
             </Pressable>
           </View>
@@ -464,15 +563,18 @@ export default function GameScreen() {
 
 // ---------------------------------------------------------------------------
 // Board: lays out cards in the level grid and renders each card.
+// Memoized so the per-frame engine ticks (elapsedMs) never re-render it; it
+// only re-renders when the cards array reference, column count, or preview
+// flag actually changes.
 // ---------------------------------------------------------------------------
-function Board({
-  gs,
-  cfg,
+const Board = memo(function Board({
+  cards,
+  cols,
   showFaceUp,
   onPress,
 }: {
-  gs: GameState;
-  cfg: ReturnType<typeof getLevelConfig>;
+  cards: GameCard[];
+  cols: number;
   showFaceUp: boolean;
   onPress: (i: number) => void;
 }) {
@@ -481,59 +583,85 @@ function Board({
   const boardWidth = Math.min(areaW - spacing.lg * 2, MAX_BOARD_WIDTH);
   const cardSize = useMemo(() => {
     if (boardWidth <= 0) return 0;
-    return (boardWidth - BOARD_GAP * (cfg.cols - 1)) / cfg.cols;
-  }, [boardWidth, cfg.cols]);
+    return (boardWidth - BOARD_GAP * (cols - 1)) / cols;
+  }, [boardWidth, cols]);
 
   return (
     <View style={styles.boardWrap} onLayout={(e) => setAreaW(e.nativeEvent.layout.width)}>
       {cardSize > 0 && (
         <View style={[styles.board, { width: boardWidth }]}>
-          {gs.cards.map((card) => {
-            const faceUp =
-              showFaceUp || card.state === 'faceup' || card.state === 'matched';
-            const sprite = spriteForAnimal(card.name);
-            return (
-              <Pressable
-                key={card.id}
-                onPress={() => onPress(card.id)}
-                disabled={showFaceUp || card.state === 'matched'}
-                style={[
-                  styles.card,
-                  {
-                    width: cardSize,
-                    height: cardSize,
-                    marginRight: card.col === cfg.cols - 1 ? 0 : BOARD_GAP,
-                    marginBottom: BOARD_GAP,
-                  },
-                  faceUp ? styles.cardFaceUp : styles.cardFaceDown,
-                  card.state === 'matched' && styles.cardMatched,
-                ]}
-              >
-                {faceUp ? (
-                  sprite ? (
-                    <Image
-                      source={sprite}
-                      style={{ width: cardSize * 0.78, height: cardSize * 0.78 }}
-                      resizeMode="contain"
-                    />
-                  ) : (
-                    <Text style={{ fontSize: cardSize * 0.5 }}>{card.emoji}</Text>
-                  )
-                ) : (
-                  <Image
-                    source={CARD_BACK}
-                    style={{ width: cardSize * 0.92, height: cardSize * 0.92 }}
-                    resizeMode="contain"
-                  />
-                )}
-              </Pressable>
-            );
-          })}
+          {cards.map((card) => (
+            <CardTile
+              key={card.id}
+              card={card}
+              cardSize={cardSize}
+              cols={cols}
+              showFaceUp={showFaceUp}
+              onPress={onPress}
+            />
+          ))}
         </View>
       )}
     </View>
   );
-}
+});
+
+// ---------------------------------------------------------------------------
+// CardTile: a single memoized card. Re-renders only when its own card object,
+// size, or the preview flag changes.
+// ---------------------------------------------------------------------------
+const CardTile = memo(function CardTile({
+  card,
+  cardSize,
+  cols,
+  showFaceUp,
+  onPress,
+}: {
+  card: GameCard;
+  cardSize: number;
+  cols: number;
+  showFaceUp: boolean;
+  onPress: (i: number) => void;
+}) {
+  const faceUp = showFaceUp || card.state === 'faceup' || card.state === 'matched';
+  const sprite = spriteForAnimal(card.name);
+
+  return (
+    <Pressable
+      onPress={() => onPress(card.id)}
+      disabled={showFaceUp || card.state === 'matched'}
+      style={[
+        styles.card,
+        {
+          width: cardSize,
+          height: cardSize,
+          marginRight: card.col === cols - 1 ? 0 : BOARD_GAP,
+          marginBottom: BOARD_GAP,
+        },
+        faceUp ? styles.cardFaceUp : styles.cardFaceDown,
+        card.state === 'matched' && styles.cardMatched,
+      ]}
+    >
+      {faceUp ? (
+        sprite ? (
+          <Image
+            source={sprite}
+            style={{ width: cardSize * 0.78, height: cardSize * 0.78 }}
+            resizeMode="contain"
+          />
+        ) : (
+          <Text style={{ fontSize: cardSize * 0.5 }}>{card.emoji}</Text>
+        )
+      ) : (
+        <Image
+          source={CARD_BACK}
+          style={{ width: cardSize * 0.92, height: cardSize * 0.92 }}
+          resizeMode="contain"
+        />
+      )}
+    </Pressable>
+  );
+});
 
 function ResultStat({ value, label }: { value: string; label: string }) {
   return (
@@ -597,8 +725,16 @@ const styles = StyleSheet.create({
   hudCenter: { alignItems: 'center', flex: 1 },
   hudLevel: { color: colors.textPrimary, fontSize: 14, fontWeight: '800' },
   hudLevelName: { color: colors.textMuted, fontSize: 11, fontWeight: '600' },
-  hudRight: { flex: 1, alignItems: 'flex-end' },
+  hudRight: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.sm },
   hudMatches: { color: colors.teal, fontSize: 18, fontWeight: '900' },
+  quitButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quitIcon: { color: colors.textSecondary, fontSize: 18, fontWeight: '900' },
 
   // Board
   boardArea: { flex: 1, position: 'relative', overflow: 'hidden' },
@@ -684,6 +820,7 @@ const styles = StyleSheet.create({
     borderColor: colors.gold,
   },
   resultTitle: { color: colors.textPrimary, fontSize: 26, fontWeight: '900', marginBottom: spacing.sm, textAlign: 'center' },
+  quitPrompt: { color: colors.textSecondary, fontSize: 16, textAlign: 'center', marginBottom: spacing.lg },
   resultStars: { fontSize: 28, marginBottom: spacing.sm },
   resultScore: { color: colors.gold, fontSize: 52, fontWeight: '900' },
   resultLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '700', textTransform: 'uppercase', marginBottom: spacing.lg },

@@ -5,7 +5,11 @@ import { useNoahGameStore } from '../../src/game/stores/noahGameStore';
 import { colors, radii, shadows, spacing, typography } from '../../src/shell/theme';
 
 export default function StatsTab() {
-  const totalGamesPlayed = useStreakStore((s) => s.totalGamesPlayed);
+  // Single source of truth for "games played": noahGameStore counts each
+  // completed game (full run), which is the same value the games_played badge
+  // events fire on. streakStore.totalGamesPlayed is a per-day play counter and
+  // disagreed with the badge counts, so we don't surface it here.
+  const totalGamesPlayed = useNoahGameStore((s) => s.totalGamesPlayed);
   const currentStreak = useStreakStore((s) => s.currentStreak);
   const longestStreak = useStreakStore((s) => s.longestStreak);
   const highScore = useNoahGameStore((s) => s.highScore);

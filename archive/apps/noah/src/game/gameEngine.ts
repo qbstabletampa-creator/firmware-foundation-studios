@@ -10,13 +10,11 @@ import type {
   Card,
   GameState,
   GameEvent,
-  FlipPhase,
   LevelResult,
   StarRating,
 } from './types';
 import {
   GAME_CONSTANTS,
-  LEVEL_CONFIGS,
   getComboMultiplier,
   getTimeBonus,
   getStarRating,
@@ -78,32 +76,6 @@ export function createInitialState(
 
 function updateCard(cards: Card[], index: number, patch: Partial<Card>): Card[] {
   return cards.map((c, i) => (i === index ? { ...c, ...patch } : c));
-}
-
-function buildLevelResult(state: GameState): LevelResult {
-  const config = getLevelConfig(state.level);
-  const stars = getStarRating(
-    state.totalPairs,
-    state.moves,
-    state.elapsedMs,
-    config.parTimeMs,
-  );
-  const timeBonus = getTimeBonus(state.elapsedMs, config.parTimeMs);
-  const perfectClear = state.mismatches === 0;
-
-  return {
-    level: state.level,
-    score: state.score + timeBonus + (perfectClear ? GAME_CONSTANTS.PERFECT_CLEAR_BONUS : 0),
-    stars,
-    moves: state.moves,
-    matches: state.matches,
-    mismatches: state.mismatches,
-    elapsedMs: state.elapsedMs,
-    perfectClear,
-    quickRecalls: state.quickRecalls,
-    timeBonus,
-    comboPoints: 0, // tracked cumulatively in score already
-  };
 }
 
 // ---------------------------------------------------------------------------
@@ -310,7 +282,6 @@ export function flipCard(
           perfectClear,
           quickRecalls,
           timeBonus,
-          comboPoints: 0,
         };
 
         events.push({ type: 'level_complete', result });

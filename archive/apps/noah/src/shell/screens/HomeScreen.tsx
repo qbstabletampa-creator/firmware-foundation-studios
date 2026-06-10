@@ -5,12 +5,12 @@ import {
   Image,
   ImageSourcePropType,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { HapticsManager } from '../sound/HapticsManager';
 import { colors, radii, shadows, spacing, typography } from '../theme';
 
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   playButtonText: {
-    color: colors.textPrimary,
+    color: colors.background,
     fontSize: 20,
     fontWeight: '900',
     letterSpacing: 1.5,

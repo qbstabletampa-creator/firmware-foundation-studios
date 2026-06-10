@@ -60,12 +60,14 @@ export type LevelConfig = {
   poolSize: number;
 };
 
+// previewMs scales with grid size: little kids need more time to memorize a
+// bigger board. ~2s on the 2x3 starter up to ~3.5s on the 5x6 flood board.
 export const LEVEL_CONFIGS: LevelConfig[] = [
-  { level: 1, name: 'First Boarding',       rows: 2, cols: 3, pairs: 3,  previewMs: 1500, parTimeMs: 30000,  poolSize: 6  },
-  { level: 2, name: 'Gathering the Flock',  rows: 3, cols: 4, pairs: 6,  previewMs: 1500, parTimeMs: 60000,  poolSize: 10 },
-  { level: 3, name: 'Into the Ark',         rows: 4, cols: 4, pairs: 8,  previewMs: 1000, parTimeMs: 90000,  poolSize: 14 },
-  { level: 4, name: 'Before the Rain',      rows: 4, cols: 5, pairs: 10, previewMs: 1000, parTimeMs: 120000, poolSize: 16 },
-  { level: 5, name: 'The Great Flood',      rows: 5, cols: 6, pairs: 15, previewMs: 1000, parTimeMs: 180000, poolSize: 18 },
+  { level: 1, name: 'First Boarding',       rows: 2, cols: 3, pairs: 3,  previewMs: 2000, parTimeMs: 30000,  poolSize: 6  },
+  { level: 2, name: 'Gathering the Flock',  rows: 3, cols: 4, pairs: 6,  previewMs: 2500, parTimeMs: 60000,  poolSize: 10 },
+  { level: 3, name: 'Into the Ark',         rows: 4, cols: 4, pairs: 8,  previewMs: 3000, parTimeMs: 90000,  poolSize: 14 },
+  { level: 4, name: 'Before the Rain',      rows: 4, cols: 5, pairs: 10, previewMs: 3200, parTimeMs: 120000, poolSize: 16 },
+  { level: 5, name: 'The Great Flood',      rows: 5, cols: 6, pairs: 15, previewMs: 3500, parTimeMs: 180000, poolSize: 18 },
 ];
 
 // ---------------------------------------------------------------------------

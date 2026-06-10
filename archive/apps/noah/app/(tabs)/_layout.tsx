@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
+import { colors } from '../../src/shell/theme';
 
 function TabIcon({ symbol, focused }: { symbol: string; focused: boolean }) {
   return (
@@ -7,7 +8,7 @@ function TabIcon({ symbol, focused }: { symbol: string; focused: boolean }) {
       <Text
         style={[
           styles.icon,
-          { color: focused ? '#FFD700' : '#6A6A64' },
+          { color: focused ? colors.gold : '#6A6A64' },
         ]}
       >
         {symbol}
@@ -27,7 +28,7 @@ export default function TabLayout() {
           borderTopWidth: 1,
           paddingTop: 6,
         },
-        tabBarActiveTintColor: '#FFD700',
+        tabBarActiveTintColor: colors.gold,
         tabBarInactiveTintColor: '#6A6A64',
         tabBarLabelStyle: {
           fontSize: 11,

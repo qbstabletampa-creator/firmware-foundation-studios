@@ -47,7 +47,6 @@ export type LevelResult = {
   perfectClear: boolean;
   quickRecalls: number;
   timeBonus: number;
-  comboPoints: number;
 };
 
 export type GameState = {
