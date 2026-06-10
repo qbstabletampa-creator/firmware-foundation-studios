@@ -86,3 +86,19 @@ Updates apply on the NEXT launch: force-close Expo Go, open the app, close, open
 
 ## Trap 9: onLayout on a view whose size depends on the measurement (zero-width deadlock)
 Manna `app/game.tsx` set the game area `width` from `areaSize.w`, measured by that same view's `onLayout`. Width starts 0 -> onLayout reports 0 -> locked at 0 forever: black play field, HUD alive, score stuck at 0 (engine early-returns on gameWidth 0). Shipped in `a827be5` when select/game layout handlers were split (select screen used to seed the size). Caught by CJ's first Expo Go published-update test, fixed in `2ffb600`: a full-width WRAPPER carries onLayout, the inner game box gets the measured width. Pattern rule: never attach the measuring onLayout to the view being sized by the measurement.
+
+## Trap 10: startGame from the select screen bakes sizes from a never-measured layout (2026-06-10)
+The Trap 9 fix (`2ffb600`) created the next bug: splitting select/playing layout handlers meant `areaSize` is only measured by the game-area wrapper, which mounts AFTER `startGame` flips to 'playing'. `startGame` runs from the SELECT screen and stored `basket.width = gameWidth * RATIO` with `gameWidth` still 0 -> basket persisted at width 0: rendered as a 1.5px border line, zero-wide catch zone, score stuck at 0, verse milestones (250+) never fired. CJ caught it on the published update. Fix (`8dedd20`): an effect re-derives `basket.width` whenever the measured `gameWidth` changes and re-centers a never-sized basket. Pattern rule: any dimension you STORE in game state at start must be re-synced when the real measurement arrives; or never store derived sizes, always compute from current measured width.
+
+## The gameplay-verification lane (added 2026-06-10, after Traps 9+10 shipped to CJ's phone)
+tsc + export + sim-smoke only prove the app COMPILES AND BOOTS. Both basket bugs would have been caught by 30 seconds of play. New mandatory gate before any `eas update` publish of a game change: an agent plays the game on the production web export and proves the core loop.
+```
+cd archive/apps/<app>
+npx expo export --platform web
+# Metro web bundles can't run zustand v5's ESM import.meta as a classic script (web-only; native resolves differently):
+sed -i 's|<script src="/_expo/static/js/web/\(entry-[a-f0-9]*\.js\)" defer>|<script type="module" src="/_expo/static/js/web/\1" defer>|' dist/index.html
+npx serve dist -l <free port 8090+> -s    # do NOT pipe serve through head: the closed pipe kills it mid-run
+```
+Then a Playwright agent (testing instances 3201-3204) plays: real input events only (auto-play loop via run_code is fine), asserts the core loop (objects render at real sizes, scoring works, verse overlay fires and dismisses), screenshots as evidence. Manna proof run: basket 98px, 257 points via real catches, Deut 8:8 overlay, Next Level resumed.
+Known web-lane noise (harmless, web-only): doubled `assets/assets/` image 404s in the static export, 3 residual non-fatal import.meta console errors, useNativeDriver warning.
+Known debt: manna `src/game/gameEngine.test.ts` is stale (pre-6/8 geometry + 50/100/150 verse thresholds; 6 tests fail against the current engine constants). Refresh before trusting vitest as a gate.
