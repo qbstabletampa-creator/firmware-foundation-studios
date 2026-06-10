@@ -93,6 +93,22 @@ export default function GameScreen() {
   const todayStr = getTodayDateString();
   const dailyAlreadyPlayed = catchStore.hasDailyScore(todayStr);
 
+  // Keep the engine's stored basket width in sync with the measured layout.
+  // startGame runs from the select screen, BEFORE the game area has ever been
+  // measured (areaSize {0,0} -> gameWidth 0), so it bakes basket.width = 0 into
+  // the state: the basket renders as a 1.5px border line and the catch zone is
+  // zero-wide (score stuck at 0, verse milestones never fire). The area can
+  // also legitimately resize (rotation, web). Re-derive width here whenever the
+  // measurement changes and re-center if the basket never had a real width.
+  useEffect(() => {
+    const s = stateRef.current;
+    if (!s || basketWidth <= 0 || s.basket.width === basketWidth) return;
+    const center = s.basket.width > 0 ? s.basket.x + s.basket.width / 2 : gameWidth / 2;
+    const x = Math.max(0, Math.min(gameWidth - basketWidth, center - basketWidth / 2));
+    stateRef.current = { ...s, basket: { x, width: basketWidth } };
+    setGameState(stateRef.current);
+  }, [basketWidth, gameWidth]);
+
   const startGame = useCallback((mode: GameMode) => {
     SoundManager.play('tap');
     setGameMode(mode);
