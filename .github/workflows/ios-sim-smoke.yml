@@ -45,13 +45,23 @@ jobs:
       - name: Build Release for simulator
         working-directory: archive/apps/${{ github.event.inputs.app }}/ios
         run: |
+          set -o pipefail
           WORKSPACE=$(ls -d *.xcworkspace | head -1)
-          SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list -json | python3 -c "import json,sys; print(json.load(sys.stdin)['workspace']['schemes'][0])")
+          # exclude Pods schemes; take the app scheme
+          SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list -json | python3 -c "import json,sys; s=json.load(sys.stdin)['workspace']['schemes']; print(next(x for x in s if not x.startswith('Pods')))")
           echo "workspace=$WORKSPACE scheme=$SCHEME"
           xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" \
             -configuration Release -sdk iphonesimulator \
             -derivedDataPath build CODE_SIGNING_ALLOWED=NO \
-            -destination 'generic/platform=iOS Simulator' build | tail -40
+            -destination 'generic/platform=iOS Simulator' build 2>&1 | tee xcodebuild.log | tail -40
+
+      - name: Upload xcodebuild log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log-${{ github.event.inputs.app }}
+          path: archive/apps/${{ github.event.inputs.app }}/ios/xcodebuild.log
+          if-no-files-found: ignore
 
       - name: Launch in simulator + screenshots
         working-directory: archive/apps/${{ github.event.inputs.app }}/ios
