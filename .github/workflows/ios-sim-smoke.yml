@@ -47,8 +47,9 @@ jobs:
         run: |
           set -o pipefail
           WORKSPACE=$(ls -d *.xcworkspace | head -1)
-          # exclude Pods schemes; take the app scheme
-          SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list -json | python3 -c "import json,sys; s=json.load(sys.stdin)['workspace']['schemes']; print(next(x for x in s if not x.startswith('Pods')))")
+          # expo prebuild names the app scheme after the project; pod schemes
+          # (EXConstants, ExpoModulesCore, ...) polluted a name-based filter
+          SCHEME="${WORKSPACE%.xcworkspace}"
           echo "workspace=$WORKSPACE scheme=$SCHEME"
           xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" \
             -configuration Release -sdk iphonesimulator \
