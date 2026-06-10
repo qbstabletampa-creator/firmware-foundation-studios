@@ -74,7 +74,6 @@ export default function GameScreen() {
 
   const gameWidth = Math.min(areaSize.w, MAX_GAME_WIDTH);
   const gameHeight = areaSize.h;
-  const gameOffsetX = (areaSize.w - gameWidth) / 2;
   const basketWidth = gameWidth * GAME_CONSTANTS.BASKET_WIDTH_RATIO;
   const basketHeight = gameWidth * GAME_CONSTANTS.BASKET_HEIGHT_RATIO;
 
@@ -407,16 +406,14 @@ export default function GameScreen() {
         </View>
       </View>
 
-      {/* Game Area */}
+      {/* Game Area. The WRAPPER measures the available space; the inner box is
+          sized from that measurement. onLayout must never sit on a view whose
+          width is driven by the measured state — width starts 0, onLayout
+          reports 0, and it deadlocks at zero forever (the a827be5 black-field
+          bug: HUD alive, game invisible, score stuck at 0). */}
+      <View style={styles.gameAreaWrap} onLayout={onAreaLayout}>
       <View
-        style={[
-          styles.gameArea,
-          {
-            width: gameWidth,
-            marginLeft: gameOffsetX,
-          },
-        ]}
-        onLayout={onAreaLayout}
+        style={[styles.gameArea, { width: gameWidth }]}
         onStartShouldSetResponder={claimResponder}
         onMoveShouldSetResponder={claimResponder}
         onResponderTerminationRequest={denyTermination}
@@ -469,6 +466,7 @@ export default function GameScreen() {
             {'🧺'}
           </Text>
         </View>
+      </View>
       </View>
 
       {/* Verse Overlay */}
@@ -633,6 +631,7 @@ const styles = StyleSheet.create({
   powerUpTimer: { fontSize: 12, fontWeight: '700' },
 
   // Game Area
+  gameAreaWrap: { flex: 1, alignItems: 'center' },
   gameArea: { flex: 1, position: 'relative', overflow: 'hidden' },
   groundGlow: {
     position: 'absolute',

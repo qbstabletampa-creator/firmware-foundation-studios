@@ -33,6 +33,12 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/2b0ff349-a7bd-4ce1-b68f-ca0b0d63ced7"
+    },
     "extra": {
       "router": {},
       "eas": {
