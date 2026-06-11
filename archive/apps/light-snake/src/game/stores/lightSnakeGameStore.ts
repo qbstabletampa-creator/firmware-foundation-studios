@@ -15,6 +15,8 @@ interface LightSnakeGameState {
   thornsPassed: number;
   dailyScores: Record<string, number>;
   seenVerseIds: string[];
+  /** First-run flag: whether the How to Play modal has been shown + dismissed. */
+  hasSeenHowToPlay: boolean;
 
   recordScore: (score: number) => void;
   recordCombo: (combo: number) => void;
@@ -26,6 +28,7 @@ interface LightSnakeGameState {
   recordDailyScore: (dateStr: string, score: number) => void;
   addSeenVerseIds: (ids: string[]) => void;
   hasDailyScore: (dateStr: string) => boolean;
+  markHowToPlaySeen: () => void;
   reset: () => void;
 }
 
@@ -44,6 +47,7 @@ export const useLightSnakeGameStore = create<LightSnakeGameState>()(
       thornsPassed: 0,
       dailyScores: {},
       seenVerseIds: [],
+      hasSeenHowToPlay: false,
 
       recordScore: (score) =>
         set((s) => ({ highScore: Math.max(s.highScore, score) })),
@@ -85,6 +89,8 @@ export const useLightSnakeGameStore = create<LightSnakeGameState>()(
 
       hasDailyScore: (dateStr) => dateStr in get().dailyScores,
 
+      markHowToPlaySeen: () => set({ hasSeenHowToPlay: true }),
+
       reset: () =>
         set({
           highScore: 0,
@@ -99,6 +105,7 @@ export const useLightSnakeGameStore = create<LightSnakeGameState>()(
           thornsPassed: 0,
           dailyScores: {},
           seenVerseIds: [],
+          hasSeenHowToPlay: false,
         }),
     }),
     {
@@ -117,6 +124,7 @@ export const useLightSnakeGameStore = create<LightSnakeGameState>()(
         thornsPassed: s.thornsPassed,
         dailyScores: s.dailyScores,
         seenVerseIds: s.seenVerseIds,
+        hasSeenHowToPlay: s.hasSeenHowToPlay,
       }),
     },
   ),

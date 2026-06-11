@@ -5,6 +5,7 @@ import {
   Image,
   ImageSourcePropType,
   LayoutChangeEvent,
+  Modal,
   PanResponder,
   Pressable,
   SafeAreaView,
@@ -71,6 +72,11 @@ export default function GameScreen() {
   const [gameMode, setGameMode] = useState<GameMode>('freeplay');
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [countdown, setCountdown] = useState(COUNTDOWN_FROM);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
+
+  // How-to-play first-run flag (persisted in the existing game store).
+  const hasSeenHowToPlay = useLightSnakeGameStore((s) => s.hasSeenHowToPlay);
+  const markHowToPlaySeen = useLightSnakeGameStore((s) => s.markHowToPlaySeen);
 
   const [sessionVerses, setSessionVerses] = useState<Verse[]>([]);
   const [shownVerseIndex, setShownVerseIndex] = useState(0);
@@ -96,6 +102,12 @@ export default function GameScreen() {
   const paused = useRef(false);
   const stateRef = useRef<GameState | null>(null);
   const committedRef = useRef(false);
+  // Direction input is HARD-gated until the countdown fully finishes and the
+  // engine is actually in 'playing'. Without this, a swipe/tap that lands during
+  // the 3-2-1 pre-arms nextDirection, so the flock lurches off at GO with zero
+  // intended input and can die at 0 points. Set true ONLY by the countdown
+  // effect at the moment it flips to playing; reset on every (re)start.
+  const inputEnabled = useRef(false);
 
   const verseOpacity = useRef(new Animated.Value(0)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
@@ -135,6 +147,7 @@ export default function GameScreen() {
       setCountdown(COUNTDOWN_FROM);
       lastFrameTime.current = 0;
       isRunning.current = false; // engine stays in 'countdown' until countdown ends
+      inputEnabled.current = false; // no direction input until countdown finishes
       paused.current = false;
       setResumePending(false);
       overlayOpacity.setValue(0);
@@ -154,6 +167,7 @@ export default function GameScreen() {
       setGameState(started);
       lastFrameTime.current = 0;
       isRunning.current = true;
+      inputEnabled.current = true; // countdown done -> direction input now allowed
       return;
     }
     const t = setTimeout(() => setCountdown((c) => c - 1), 750);
@@ -347,6 +361,10 @@ export default function GameScreen() {
 
   // --- input ----------------------------------------------------------------
   const queueDirection = useCallback((dir: Direction) => {
+    // Hard gate: ignore ALL direction input until the countdown has fully
+    // finished AND the engine is in 'playing'. This blocks stray countdown
+    // taps/swipes (d-pad isn't mounted yet, but swipes still reach here).
+    if (!inputEnabled.current) return;
     if (!stateRef.current || stateRef.current.phase !== 'playing') return;
     const next = changeDirection(stateRef.current, dir);
     stateRef.current = next;
@@ -356,10 +374,14 @@ export default function GameScreen() {
   const panResponder = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
+        // Don't even claim the gesture during the countdown, so a stray swipe
+        // can't pre-arm a direction before GO. queueDirection re-checks too.
+        onStartShouldSetPanResponder: () => inputEnabled.current,
         onMoveShouldSetPanResponder: (_e, g) =>
-          Math.abs(g.dx) > MIN_SWIPE || Math.abs(g.dy) > MIN_SWIPE,
+          inputEnabled.current &&
+          (Math.abs(g.dx) > MIN_SWIPE || Math.abs(g.dy) > MIN_SWIPE),
         onPanResponderRelease: (_e, g) => {
+          if (!inputEnabled.current) return;
           if (Math.abs(g.dx) > Math.abs(g.dy)) {
             queueDirection(g.dx > 0 ? 'right' : 'left');
           } else {
@@ -376,6 +398,7 @@ export default function GameScreen() {
     setGameState(null);
     stateRef.current = null;
     isRunning.current = false;
+    inputEnabled.current = false;
   }, []);
 
   // Badge celebration after game over.
@@ -385,6 +408,34 @@ export default function GameScreen() {
       return () => clearTimeout(timer);
     }
   }, [newlyUnlocked, screenMode, celebratingBadge]);
+
+  // Auto-show How to Play once, on the mode-select screen, on first run only.
+  // Must wait for persist rehydration: before hydration the store holds the
+  // default hasSeenHowToPlay=false, so evaluating it early re-opens the modal
+  // on every cold launch for players who already dismissed it.
+  const [howToStoreHydrated, setHowToStoreHydrated] = useState(
+    () => useLightSnakeGameStore.persist.hasHydrated(),
+  );
+  useEffect(() => {
+    const unsub = useLightSnakeGameStore.persist.onFinishHydration(() => setHowToStoreHydrated(true));
+    return unsub;
+  }, []);
+  useEffect(() => {
+    if (howToStoreHydrated && screenMode === 'select' && !hasSeenHowToPlay) {
+      setShowHowToPlay(true);
+    }
+  }, [howToStoreHydrated, screenMode, hasSeenHowToPlay]);
+
+  const dismissHowToPlay = useCallback(() => {
+    SoundManager.play('tap');
+    setShowHowToPlay(false);
+    markHowToPlaySeen();
+  }, [markHowToPlaySeen]);
+
+  const openHowToPlay = useCallback(() => {
+    SoundManager.play('tap');
+    setShowHowToPlay(true);
+  }, []);
 
   // --- SELECT screen --------------------------------------------------------
   if (screenMode === 'select') {
@@ -427,7 +478,19 @@ export default function GameScreen() {
           {store.highScore > 0 && (
             <Text style={styles.highScoreText}>High Score: {store.highScore}</Text>
           )}
+
+          <Pressable
+            onPress={openHowToPlay}
+            hitSlop={12}
+            style={styles.howToLink}
+            accessibilityRole="button"
+            accessibilityLabel="How to play"
+          >
+            <Text style={styles.howToLinkText}>How to play</Text>
+          </Pressable>
         </View>
+
+        <HowToPlayModal visible={showHowToPlay} onDismiss={dismissHowToPlay} />
       </SafeAreaView>
     );
   }
@@ -747,6 +810,53 @@ function ResultStat({ value, label }: { value: string; label: string }) {
   );
 }
 
+// How to Play modal — Gosple's pattern (overlay > card > title/body/example
+// rows/dismiss), themed for Shepherd's Trail. Auto-shows on first run and is
+// always reachable from the mode-select screen.
+function HowToPlayModal({
+  visible,
+  onDismiss,
+}: {
+  visible: boolean;
+  onDismiss: () => void;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalCard}>
+          <Text style={styles.modalTitle}>How to Play</Text>
+          <Text style={styles.modalBody}>
+            Swipe or tap the arrows to lead Eli the shepherd around the field.
+          </Text>
+          <View style={styles.exampleSection}>
+            <View style={styles.exampleRow}>
+              <Text style={styles.exIcon}>🐑</Text>
+              <Text style={styles.exLabel}>Gather the flock and food (bread, fish, lamp)</Text>
+            </View>
+            <View style={styles.exampleRow}>
+              <Text style={styles.exIcon}>🌵</Text>
+              <Text style={styles.exLabel}>Avoid the walls, thorns, and your own flock line</Text>
+            </View>
+            <View style={styles.exampleRow}>
+              <Text style={styles.exIcon}>📖</Text>
+              <Text style={styles.exLabel}>Every 50 points reveals a Bible verse</Text>
+            </View>
+          </View>
+          <Text style={styles.modalHint}>Round up the whole flock. Don't let it scatter!</Text>
+          <Pressable
+            style={styles.modalButton}
+            onPress={onDismiss}
+            accessibilityRole="button"
+            accessibilityLabel="Got it"
+          >
+            <Text style={styles.modalButtonText}>Let's Go!</Text>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
 
@@ -782,6 +892,64 @@ const styles = StyleSheet.create({
   modeLabel: { color: colors.textPrimary, fontSize: 20, fontWeight: '800' },
   modeDesc: { color: colors.textSecondary, fontSize: 14, marginTop: spacing.xs },
   highScoreText: { color: colors.gold, fontSize: 16, fontWeight: '700', marginTop: spacing.xl },
+  howToLink: { marginTop: spacing.lg, paddingVertical: spacing.xs },
+  howToLinkText: {
+    color: colors.textSecondary,
+    fontSize: 15,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
+
+  // How to Play modal (Gosple pattern, Shepherd's Trail theme)
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+  },
+  modalCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.xl,
+    padding: spacing.xl,
+    width: '100%',
+    maxWidth: 340,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  modalTitle: {
+    color: colors.textPrimary,
+    fontSize: 24,
+    fontWeight: '900',
+    textAlign: 'center',
+    marginBottom: spacing.md,
+  },
+  modalBody: {
+    color: colors.textSecondary,
+    fontSize: 15,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+    lineHeight: 22,
+  },
+  exampleSection: { gap: spacing.md, marginBottom: spacing.lg },
+  exampleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  exIcon: { fontSize: 26, width: 34, textAlign: 'center' },
+  exLabel: { color: colors.textPrimary, fontSize: 14, fontWeight: '600', flex: 1, lineHeight: 19 },
+  modalHint: {
+    color: colors.textMuted,
+    fontSize: 13,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+    lineHeight: 20,
+  },
+  modalButton: {
+    backgroundColor: colors.gold,
+    borderRadius: radii.lg,
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalButtonText: { color: colors.background, fontSize: 17, fontWeight: '800' },
 
   // HUD
   hud: {

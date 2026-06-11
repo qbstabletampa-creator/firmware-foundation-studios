@@ -42,16 +42,17 @@ export const NOAH_PALETTE: GamePalette = {
 };
 
 /**
- * Light Snake: a luminous night. A deep midnight-blue sky melts down into a
- * warm lantern-gold glow at the horizon, so the snake's light trail and the
- * food sprites read clearly. Warm and wholesome, never cold or harsh. The
- * "dune" silhouette is a dark hillside the light travels across.
+ * Shepherd's Trail: TWILIGHT GREEN PASTURES. A dusk indigo sky settles down
+ * into a soft teal-green glow along the horizon, over rolling hill silhouettes,
+ * with tiny fireflies drifting up out of the grass. Unmistakably its own scene
+ * vs Manna's golden-hour desert: cool dusk up top, green pasture below, kept
+ * dark enough at the play zone that the board, flock, and sprites stay readable.
  */
 export const LIGHT_SNAKE_PALETTE: GamePalette = {
-  sky: ['#05060F', '#0A0A1A', '#15173A', '#352A5A', '#8A5A3C', '#E8B86A'],
-  glow: 'rgba(255, 212, 102, 0.45)',
-  dune: '#12101E',
-  mote: 'rgba(255, 238, 190, 0.95)',
+  sky: ['#0B0A22', '#15163C', '#1F2E52', '#26506A', '#2E7E6E', '#5FB68A'],
+  glow: 'rgba(120, 230, 170, 0.42)',
+  dune: '#0C2018',
+  mote: 'rgba(190, 255, 150, 0.95)',
 };
 
 const BANDS = 16;
@@ -164,8 +165,9 @@ export default function GameBackground({ palette = MANNA_PALETTE }: { palette?: 
         <Mote key={i} color={palette.mote} index={i} />
       ))}
 
-      {/* Layered dune silhouettes */}
-      <View style={[styles.duneBack, { backgroundColor: palette.dune, opacity: 0.55 }]} />
+      {/* Layered rolling-hill silhouettes (far -> near for depth). */}
+      <View style={[styles.hillFar, { backgroundColor: palette.dune, opacity: 0.4 }]} />
+      <View style={[styles.duneBack, { backgroundColor: palette.dune, opacity: 0.65 }]} />
       <View style={[styles.duneFront, { backgroundColor: palette.dune }]} />
     </View>
   );
@@ -185,24 +187,37 @@ const styles = StyleSheet.create({
     bottom: -180,
     borderRadius: 999,
   },
+  // Distant rolling hill, broad and low, slightly offset for a layered ridgeline.
+  hillFar: {
+    position: 'absolute',
+    bottom: 0,
+    left: -80,
+    right: -40,
+    height: 190,
+    borderTopLeftRadius: 240,
+    borderTopRightRadius: 320,
+    transform: [{ scaleX: 1.5 }],
+  },
+  // Mid hill: rounder crown so the ridge reads as soft pasture, not a dune.
   duneBack: {
     position: 'absolute',
     bottom: 0,
     left: -60,
     right: -60,
     height: 150,
-    borderTopLeftRadius: 280,
-    borderTopRightRadius: 200,
+    borderTopLeftRadius: 300,
+    borderTopRightRadius: 300,
     transform: [{ scaleX: 1.4 }],
   },
+  // Near hill: the grassy bank the flock travels across.
   duneFront: {
     position: 'absolute',
     bottom: 0,
     left: -40,
     right: -40,
-    height: 96,
-    borderTopLeftRadius: 180,
-    borderTopRightRadius: 240,
+    height: 100,
+    borderTopLeftRadius: 220,
+    borderTopRightRadius: 260,
     transform: [{ scaleX: 1.3 }],
   },
 });

@@ -23,10 +23,12 @@ export default function StatsTab() {
           <StatBox label="Best Combo" value={bestCombo} valueColor={colors.teal} />
         </View>
         <View style={styles.statRow}>
-          <StatBox label="Played" value={totalGamesPlayed} />
-          <StatBox label="Items" value={totalItemsEaten} />
-          <StatBox label="Streak" value={currentStreak} valueColor={colors.gold} />
-          <StatBox label="Best" value={longestStreak} />
+          <StatBox label="Games Played" value={totalGamesPlayed} />
+          <StatBox label="Items Eaten" value={totalItemsEaten} />
+        </View>
+        <View style={styles.statRow}>
+          <StatBox label="Current Streak" value={currentStreak} valueColor={colors.gold} />
+          <StatBox label="Longest Streak" value={longestStreak} />
         </View>
 
         <Text style={styles.sectionTitle}>Badges</Text>
@@ -37,7 +39,12 @@ export default function StatsTab() {
               <Text style={[styles.badgeIcon, !badge.unlockedAt && styles.badgeLocked]}>
                 {badge.icon}
               </Text>
-              <Text style={[styles.badgeName, !badge.unlockedAt && styles.badgeLockedText]}>
+              <Text
+                style={[styles.badgeName, !badge.unlockedAt && styles.badgeLockedText]}
+                numberOfLines={2}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
+              >
                 {badge.name}
               </Text>
               <Text style={styles.badgeDesc}>
@@ -91,23 +98,28 @@ const styles = StyleSheet.create({
   },
   statBox: {
     flex: 1,
+    minWidth: 0,
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
     paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
     alignItems: 'center',
+    justifyContent: 'center',
     ...shadows.card,
   },
   statValue: {
     color: colors.textPrimary,
     fontSize: 26,
     fontWeight: '900',
+    textAlign: 'center',
   },
   statLabel: {
     color: colors.textMuted,
     fontSize: 11,
     fontWeight: '700',
-    marginTop: 2,
+    marginTop: 4,
     textTransform: 'uppercase',
+    textAlign: 'center',
   },
   sectionTitle: {
     color: colors.textPrimary,
@@ -124,7 +136,7 @@ const styles = StyleSheet.create({
     width: '31%',
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
-    padding: spacing.sm,
+    paddingHorizontal: 4,
     paddingVertical: spacing.md,
     alignItems: 'center',
     ...shadows.card,
@@ -138,16 +150,19 @@ const styles = StyleSheet.create({
   },
   badgeName: {
     color: colors.textPrimary,
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '800',
+    lineHeight: 15,
+    textAlign: 'center',
   },
   badgeLockedText: {
     color: colors.textMuted,
   },
   badgeDesc: {
     color: colors.textSecondary,
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: 11,
+    lineHeight: 14,
+    marginTop: 4,
     textAlign: 'center',
   },
 });
