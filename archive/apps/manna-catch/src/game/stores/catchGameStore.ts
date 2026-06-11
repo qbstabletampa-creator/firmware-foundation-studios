@@ -9,6 +9,8 @@ interface CatchGameState {
   totalGamesPlayed: number;
   dailyScores: Record<string, number>;
   seenVerseIds: string[];
+  /** True once the player has dismissed the first-run How to Play modal. */
+  hasSeenHowTo: boolean;
 
   recordScore: (score: number) => void;
   recordCombo: (combo: number) => void;
@@ -17,6 +19,7 @@ interface CatchGameState {
   recordDailyScore: (dateStr: string, score: number) => void;
   addSeenVerseIds: (ids: string[]) => void;
   hasDailyScore: (dateStr: string) => boolean;
+  markHowToSeen: () => void;
   reset: () => void;
 }
 
@@ -29,6 +32,7 @@ export const useCatchGameStore = create<CatchGameState>()(
       totalGamesPlayed: 0,
       dailyScores: {},
       seenVerseIds: [],
+      hasSeenHowTo: false,
 
       recordScore: (score) =>
         set((s) => ({ highScore: Math.max(s.highScore, score) })),
@@ -55,6 +59,8 @@ export const useCatchGameStore = create<CatchGameState>()(
 
       hasDailyScore: (dateStr) => dateStr in get().dailyScores,
 
+      markHowToSeen: () => set({ hasSeenHowTo: true }),
+
       reset: () =>
         set({
           highScore: 0,
@@ -63,6 +69,7 @@ export const useCatchGameStore = create<CatchGameState>()(
           totalGamesPlayed: 0,
           dailyScores: {},
           seenVerseIds: [],
+          hasSeenHowTo: false,
         }),
     }),
     {
@@ -75,6 +82,7 @@ export const useCatchGameStore = create<CatchGameState>()(
         totalGamesPlayed: s.totalGamesPlayed,
         dailyScores: s.dailyScores,
         seenVerseIds: s.seenVerseIds,
+        hasSeenHowTo: s.hasSeenHowTo,
       }),
     },
   ),

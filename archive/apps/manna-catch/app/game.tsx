@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   LayoutChangeEvent,
+  Modal,
   Pressable,
   SafeAreaView,
   StyleSheet,
@@ -63,6 +64,7 @@ export default function GameScreen() {
   const [celebratingBadge, setCelebratingBadge] = useState<typeof newlyUnlocked[number] | null>(null);
   const [itemsCaughtThisGame, setItemsCaughtThisGame] = useState(0);
   const [tookDamage, setTookDamage] = useState(false);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
 
   const rngRef = useRef<() => number>(() => Math.random());
   const lastFrameTime = useRef(0);
@@ -92,6 +94,32 @@ export default function GameScreen() {
 
   const todayStr = getTodayDateString();
   const dailyAlreadyPlayed = catchStore.hasDailyScore(todayStr);
+
+  // First-run How to Play. The hasSeenHowTo flag is persisted in the catch game
+  // store (AsyncStorage), so the modal auto-shows exactly once on the select
+  // screen for a new player. The "How to play" link reopens it any time after.
+  // Auto-show must wait for persist rehydration: before hydration the store
+  // holds the default hasSeenHowTo=false, so evaluating it early re-opens the
+  // modal on every cold launch for players who already dismissed it.
+  const hasSeenHowTo = catchStore.hasSeenHowTo;
+  const [storeHydrated, setStoreHydrated] = useState(
+    () => useCatchGameStore.persist.hasHydrated(),
+  );
+  useEffect(() => {
+    const unsub = useCatchGameStore.persist.onFinishHydration(() => setStoreHydrated(true));
+    return unsub;
+  }, []);
+  useEffect(() => {
+    if (storeHydrated && !hasSeenHowTo) setShowHowToPlay(true);
+  }, [storeHydrated, hasSeenHowTo]);
+
+  const dismissHowToPlay = useCallback(() => {
+    SoundManager.play('tap');
+    setShowHowToPlay(false);
+    if (!useCatchGameStore.getState().hasSeenHowTo) {
+      useCatchGameStore.getState().markHowToSeen();
+    }
+  }, []);
 
   // Keep the engine's stored basket width in sync with the measured layout.
   // startGame runs from the select screen, BEFORE the game area has ever been
@@ -378,7 +406,20 @@ export default function GameScreen() {
               High Score: {catchStore.highScore}
             </Text>
           )}
+
+          <Pressable
+            onPress={() => {
+              SoundManager.play('tap');
+              setShowHowToPlay(true);
+            }}
+            hitSlop={10}
+            style={styles.howToLink}
+          >
+            <Text style={styles.howToLinkText}>How to play</Text>
+          </Pressable>
         </View>
+
+        <HowToPlayModal visible={showHowToPlay} onDismiss={dismissHowToPlay} />
       </SafeAreaView>
     );
   }
@@ -559,6 +600,49 @@ export default function GameScreen() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// How to Play modal (first-run + manual). Pattern matches Gosple's modal:
+// overlay > card > title + body + example rows + dismiss button.
+// ---------------------------------------------------------------------------
+
+function HowToPlayModal({ visible, onDismiss }: { visible: boolean; onDismiss: () => void }) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalCard}>
+          <Text style={styles.modalTitle}>How to Play</Text>
+          <Text style={styles.modalBody}>
+            Drag your finger to move the basket and catch the blessings as they fall.
+          </Text>
+
+          <View style={styles.modalExamples}>
+            <View style={styles.modalExampleRow}>
+              <Text style={styles.modalExampleIcons}>🍞 🍯 🍇 ⭐</Text>
+              <Text style={styles.modalExampleLabel}>Catch these for points</Text>
+            </View>
+            <View style={styles.modalExampleRow}>
+              <Text style={styles.modalExampleIcons}>🌵 🪨 🐍</Text>
+              <Text style={styles.modalExampleLabel}>Avoid these, they cost a heart</Text>
+            </View>
+            <View style={styles.modalExampleRow}>
+              <Text style={styles.modalExampleIcons}>♥ ♥ ♥</Text>
+              <Text style={styles.modalExampleLabel}>You have 3 hearts</Text>
+            </View>
+          </View>
+
+          <Text style={styles.modalHint}>
+            Every level break reveals a Bible verse to read together.
+          </Text>
+
+          <Pressable style={styles.modalButton} onPress={onDismiss}>
+            <Text style={styles.modalButtonText}>Let's Go!</Text>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
 
@@ -594,6 +678,64 @@ const styles = StyleSheet.create({
   modeLabel: { color: colors.textPrimary, fontSize: 20, fontWeight: '800' },
   modeDesc: { color: colors.textSecondary, fontSize: 14, marginTop: spacing.xs },
   highScoreText: { color: colors.gold, fontSize: 16, fontWeight: '700', marginTop: spacing.xl },
+  howToLink: { marginTop: spacing.lg, paddingVertical: spacing.xs },
+  howToLinkText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
+
+  // How to Play modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(16, 16, 14, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+  },
+  modalCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.xl,
+    padding: spacing.xl,
+    width: '100%',
+    maxWidth: 360,
+    borderWidth: 1,
+    borderColor: colors.gold,
+  },
+  modalTitle: {
+    color: colors.gold,
+    fontSize: 24,
+    fontWeight: '900',
+    textAlign: 'center',
+    marginBottom: spacing.md,
+  },
+  modalBody: {
+    color: colors.textSecondary,
+    fontSize: 15,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: spacing.lg,
+  },
+  modalExamples: { gap: spacing.md, marginBottom: spacing.lg },
+  modalExampleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  modalExampleIcons: { fontSize: 20, width: 96 },
+  modalExampleLabel: { color: colors.textPrimary, fontSize: 14, fontWeight: '600', flex: 1 },
+  modalHint: {
+    color: colors.textMuted,
+    fontSize: 13,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: spacing.lg,
+  },
+  modalButton: {
+    backgroundColor: colors.gold,
+    borderRadius: radii.lg,
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalButtonText: { color: colors.background, fontSize: 17, fontWeight: '800' },
 
   // Good vs bad legend (shown on the play/select screen so players know the rules)
   legend: {

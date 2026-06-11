@@ -23,9 +23,13 @@ export const ITEM_DEFS: ItemDef[] = [
   { type: 'figs',        category: 'good', icon: '🫒', points: 8,  weight: 12, unlockScore: 75  },
   { type: 'star',        category: 'good', icon: '⭐', points: 20, weight: 5,  unlockScore: 100 },
   { type: 'scroll',      category: 'good', icon: '📜', points: 15, weight: 8,  unlockScore: 50  },
-  { type: 'thorn',       category: 'bad',  icon: '🌵', points: 0,  weight: 18, unlockScore: 0   },
-  { type: 'stone',       category: 'bad',  icon: '🪨', points: 0,  weight: 12, unlockScore: 30  },
-  { type: 'snake',       category: 'bad',  icon: '🐍', points: 0,  weight: 11, unlockScore: 40  },
+  // Bad-item weights and unlocks softened so level 2 isn't a wall. The thorn is
+  // the only hazard early; stone and snake now wait until the player has real
+  // points on the board, and all three carry slightly lower spawn weight so the
+  // good:bad mix stays friendly for a kids' game.
+  { type: 'thorn',       category: 'bad',  icon: '🌵', points: 0,  weight: 15, unlockScore: 0   },
+  { type: 'stone',       category: 'bad',  icon: '🪨', points: 0,  weight: 10, unlockScore: 60  },
+  { type: 'snake',       category: 'bad',  icon: '🐍', points: 0,  weight: 9,  unlockScore: 90  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -93,16 +97,18 @@ export const GAME_CONSTANTS = {
 
   /**
    * Per-level fall-speed bump. Each verse advances a level and multiplies fall
-   * speed by (1 + level * this). 0.15 = ~15% faster per level, "a little."
+   * speed by (1 + level * this). 0.08 = ~8% faster per level. Gentler than the
+   * old 0.15 so advancing past level 2 doesn't spike: by level 5 items are
+   * ~40% faster instead of ~75%, which kids can keep up with.
    */
-  LEVEL_SPEED_STEP: 0.15,
+  LEVEL_SPEED_STEP: 0.08,
 
   /**
-   * Speed increase per elapsed second. At 120 base and 0.8 ramp the speed
-   * reaches ~350 after roughly 4.5 minutes, which gives casual players a
-   * comfortable curve while rewarding endurance.
+   * Speed increase per elapsed second. At 120 base and 0.55 ramp the speed
+   * climbs slowly enough that a single level rarely feels punishing; it still
+   * reaches MAX_SPEED for endurance players, just later. Lowered from 0.8.
    */
-  SPEED_RAMP_PER_SECOND: 0.8,
+  SPEED_RAMP_PER_SECOND: 0.55,
 
   /** Starting milliseconds between item spawns. */
   BASE_SPAWN_INTERVAL_MS: 1200,
@@ -120,10 +126,13 @@ export const GAME_CONSTANTS = {
   /**
    * Verse / level thresholds ESCALATE: each level needs more points than the
    * last. Gap to reach level m = VERSE_BASE_POINTS + (m-1) * VERSE_POINTS_STEP.
-   * Gaps: 250, 350, 450, 550... (cumulative: 250, 600, 1050, 1600...).
+   * Gaps: 200, 250, 300, 350... (cumulative: 200, 450, 750, 1100...).
+   * Lowered from 250/100 so the first couple of levels arrive sooner and the
+   * verse breaks (the whole point of the game) come at a steady, kid-friendly
+   * pace instead of a steepening grind.
    */
-  VERSE_BASE_POINTS: 250,
-  VERSE_POINTS_STEP: 100,
+  VERSE_BASE_POINTS: 200,
+  VERSE_POINTS_STEP: 50,
 
   /** Magnet power-up pull strength in pixels per second toward basket center. */
   MAGNET_PULL_STRENGTH: 200,

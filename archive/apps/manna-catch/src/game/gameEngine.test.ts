@@ -23,9 +23,19 @@ const GAME_HEIGHT = 800;
 /** Convenience: item size the engine will compute for our GAME_WIDTH. */
 const ITEM_SIZE = Math.round(GAME_WIDTH * GAME_CONSTANTS.ITEM_SIZE_RATIO);
 
-/** Build a basket-height value consistent with what the engine derives. */
-const BASKET_HEIGHT = ITEM_SIZE * 0.6;
-const BASKET_Y = GAME_HEIGHT - ITEM_SIZE - BASKET_HEIGHT;
+// Basket geometry, derived EXACTLY the way gameEngine.basketRect() derives it
+// so collision tests stay locked to the real engine (post-6/8 geometry:
+// BASKET_HEIGHT_RATIO + BASKET_BOTTOM_OFFSET, not the old item-size-relative
+// math). If the engine's geometry changes, these recompute with it.
+const BASKET_HEIGHT = Math.round(GAME_WIDTH * GAME_CONSTANTS.BASKET_HEIGHT_RATIO);
+const BASKET_Y = GAME_HEIGHT - GAME_CONSTANTS.BASKET_BOTTOM_OFFSET - BASKET_HEIGHT;
+
+// Cumulative score to REACH verse/level m, mirroring gameEngine's escalating
+// threshold formula. With the retuned constants (BASE 200, STEP 50) this is
+// L1=200, L2=450, L3=750. Derived from GAME_CONSTANTS so it tracks any retune.
+const cumulativeForLevel = (m: number) =>
+  m * GAME_CONSTANTS.VERSE_BASE_POINTS +
+  (GAME_CONSTANTS.VERSE_POINTS_STEP * (m - 1) * m) / 2;
 
 /** Create a FallingItem positioned to collide with the basket. */
 function makeGoodItemAtBasket(overrides: Partial<FallingItem> = {}): FallingItem {
@@ -197,41 +207,56 @@ describe('tick', () => {
     expect(events).toHaveLength(0);
   });
 
-  it('verse milestone fires at 50, 100, 150 points', () => {
-    // Score is 45. Catching a 10-point item brings it to 55, crossing the 50 milestone.
+  it('verse milestones fire at the escalating thresholds (200, 450, 750)', () => {
+    // Sanity-check the thresholds we are asserting against actually match the
+    // retuned constants, so this test fails loudly if the curve is changed
+    // without updating it.
+    expect(cumulativeForLevel(1)).toBe(200);
+    expect(cumulativeForLevel(2)).toBe(450);
+    expect(cumulativeForLevel(3)).toBe(750);
+
+    // Cross level 1 (200): start one point under, catch a 10-pointer to cross.
+    const l1 = cumulativeForLevel(1);
     const item = makeGoodItemAtBasket({ points: 10 });
-    const state = makePlayingState({ score: 45, items: [item], versesMilestone: 0 });
+    const state = makePlayingState({ score: l1 - 1, items: [item], versesMilestone: 0 });
     const { state: next, events } = tick(state, 16, GAME_WIDTH, GAME_HEIGHT, makeRng());
 
-    expect(next.score).toBe(55);
+    expect(next.score).toBe(l1 + 9);
     expect(next.versesMilestone).toBe(1);
     expect(events.some((e) => e.type === 'verse_milestone' && e.milestone === 1)).toBe(true);
 
-    // Now cross 100. Score is 95, catch a 10-pointer for 105.
+    // Cross level 2 (450).
+    const l2 = cumulativeForLevel(2);
     const item2 = makeGoodItemAtBasket({ id: 'good2', points: 10 });
-    const state2 = makePlayingState({
-      score: 95,
-      items: [item2],
-      versesMilestone: 1,
-    });
+    const state2 = makePlayingState({ score: l2 - 1, items: [item2], versesMilestone: 1 });
     const { state: next2, events: events2 } = tick(state2, 16, GAME_WIDTH, GAME_HEIGHT, makeRng());
 
-    expect(next2.score).toBe(105);
+    expect(next2.score).toBe(l2 + 9);
     expect(next2.versesMilestone).toBe(2);
     expect(events2.some((e) => e.type === 'verse_milestone' && e.milestone === 2)).toBe(true);
 
-    // Cross 150: score 145 + 10 = 155.
+    // Cross level 3 (750).
+    const l3 = cumulativeForLevel(3);
     const item3 = makeGoodItemAtBasket({ id: 'good3', points: 10 });
-    const state3 = makePlayingState({
-      score: 145,
-      items: [item3],
-      versesMilestone: 2,
-    });
+    const state3 = makePlayingState({ score: l3 - 1, items: [item3], versesMilestone: 2 });
     const { state: next3, events: events3 } = tick(state3, 16, GAME_WIDTH, GAME_HEIGHT, makeRng());
 
-    expect(next3.score).toBe(155);
+    expect(next3.score).toBe(l3 + 9);
     expect(next3.versesMilestone).toBe(3);
     expect(events3.some((e) => e.type === 'verse_milestone' && e.milestone === 3)).toBe(true);
+  });
+
+  it('does not fire a verse milestone before the level-1 threshold', () => {
+    // One point short of level 1: a 10-point catch lands below the threshold
+    // (200) only if we start far enough under. Start at 150, catch 10 -> 160,
+    // still under 200, so no milestone.
+    const item = makeGoodItemAtBasket({ points: 10 });
+    const state = makePlayingState({ score: 150, items: [item], versesMilestone: 0 });
+    const { state: next, events } = tick(state, 16, GAME_WIDTH, GAME_HEIGHT, makeRng());
+
+    expect(next.score).toBe(160);
+    expect(next.versesMilestone).toBe(0);
+    expect(events.some((e) => e.type === 'verse_milestone')).toBe(false);
   });
 
   it('combo event fires at 3+', () => {

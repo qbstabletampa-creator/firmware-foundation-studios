@@ -133,12 +133,18 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   badgeCard: {
-    width: '31%',
+    // Three across with the row's 8px gaps accounted for, so the grid never
+    // collapses to two-per-row on a 390px screen. minHeight keeps every card
+    // the same height so rows line up cleanly (badge descriptions vary in
+    // length, which otherwise left the grid ragged).
+    width: '31.5%',
+    minHeight: 104,
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
     paddingHorizontal: 4,
     paddingVertical: spacing.md,
     alignItems: 'center',
+    justifyContent: 'flex-start',
     ...shadows.card,
   },
   badgeIcon: {
