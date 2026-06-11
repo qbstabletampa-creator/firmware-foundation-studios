@@ -1,5 +1,23 @@
 # Firmware Foundation Studios Log
 
+## 2026-06-11 -- Shepherd's Trail (light-snake) polish round (Engine)
+
+- New page `pages/shepherds-trail-build-log.md`; linked under Active Build in `index.md`.
+- Five-item polish vs the app-shell standard, all in `archive/apps/light-snake` only:
+  1. Adopted the house GL lightRays splash (SplashScreen + RayCanvas + rayShaderSource copied BYTE-IDENTICAL from manna, sha256 verified; added expo-gl ~16.0.10). Routing already GL-only / Trap-7 clean.
+  2. How-to-play modal (Gosple pattern), auto-shows first run via NEW persisted `hasSeenHowToPlay` flag in the game store, plus always-visible "How to play" link on mode-select.
+  3. Countdown stray-tap bug FIXED: `inputEnabled` ref gates queueDirection + PanResponder until countdown ends and phase==='playing'.
+  4. Background reworked to twilight green pastures (dusk indigo -> teal-green horizon, rolling hill bands, fireflies). Kept GamePalette API + both exports.
+  5. Stats + badges aligned to manna's canonical format (2-per-row stat boxes, centered, badge numberOfLines/adjustsFontSizeToFit). No truncation at 390px.
+- Gates: tsc 0, vitest 9/9, expo export web clean. Visually verified in browser (splash boots, twilight bg, modal).
+- Gotchas captured: hoisted (non-workspace) monorepo dep resolution; static-serve `import.meta` ESM quirk on Expo web exports.
+
+## 2026-06-10 -- Christian App Store hook screenshot growth format expanded
+
+- Updated `pages/christian-app-store-hook-screenshot-growth-format.md` with Adrià Martinez's longer article capture on AI influencer slideshow marketing.
+- Kept the FFS translation tight: borrow the hook plus real screenshot format, not fake influencer account farms.
+- Added guardrails for manual review, disclosure, and parent trusted Christian brand fit.
+
 ## 2026-06-10 -- INCIDENT: install builds black-screened; root causes fixed; sim-smoke rig (Stable, pt 3)
 
 - CJ tested the 3 install builds: ALL black-screened at launch, Noah had Manna's icon, native splashes wrong. Four distinct bugs found:

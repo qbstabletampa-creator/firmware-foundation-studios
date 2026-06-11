@@ -1,7 +1,7 @@
 # Firmware Foundation Studios Wiki
 
 **Summary:** Dedicated vault for Firmware Foundation Studios, CJ's separate public Christian kids game studio.
-**Last Updated:** 2026-06-07
+**Last Updated:** 2026-06-10
 **Sources:** CJ Telegram planning thread, Christian kids game factory capture, charity research.
 **Related:** [[studio-decisions]], [[app-factory-strategy]], [[gosple-product-spec]], [[charity-options]]
 
@@ -26,6 +26,7 @@
 - [Phase 2 Build Log](pages/phase2-build-log.md) -- Shared infrastructure: GameSplashScreen, soundEngine, GameOnboarding, rayShader extraction. ~1,436 duplicated lines eliminated.
 - [Phase 3 Build Log](pages/phase3-build-log.md) -- Sound wired into all 4 games, score tweens, button springs. Visual polish blocked on art.
 - [Phase 4 Build Log](pages/phase4-build-log.md) -- Light Snake + Bible Brick Breaker complete. 54-bug audit + fix pass. All code compiles clean.
+- [Shepherd's Trail Build Log](pages/shepherds-trail-build-log.md) -- per-app log for light-snake. 2026-06-11 polish: GL splash adopted (byte-identical to manna + expo-gl), Gosple how-to-play modal, countdown stray-tap fix, twilight-green-pasture background, stats aligned to canonical format. Monorepo dep-hoist + static-serve gotchas.
 - [Session 4 Notes](pages/ffs-elite-upgrade-session-notes.md) -- PICKUP NOTES: Session 4 state, remaining sprites, browser QA needed, iOS/App Store next steps.
 - [Phase 0 Tool Setup](pages/phase0-tool-setup.md) -- AIML API configured, GameLabs/Sprite Lab/OpusGameLabs researched, Reve confirmed as primary sprite model.
 - [Sprite System Build](pages/sprite-system-build.md) -- Full sprite infrastructure, scene refactors, environment polish. ChatGPT claymation style locked. 47/47 game sprites done, icons + tiles remain.
@@ -46,6 +47,7 @@
 
 ## Research
 
+- [Christian Roblox Safe Kids Market Scan](pages/christian-roblox-safe-kids-market-scan-2026-06-10.md) - CJ asked whether anyone is building safe Christian Roblox for kids. Market scan found scattered faith adjacent Roblox experiences, but no clean parent trusted ecosystem.
 - [Christian App Store Hook Screenshot Growth Format](pages/christian-app-store-hook-screenshot-growth-format.md) -- Adrià Martinez X capture adapted to Firmware Foundation Studios: slide 1 parent or kid hook, slide 2 real app/game screenshot or store listing proof.
 - [Roblox Studio MCP Game Build Capture](pages/roblox-studio-mcp-game-build-capture.md) -- AzFlin X capture on completing Roblox core curriculum and using official Roblox MCP in Claude Code to automate tedious Studio work. Useful for FFS prototype labs, agent controlled editors, and simple progression loop thinking.
 - [Vibe Fighter AI Game Build Capture](pages/vibe-fighter-ai-game-build-capture.md) -- X and YouTube capture on building a Street Fighter style game with AI. Best FFS takeaway is not the clone, it is the workflow: concept art, sprite pipeline, Character Gym, Playground, JSON tuning, then game.
