@@ -75,3 +75,11 @@ Every game has the SAME onboarding structure but its OWN mascot character, gener
 
 ## Why this exists
 2026-06-08: spent a long session getting Manna Catch's splash to EXACTLY match the deployed iOS Gosple (full-screen `lightRays` shader, white italic verse, logo at 0.42). CJ's directive: every game must share the identical splash, look, feel, and onboarding. This page is the contract so we never re-derive it per game.
+
+---
+
+## ADDENDUM 2026-06-10 (CJ directives after first full-fleet Expo Go test)
+1. **How-to-play is part of the standard.** Every game shows a "How to Play" modal (Gosple's pattern: modalCard, title, 2-4 plain lines, small visual examples, one dismiss button) BEFORE first play, and it stays reachable from the game/mode-select screen. No game ships without it.
+2. **THE splash = the live App Store Gosple splash** (full-screen lightRays GL shader via expo-gl RayCanvas, FFS logo, Romans 8:28 italic). Manna's current splash stack (SplashScreen.tsx + RayCanvas.tsx + rayShaderSource.ts) IS that splash, verified on CJ's phone in Expo Go 6/10. All apps use it identically. The plainer AnimatedLogo-only splash is retired.
+3. **Backgrounds: same structure, distinct scene per game.** Layered gradient sky + landscape silhouette band + ambient motes, but each game's scene is unmistakably its own (Manna = golden-hour wilderness/dunes; Shepherd's Trail = twilight green pastures/hills/fireflies; Noah = deep-blue ocean/ark/rainbow accents; Gosple = its existing look). Level palettes evolve within the scene.
+4. **Stats pages + badges: one format.** Manna's stats grid is canonical: equal-flex centered stat boxes, bold value over small uppercase label, consistent gaps, badges in a centered grid, zero text overlap. Every app matches it.
