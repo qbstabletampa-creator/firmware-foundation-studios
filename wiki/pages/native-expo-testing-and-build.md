@@ -110,3 +110,16 @@ Known debt: manna `src/game/gameEngine.test.ts` is stale (pre-6/8 geometry + 50/
 - GOSPLE: SDK 56 -> 54 migration (`10a4958`), published 21:42Z + channel created. Whole fleet now SDK 54 = one Expo Go. Agent QA 5/5 (full Wordle loop, Eph 5:4 reveal).
 - Verification evidence archived: `.pmloop/verify-2026-06-10/` (24 screenshots).
 - Known debt: manna gameEngine.test.ts stale (6 fails, old geometry/thresholds); web-lane assets/assets 404s (export quirk, native unaffected).
+
+## Session log 2026-06-10 LATE: CJ-feedback polish round, all 4 apps republished
+After CJ's first full-fleet Expo Go test, a polish round across all 4 apps, each gameplay-verified on the prod web export + PM spot-check before publish:
+- MANNA (live 03:57Z): eased curve (first verse 250->200, LEVEL_SPEED_STEP .15->.08, SPEED_RAMP .8->.55, stone/snake unlock 60/90, bad weights trimmed), how-to-play modal, golden-hour desert bg (sun disc/dune rim/stars), rewrote stale tests 53/53.
+- NOAH (live 04:15Z): verses now ONLY at level breaks (removed verse_milestone engine event), moves-budget lose condition ceil(pairs*2.5)+1 w/ amber<=3 + 'So close!' fail card + Try-Again-same-level, how-to-play, GL splash, ocean-night bg + rainbow arc L3+. Engine tests 15/15. CONTENT TODO (CJ/Quill): Noah verse set is bread/provision themed, wants ark/covenant verses.
+- SHEPHERD'S TRAIL (live 04:33Z): GL splash adopted, how-to-play, COUNTDOWN INPUT GUARD (inputEnabled ref gates swipe+d-pad until 3-2-1 done & phase==='playing'), twilight-pastures bg. Engine unchanged 9/9.
+- GOSPLE: unchanged this round (already SDK54 + published 21:42Z earlier).
+
+## Trap 11: how-to-play auto-show must gate on persist rehydration (2026-06-10)
+A first-run modal driven by a persisted zustand flag re-pops on EVERY cold launch if the auto-show effect reads the flag before rehydration: the store boots with the default (hasSeen=false), the mount effect fires the modal, THEN storage hydrates to true (too late). On web localStorage is sync so it may not show; on native AsyncStorage is async so it WILL flash every launch. Fix: gate the effect on `useStore.persist.hasHydrated()` seeded into state + `onFinishHydration` subscription; only evaluate the flag once hydrated. Applied to manna/noah/light-snake how-to-play. Caught by the gameplay QA gate, not by tsc/export.
+
+## Trap 12: a subagent QA "FAIL" can be a misread — PM must reproduce before acting
+Light-snake round-2 QA reported "instant game-over at 0, no countdown." PM could not reproduce: 4 direct runs (incl. spam-tapping during the countdown, and the exact home->play->Free Play in-app path) all showed the 3-2-1 rendering, the game reaching 'playing', and an UNSTEERED flock walling out after ~2s at score 0 — i.e. correct snake behavior, not an instant-death bug. The countdown input guard held. Lesson: the acceptance gate cuts both ways — independently reproduce a blocking finding before treating it as truth or "fixing" a non-bug. (Bot auto-play that can't steer a snake reads "death at 0" as instant when it's just walling out.)
