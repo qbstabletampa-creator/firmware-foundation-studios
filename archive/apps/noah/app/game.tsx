@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Image,
+  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -35,7 +36,7 @@ import GameBackground, { NOAH_PALETTE } from '../src/shell/components/GameBackgr
 const VERSE_THEMES: VerseTheme[] = ['animals', 'creation', 'nature', 'trust', 'obedience'];
 
 type GameMode = 'daily' | 'freeplay';
-type ScreenMode = 'select' | 'playing' | 'levelup' | 'gameover';
+type ScreenMode = 'select' | 'playing' | 'levelup' | 'verse' | 'failed' | 'gameover';
 
 const MAX_BOARD_WIDTH = 460;
 const BOARD_GAP = 8;
@@ -60,12 +61,16 @@ export default function GameScreen() {
   const clearNewlyUnlocked = useBadgeStore((s) => s.clearNewlyUnlocked);
   const noahStore = useNoahGameStore();
 
+  const hasSeenHowToPlay = useNoahGameStore((s) => s.hasSeenHowToPlay);
+  const markHowToPlaySeen = useNoahGameStore((s) => s.markHowToPlaySeen);
+
   const [screenMode, setScreenMode] = useState<ScreenMode>('select');
   const [gameMode, setGameMode] = useState<GameMode>('freeplay');
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [level, setLevel] = useState(1);
   const [cumulativeScore, setCumulativeScore] = useState(0);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
 
   const [sessionVerses, setSessionVerses] = useState<Verse[]>([]);
   const [shownVerseIndex, setShownVerseIndex] = useState(0);
@@ -153,30 +158,17 @@ export default function GameScreen() {
           case 'quick_recall':
             HapticsManager.light();
             break;
-          case 'verse_milestone': {
-            // Walk the session verse list cumulatively, not by the engine's
-            // per-level milestone number (which resets each level).
-            const idx = verseCursor.current;
-            if (idx < sessionVerses.length) {
-              verseCursor.current = idx + 1;
-              setActiveVerse(sessionVerses[idx]);
-              setShownVerseIndex((prev) => Math.max(prev, idx + 1));
-              isRunning.current = false;
-              SoundManager.play('levelup');
-              verseOpacity.setValue(0);
-              Animated.timing(verseOpacity, {
-                toValue: 1,
-                duration: 400,
-                useNativeDriver: true,
-              }).start();
-            }
-            break;
-          }
           case 'level_complete': {
             isRunning.current = false;
             HapticsManager.success();
             SoundManager.play('levelup');
             setLastResult(ev.result);
+            break;
+          }
+          case 'level_failed': {
+            isRunning.current = false;
+            HapticsManager.medium();
+            SoundManager.play('gameover');
             break;
           }
           case 'game_complete': {
@@ -188,17 +180,8 @@ export default function GameScreen() {
         }
       }
     },
-    [sessionVerses, verseOpacity],
+    [],
   );
-
-  const dismissVerse = useCallback(() => {
-    SoundManager.play('verse');
-    setActiveVerse(null);
-    // Only resume if the level is still in play.
-    if (stateRef.current && stateRef.current.phase === 'playing') {
-      isRunning.current = true;
-    }
-  }, []);
 
   // --- record results on level/game complete --------------------------------
   const commitResult = useCallback(
@@ -251,29 +234,49 @@ export default function GameScreen() {
     ],
   );
 
+  const fadeInOverlay = useCallback(() => {
+    overlayOpacity.setValue(0);
+    Animated.timing(overlayOpacity, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  }, [overlayOpacity]);
+
   // React to phase changes that end a level.
   useEffect(() => {
-    if (!gameState || !lastResult) return;
-    if (gameState.phase === 'level_complete' && screenMode === 'playing') {
+    if (!gameState || screenMode !== 'playing') return;
+
+    if (gameState.phase === 'level_complete' && lastResult) {
       commitResult(lastResult, false);
       setScreenMode('levelup');
-      overlayOpacity.setValue(0);
-      Animated.timing(overlayOpacity, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }).start();
-    } else if (gameState.phase === 'game_complete' && screenMode === 'playing') {
+      fadeInOverlay();
+    } else if (gameState.phase === 'game_complete' && lastResult) {
       commitResult(lastResult, true);
       setScreenMode('gameover');
-      overlayOpacity.setValue(0);
-      Animated.timing(overlayOpacity, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }).start();
+      fadeInOverlay();
+    } else if (gameState.phase === 'level_failed') {
+      // Out of moves before clearing the board. The level isn't completed, so
+      // there's no LevelResult to commit; the score from previously cleared
+      // levels stays in cumulativeScore. Record the play and any verses seen.
+      recordPlay(false, todayStr);
+      const verseIds = sessionVerses.slice(0, shownVerseIndex).map((v) => v.id);
+      if (verseIds.length > 0) noahStore.addSeenVerseIds(verseIds);
+      setScreenMode('failed');
+      fadeInOverlay();
     }
-  }, [gameState, lastResult, screenMode, commitResult, overlayOpacity]);
+  }, [
+    gameState,
+    lastResult,
+    screenMode,
+    commitResult,
+    fadeInOverlay,
+    recordPlay,
+    todayStr,
+    sessionVerses,
+    shownVerseIndex,
+    noahStore,
+  ]);
 
   useEffect(() => {
     if (newlyUnlocked.length > 0 && screenMode === 'gameover' && !celebratingBadge) {
@@ -281,6 +284,35 @@ export default function GameScreen() {
       return () => clearTimeout(timer);
     }
   }, [newlyUnlocked, screenMode, celebratingBadge]);
+
+  // Auto-show the How to Play modal on first run (persisted flag), once the
+  // store has hydrated. Only on the select screen so it never pops mid-game.
+  // The hydration gate is load-bearing: before rehydration the store holds the
+  // default hasSeenHowToPlay=false, so evaluating it early re-opens the modal
+  // on every cold launch for players who already dismissed it.
+  const [howToStoreHydrated, setHowToStoreHydrated] = useState(
+    () => useNoahGameStore.persist.hasHydrated(),
+  );
+  useEffect(() => {
+    const unsub = useNoahGameStore.persist.onFinishHydration(() => setHowToStoreHydrated(true));
+    return unsub;
+  }, []);
+  useEffect(() => {
+    if (howToStoreHydrated && !hasSeenHowToPlay && screenMode === 'select') {
+      setShowHowToPlay(true);
+    }
+  }, [howToStoreHydrated, hasSeenHowToPlay, screenMode]);
+
+  const openHowToPlay = useCallback(() => {
+    SoundManager.play('tap');
+    setShowHowToPlay(true);
+  }, []);
+
+  const dismissHowToPlay = useCallback(() => {
+    SoundManager.play('tap');
+    setShowHowToPlay(false);
+    markHowToPlaySeen();
+  }, [markHowToPlaySeen]);
 
   // --- game loop ------------------------------------------------------------
   // PERF: tick() advances elapsedMs every frame, but the HUD shows no live
@@ -341,10 +373,47 @@ export default function GameScreen() {
     [handleEvents],
   );
 
-  const nextLevel = useCallback(() => {
+  // "Next Level" on the Level Clear modal: show the verse card for the level we
+  // just finished BEFORE building the next board. One verse per completed level,
+  // walking the session list cumulatively (verseCursor). This is the ONLY place
+  // verses appear now, so they always land at a level break, never mid-level.
+  const showVerseForLevel = useCallback(() => {
     SoundManager.play('tap');
+    const idx = verseCursor.current;
+    if (idx < sessionVerses.length) {
+      verseCursor.current = idx + 1;
+      setActiveVerse(sessionVerses[idx]);
+      setShownVerseIndex((prev) => Math.max(prev, idx + 1));
+      setScreenMode('verse');
+      verseOpacity.setValue(0);
+      Animated.timing(verseOpacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      // No verse left for this break (ran out): go straight to the next board.
+      setLastResult(null);
+      setActiveVerse(null);
+      startLevel(level + 1, rngRef.current);
+    }
+  }, [sessionVerses, verseOpacity, level, startLevel]);
+
+  // "Continue" on the verse card: build the next board.
+  const continueFromVerse = useCallback(() => {
+    SoundManager.play('verse');
+    setActiveVerse(null);
     setLastResult(null);
     startLevel(level + 1, rngRef.current);
+  }, [level, startLevel]);
+
+  // "Try Again" on the fail card: restart the SAME level fresh. Score from
+  // previously completed levels (cumulativeScore) is kept.
+  const retryLevel = useCallback(() => {
+    SoundManager.play('tap');
+    setLastResult(null);
+    setActiveVerse(null);
+    startLevel(level, rngRef.current);
   }, [level, startLevel]);
 
   const playAgain = useCallback(() => {
@@ -417,7 +486,19 @@ export default function GameScreen() {
           {noahStore.highScore > 0 && (
             <Text style={styles.highScoreText}>High Score: {noahStore.highScore}</Text>
           )}
+
+          <Pressable
+            onPress={openHowToPlay}
+            hitSlop={12}
+            style={styles.howToLink}
+            accessibilityRole="button"
+            accessibilityLabel="How to play"
+          >
+            <Text style={styles.howToLinkText}>How to play</Text>
+          </Pressable>
         </View>
+
+        <HowToPlayModal visible={showHowToPlay} onDismiss={dismissHowToPlay} />
       </SafeAreaView>
     );
   }
@@ -438,7 +519,15 @@ export default function GameScreen() {
         </View>
         <View style={styles.hudCenter}>
           <Text style={styles.hudLevel}>Level {gs.level}</Text>
-          <Text style={styles.hudLevelName}>{cfg.name}</Text>
+          <View
+            style={[styles.movesPill, gs.movesRemaining <= 3 && styles.movesPillLow]}
+            accessibilityRole="text"
+            accessibilityLabel={`Moves left: ${gs.movesRemaining}`}
+          >
+            <Text style={[styles.movesPillText, gs.movesRemaining <= 3 && styles.movesPillTextLow]}>
+              Moves: {gs.movesRemaining}
+            </Text>
+          </View>
         </View>
         <View style={styles.hudRight}>
           <Text style={styles.hudMatches}>
@@ -458,7 +547,7 @@ export default function GameScreen() {
 
       {/* Board area */}
       <View style={styles.boardArea}>
-        <GameBackground palette={NOAH_PALETTE} />
+        <GameBackground palette={NOAH_PALETTE} level={gs.level} />
         <Board
           cards={gs.cards}
           cols={cfg.cols}
@@ -472,15 +561,16 @@ export default function GameScreen() {
         )}
       </View>
 
-      {/* Verse overlay */}
-      {activeVerse && (
+      {/* Verse card -- shown at the LEVEL BREAK between Level Clear and the next
+          board. Reference + text + kid prompt + continue button. */}
+      {screenMode === 'verse' && activeVerse && (
         <Animated.View style={[styles.verseOverlay, { opacity: verseOpacity }]}>
           <View style={styles.verseCard}>
             <Text style={styles.verseRef}>{activeVerse.reference}</Text>
             <Text style={styles.verseText}>{activeVerse.text}</Text>
             <Text style={styles.versePrompt}>{activeVerse.kidPrompt}</Text>
-            <Pressable style={styles.verseDismiss} onPress={dismissVerse}>
-              <Text style={styles.verseDismissText}>Keep Playing</Text>
+            <Pressable style={styles.verseDismiss} onPress={continueFromVerse}>
+              <Text style={styles.verseDismissText}>Continue</Text>
             </Pressable>
           </View>
         </Animated.View>
@@ -515,8 +605,28 @@ export default function GameScreen() {
               <ResultStat value={`${lastResult.timeBonus}`} label="Time Bonus" />
               <ResultStat value={lastResult.perfectClear ? 'Yes' : 'No'} label="Perfect" />
             </View>
-            <Pressable style={styles.primaryButton} onPress={nextLevel}>
+            <Pressable style={styles.primaryButton} onPress={showVerseForLevel}>
               <Text style={styles.primaryButtonText}>Next Level</Text>
+            </Pressable>
+            <Pressable style={styles.secondaryButton} onPress={goHome}>
+              <Text style={styles.secondaryButtonText}>Home</Text>
+            </Pressable>
+          </View>
+        </Animated.View>
+      )}
+
+      {/* Out-of-moves fail overlay -- encouraging, kid-friendly. Try Again
+          restarts the SAME level fresh; prior level scores are kept. */}
+      {screenMode === 'failed' && (
+        <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
+          <View style={styles.resultCard}>
+            <Text style={styles.failIcon}>{'🐾'}</Text>
+            <Text style={styles.resultTitle}>So close!</Text>
+            <Text style={styles.failMessage}>
+              The animals got loose. Try again!
+            </Text>
+            <Pressable style={styles.primaryButton} onPress={retryLevel}>
+              <Text style={styles.primaryButtonText}>Try Again</Text>
             </Pressable>
             <Pressable style={styles.secondaryButton} onPress={goHome}>
               <Text style={styles.secondaryButtonText}>Home</Text>
@@ -672,6 +782,40 @@ function ResultStat({ value, label }: { value: string; label: string }) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// HowToPlayModal: kid-friendly rules. Auto-shows on first run and is always
+// reachable from the "How to play" link on the mode select screen.
+// ---------------------------------------------------------------------------
+function HowToPlayModal({ visible, onDismiss }: { visible: boolean; onDismiss: () => void }) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalCard}>
+          <Text style={styles.modalTitle}>How to Play</Text>
+          <View style={styles.howToList}>
+            <HowToRow icon="🃏" text="Flip two cards to find matching animal pairs." />
+            <HowToRow icon="🛟" text="Match all the pairs to fill the Ark." />
+            <HowToRow icon="👣" text="Watch your moves. Run out and you retry the level." />
+            <HowToRow icon="📖" text="A Bible verse waits after every level." />
+          </View>
+          <Pressable style={styles.modalButton} onPress={onDismiss}>
+            <Text style={styles.modalButtonText}>Let's Go!</Text>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function HowToRow({ icon, text }: { icon: string; text: string }) {
+  return (
+    <View style={styles.howToRow}>
+      <Text style={styles.howToIcon}>{icon}</Text>
+      <Text style={styles.howToText}>{text}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
 
@@ -707,6 +851,13 @@ const styles = StyleSheet.create({
   modeLabel: { color: colors.textPrimary, fontSize: 20, fontWeight: '800' },
   modeDesc: { color: colors.textSecondary, fontSize: 14, marginTop: spacing.xs },
   highScoreText: { color: colors.gold, fontSize: 16, fontWeight: '700', marginTop: spacing.xl },
+  howToLink: { marginTop: spacing.lg, paddingVertical: spacing.sm, paddingHorizontal: spacing.md },
+  howToLinkText: {
+    color: colors.textSecondary,
+    fontSize: 15,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
 
   // HUD
   hud: {
@@ -722,9 +873,22 @@ const styles = StyleSheet.create({
   hudLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
   hudScore: { color: colors.gold, ...typography.score },
   hudCombo: { color: colors.teal, ...typography.combo },
-  hudCenter: { alignItems: 'center', flex: 1 },
+  hudCenter: { alignItems: 'center', flex: 1, gap: 3 },
   hudLevel: { color: colors.textPrimary, fontSize: 14, fontWeight: '800' },
-  hudLevelName: { color: colors.textMuted, fontSize: 11, fontWeight: '600' },
+  movesPill: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radii.lg,
+    backgroundColor: 'rgba(120, 220, 255, 0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(120, 220, 255, 0.32)',
+  },
+  movesPillLow: {
+    backgroundColor: 'rgba(255, 179, 71, 0.18)',
+    borderColor: colors.present,
+  },
+  movesPillText: { color: colors.teal, fontSize: 12, fontWeight: '900', letterSpacing: 0.3 },
+  movesPillTextLow: { color: colors.present },
   hudRight: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.sm },
   hudMatches: { color: colors.teal, fontSize: 18, fontWeight: '900' },
   quitButton: {
@@ -821,6 +985,14 @@ const styles = StyleSheet.create({
   },
   resultTitle: { color: colors.textPrimary, fontSize: 26, fontWeight: '900', marginBottom: spacing.sm, textAlign: 'center' },
   quitPrompt: { color: colors.textSecondary, fontSize: 16, textAlign: 'center', marginBottom: spacing.lg },
+  failIcon: { fontSize: 44, marginBottom: spacing.xs },
+  failMessage: {
+    color: colors.textSecondary,
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: spacing.lg,
+  },
   resultStars: { fontSize: 28, marginBottom: spacing.sm },
   resultScore: { color: colors.gold, fontSize: 52, fontWeight: '900' },
   resultLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '700', textTransform: 'uppercase', marginBottom: spacing.lg },
@@ -848,4 +1020,41 @@ const styles = StyleSheet.create({
     borderColor: colors.surfaceBorder,
   },
   secondaryButtonText: { color: colors.textSecondary, fontSize: 16, fontWeight: '700' },
+
+  // How to Play modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(6, 18, 43, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+  },
+  modalCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.xl,
+    padding: spacing.xl,
+    width: '100%',
+    maxWidth: 360,
+    borderWidth: 1,
+    borderColor: colors.gold,
+  },
+  modalTitle: {
+    color: colors.textPrimary,
+    fontSize: 24,
+    fontWeight: '900',
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  howToList: { gap: spacing.md, marginBottom: spacing.lg },
+  howToRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  howToIcon: { fontSize: 26, width: 32, textAlign: 'center' },
+  howToText: { color: colors.textPrimary, fontSize: 15, fontWeight: '600', flex: 1, lineHeight: 20 },
+  modalButton: {
+    backgroundColor: colors.gold,
+    borderRadius: radii.lg,
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalButtonText: { color: colors.background, fontSize: 17, fontWeight: '800' },
 });

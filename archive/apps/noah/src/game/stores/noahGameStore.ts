@@ -11,6 +11,7 @@ interface NoahGameState {
   animalsCollected: string[];
   dailyScores: Record<string, number>;
   seenVerseIds: string[];
+  hasSeenHowToPlay: boolean;
 
   recordScore: (score: number) => void;
   recordCombo: (combo: number) => void;
@@ -21,6 +22,7 @@ interface NoahGameState {
   recordDailyScore: (dateStr: string, score: number) => void;
   addSeenVerseIds: (ids: string[]) => void;
   hasDailyScore: (dateStr: string) => boolean;
+  markHowToPlaySeen: () => void;
   reset: () => void;
 }
 
@@ -35,6 +37,7 @@ export const useNoahGameStore = create<NoahGameState>()(
       animalsCollected: [],
       dailyScores: {},
       seenVerseIds: [],
+      hasSeenHowToPlay: false,
 
       recordScore: (score) =>
         set((s) => ({ highScore: Math.max(s.highScore, score) })),
@@ -72,6 +75,8 @@ export const useNoahGameStore = create<NoahGameState>()(
 
       hasDailyScore: (dateStr) => dateStr in get().dailyScores,
 
+      markHowToPlaySeen: () => set({ hasSeenHowToPlay: true }),
+
       reset: () =>
         set({
           highScore: 0,
@@ -82,6 +87,7 @@ export const useNoahGameStore = create<NoahGameState>()(
           animalsCollected: [],
           dailyScores: {},
           seenVerseIds: [],
+          hasSeenHowToPlay: false,
         }),
     }),
     {
@@ -96,6 +102,7 @@ export const useNoahGameStore = create<NoahGameState>()(
         animalsCollected: s.animalsCollected,
         dailyScores: s.dailyScores,
         seenVerseIds: s.seenVerseIds,
+        hasSeenHowToPlay: s.hasSeenHowToPlay,
       }),
     },
   ),

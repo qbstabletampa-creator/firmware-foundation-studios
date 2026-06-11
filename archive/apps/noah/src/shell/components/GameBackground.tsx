@@ -3,10 +3,13 @@ import { Animated, Easing, StyleSheet, View, type DimensionValue } from 'react-n
 
 /**
  * Elite, pure-RN animated game background. No native deps (Expo Go safe, hot
- * reloads). Renders a smooth banded sky gradient, a soft horizon sun glow,
- * slow-drifting light motes, and layered dune silhouettes.
+ * reloads). Each FFS game gets its own distinct scene via `palette`.
  *
- * Themeable via `palette` so each FFS game can reuse it with its own vibe.
+ * NOAH = DEEP-BLUE OCEAN NIGHT: a midnight-blue sky melting into deep sea teal
+ * at the horizon, layered wave-band silhouettes rolling along the bottom, soft
+ * star motes drifting up, and (on later levels) a faint rainbow arc as a nod to
+ * the covenant. Dark up top keeps card faces and HUD text readable.
+ *
  * Keep it BEHIND gameplay: render as the first child of the game area.
  */
 
@@ -15,9 +18,9 @@ export type GamePalette = {
   sky: string[];
   /** Horizon sun/glow tint (use an rgba with alpha). */
   glow: string;
-  /** Dune silhouette color. */
+  /** Wave / silhouette color. */
   dune: string;
-  /** Drifting mote color (rgba with alpha). */
+  /** Drifting mote (star) color (rgba with alpha). */
   mote: string;
 };
 
@@ -30,19 +33,30 @@ export const MANNA_PALETTE: GamePalette = {
 };
 
 /**
- * Noah's Ark: lush after the rain. Deep night sky up top fading to a
- * rainbow-tinged horizon over green hills. Dark up top keeps card faces and
- * HUD text readable; the "dune" silhouette doubles as rolling green hills.
+ * Noah's Ark: deep-blue ocean night. Midnight blue overhead easing into deep
+ * sea teal at the waterline. The "dune" color is the dark wave silhouette.
  */
 export const NOAH_PALETTE: GamePalette = {
-  sky: ['#06122B', '#0E2A4A', '#1E5A6E', '#3E8C8C', '#9ED27A', '#F4C26B'],
-  glow: 'rgba(120, 220, 255, 0.40)',
-  dune: '#163B1E',
-  mote: 'rgba(210, 255, 230, 0.9)',
+  sky: ['#040A1C', '#071633', '#0B2547', '#103A5C', '#16566E', '#1E7A82'],
+  glow: 'rgba(80, 200, 230, 0.32)',
+  dune: '#06223A',
+  mote: 'rgba(220, 244, 255, 0.95)',
 };
 
 const BANDS = 16;
-const MOTE_COUNT = 6;
+const STAR_COUNT = 7;
+/** Levels at or above this show the faint rainbow covenant arc. */
+const RAINBOW_FROM_LEVEL = 3;
+
+// A soft, low-opacity rainbow read from the inside out (top band first).
+const RAINBOW_BANDS = [
+  'rgba(255, 90, 90, 0.16)',
+  'rgba(255, 170, 70, 0.15)',
+  'rgba(255, 230, 90, 0.15)',
+  'rgba(110, 220, 130, 0.15)',
+  'rgba(90, 170, 255, 0.15)',
+  'rgba(170, 120, 235, 0.14)',
+];
 
 function hexToRgb(hex: string) {
   const h = hex.replace('#', '');
@@ -66,16 +80,17 @@ function mixStops(stops: string[], t: number): string {
   return `rgb(${r}, ${g}, ${bl})`;
 }
 
-function Mote({ color, index }: { color: string; index: number }) {
+/** A drifting star mote: rises slowly and twinkles. */
+function Star({ color, index }: { color: string; index: number }) {
   const rise = useRef(new Animated.Value(0)).current;
   const fade = useRef(new Animated.Value(0)).current;
 
   // Deterministic-ish per-index variation (no Math.random in render).
-  const left = `${8 + ((index * 37) % 84)}%` as DimensionValue;
-  const size = 3 + (index % 3) * 2;
-  const duration = 7000 + (index % 4) * 1800;
-  const delay = index * 900;
-  const drift = index % 2 === 0 ? 14 : -14;
+  const left = `${6 + ((index * 41) % 88)}%` as DimensionValue;
+  const size = 2 + (index % 3) * 2;
+  const duration = 8000 + (index % 4) * 1600;
+  const delay = index * 760;
+  const drift = index % 2 === 0 ? 10 : -10;
 
   useEffect(() => {
     const riseLoop = Animated.loop(
@@ -89,8 +104,8 @@ function Mote({ color, index }: { color: string; index: number }) {
     );
     const fadeLoop = Animated.loop(
       Animated.sequence([
-        Animated.timing(fade, { toValue: 1, duration: duration * 0.3, delay, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-        Animated.timing(fade, { toValue: 0.2, duration: duration * 0.7, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(fade, { toValue: 1, duration: duration * 0.35, delay, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(fade, { toValue: 0.25, duration: duration * 0.65, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
       ]),
     );
     riseLoop.start();
@@ -101,7 +116,7 @@ function Mote({ color, index }: { color: string; index: number }) {
     };
   }, [rise, fade, duration, delay]);
 
-  const translateY = rise.interpolate({ inputRange: [0, 1], outputRange: [40, -560] });
+  const translateY = rise.interpolate({ inputRange: [0, 1], outputRange: [30, -540] });
   const translateX = rise.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, drift, 0] });
 
   return (
@@ -109,7 +124,7 @@ function Mote({ color, index }: { color: string; index: number }) {
       pointerEvents="none"
       style={{
         position: 'absolute',
-        bottom: 80,
+        bottom: 120,
         left,
         width: size,
         height: size,
@@ -119,46 +134,89 @@ function Mote({ color, index }: { color: string; index: number }) {
         transform: [{ translateY }, { translateX }],
         shadowColor: color,
         shadowOpacity: 0.9,
-        shadowRadius: 6,
+        shadowRadius: 5,
         shadowOffset: { width: 0, height: 0 },
       }}
     />
   );
 }
 
-export default function GameBackground({ palette = MANNA_PALETTE }: { palette?: GamePalette }) {
+export default function GameBackground({
+  palette = MANNA_PALETTE,
+  level = 1,
+}: {
+  palette?: GamePalette;
+  level?: number;
+}) {
   const bands = useMemo(
     () => Array.from({ length: BANDS }, (_, i) => mixStops(palette.sky, i / (BANDS - 1))),
     [palette.sky],
   );
 
+  const showRainbow = level >= RAINBOW_FROM_LEVEL;
+
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {/* Smooth banded sky */}
+      {/* Smooth banded night sky */}
       {bands.map((c, i) => (
         <View key={i} style={{ flex: 1, backgroundColor: c }} />
       ))}
 
-      {/* Horizon sun glow (stacked translucent discs near the catch zone) */}
+      {/* Faint rainbow covenant arc (later levels only). Concentric soft rings
+          clipped by the wave band so only the arc above the water shows. */}
+      {showRainbow && (
+        <View style={styles.rainbowWrap} pointerEvents="none">
+          {RAINBOW_BANDS.map((c, i) => {
+            const ring = 760 - i * 36;
+            return (
+              <View
+                key={i}
+                style={{
+                  position: 'absolute',
+                  width: ring,
+                  height: ring,
+                  borderRadius: ring / 2,
+                  borderWidth: 18,
+                  borderColor: c,
+                  bottom: -ring / 2,
+                }}
+              />
+            );
+          })}
+        </View>
+      )}
+
+      {/* Moonlit horizon glow on the water */}
       <View style={styles.glowWrap} pointerEvents="none">
-        <View style={[styles.glow, { width: 460, height: 460, backgroundColor: palette.glow, opacity: 0.35 }]} />
-        <View style={[styles.glow, { width: 300, height: 300, backgroundColor: palette.glow, opacity: 0.5 }]} />
-        <View style={[styles.glow, { width: 150, height: 150, backgroundColor: palette.glow, opacity: 0.7 }]} />
+        <View style={[styles.glow, { width: 440, height: 440, backgroundColor: palette.glow, opacity: 0.3 }]} />
+        <View style={[styles.glow, { width: 280, height: 280, backgroundColor: palette.glow, opacity: 0.45 }]} />
+        <View style={[styles.glow, { width: 140, height: 140, backgroundColor: palette.glow, opacity: 0.65 }]} />
       </View>
 
-      {/* Drifting light motes */}
-      {Array.from({ length: MOTE_COUNT }, (_, i) => (
-        <Mote key={i} color={palette.mote} index={i} />
+      {/* Drifting star motes */}
+      {Array.from({ length: STAR_COUNT }, (_, i) => (
+        <Star key={i} color={palette.mote} index={i} />
       ))}
 
-      {/* Layered dune silhouettes */}
-      <View style={[styles.duneBack, { backgroundColor: palette.dune, opacity: 0.55 }]} />
-      <View style={[styles.duneFront, { backgroundColor: palette.dune }]} />
+      {/* Layered wave-band silhouettes rolling along the bottom */}
+      <View style={[styles.waveBack, { backgroundColor: palette.dune, opacity: 0.45 }]} />
+      <View style={[styles.waveMid, { backgroundColor: palette.dune, opacity: 0.7 }]} />
+      <View style={[styles.waveFront, { backgroundColor: palette.dune }]} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  rainbowWrap: {
+    position: 'absolute',
+    bottom: 70,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
+    height: 420,
+  },
   glowWrap: {
     position: 'absolute',
     bottom: 40,
@@ -169,27 +227,38 @@ const styles = StyleSheet.create({
   },
   glow: {
     position: 'absolute',
-    bottom: -180,
+    bottom: -160,
     borderRadius: 999,
   },
-  duneBack: {
+  // Three overlapping rounded crests give a layered ocean-surface silhouette.
+  waveBack: {
     position: 'absolute',
     bottom: 0,
-    left: -60,
-    right: -60,
+    left: -80,
+    right: -80,
     height: 150,
-    borderTopLeftRadius: 280,
-    borderTopRightRadius: 200,
-    transform: [{ scaleX: 1.4 }],
+    borderTopLeftRadius: 320,
+    borderTopRightRadius: 240,
+    transform: [{ scaleX: 1.5 }],
   },
-  duneFront: {
+  waveMid: {
+    position: 'absolute',
+    bottom: 0,
+    left: -50,
+    right: -50,
+    height: 110,
+    borderTopLeftRadius: 200,
+    borderTopRightRadius: 300,
+    transform: [{ scaleX: 1.35 }],
+  },
+  waveFront: {
     position: 'absolute',
     bottom: 0,
     left: -40,
     right: -40,
-    height: 96,
-    borderTopLeftRadius: 180,
-    borderTopRightRadius: 240,
+    height: 74,
+    borderTopLeftRadius: 260,
+    borderTopRightRadius: 180,
     transform: [{ scaleX: 1.3 }],
   },
 });

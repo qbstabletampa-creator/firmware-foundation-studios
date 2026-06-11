@@ -90,8 +90,11 @@ export const GAME_CONSTANTS = {
   /** Perfect clear bonus (zero mismatches). */
   PERFECT_CLEAR_BONUS: 1000,
 
-  /** Show a verse card every N matched pairs. */
-  VERSE_MILESTONE_MATCHES: 5,
+  /** Moves budget = ceil(pairs * MOVES_BUDGET_PER_PAIR) + MOVES_BUDGET_FLOOR.
+   *  Generous for kids: a perfect run needs `pairs` moves, so 2.5x + 1 leaves
+   *  plenty of room to forget a card or two and still clear the board. */
+  MOVES_BUDGET_PER_PAIR: 2.5,
+  MOVES_BUDGET_FLOOR: 1,
 
   /** Maximum combo multiplier cap. */
   MAX_COMBO_MULTIPLIER: 3.0,
@@ -103,6 +106,16 @@ export const GAME_CONSTANTS = {
 // ---------------------------------------------------------------------------
 // Scoring helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Moves budget for a level with `pairs` pairs.
+ * = ceil(pairs * 2.5) + 1. A perfect run uses exactly `pairs` moves, so this
+ * gives kids ~1.5x slack plus a floor of one extra move. Out of budget before
+ * the board is cleared fails the level.
+ */
+export function getMovesBudget(pairs: number): number {
+  return Math.ceil(pairs * GAME_CONSTANTS.MOVES_BUDGET_PER_PAIR) + GAME_CONSTANTS.MOVES_BUDGET_FLOOR;
+}
 
 /**
  * Get the combo multiplier for a given streak count.

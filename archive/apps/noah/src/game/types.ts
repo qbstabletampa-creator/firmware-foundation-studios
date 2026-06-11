@@ -26,6 +26,7 @@ export type GamePhase =
   | 'ready'
   | 'playing'
   | 'level_complete'
+  | 'level_failed'
   | 'game_complete';
 
 export type FlipPhase =
@@ -64,6 +65,10 @@ export type GameState = {
   bestCombo: number;
   /** Number of pair attempts (incremented each time a second card is flipped). */
   moves: number;
+  /** Total moves allowed this level before the level fails. */
+  movesBudget: number;
+  /** Moves remaining before the level fails (counts down from movesBudget). */
+  movesRemaining: number;
   matches: number;
   mismatches: number;
   totalPairs: number;
@@ -75,8 +80,6 @@ export type GameState = {
   previewTimer: number;
   /** Tracks which animal names have been matched (for collection badges). */
   animalsMatched: string[];
-  /** Verse milestone counter (triggers verse display every N matches). */
-  verseMilestone: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -91,8 +94,8 @@ export type GameEvent =
   | { type: 'combo'; count: number; multiplier: number }
   | { type: 'quick_recall'; bonus: number }
   | { type: 'level_complete'; result: LevelResult }
+  | { type: 'level_failed'; level: number }
   | { type: 'game_complete'; totalScore: number }
   | { type: 'preview_end' }
-  | { type: 'verse_milestone'; milestone: number }
   | { type: 'perfect_clear'; bonus: number }
   | { type: 'time_bonus'; bonus: number };

@@ -18,6 +18,7 @@ import {
   getComboMultiplier,
   getTimeBonus,
   getStarRating,
+  getMovesBudget,
 } from './itemConfig';
 import { generateBoard, checkMatch, getLevelConfig } from './collisionEngine';
 
@@ -44,6 +45,7 @@ export function createInitialState(
 ): GameState {
   const config = getLevelConfig(level);
   const cards = generateBoard(level, rng);
+  const movesBudget = getMovesBudget(config.pairs);
 
   return {
     phase: 'preview',
@@ -58,6 +60,8 @@ export function createInitialState(
     combo: 0,
     bestCombo: 0,
     moves: 0,
+    movesBudget,
+    movesRemaining: movesBudget,
     matches: 0,
     mismatches: 0,
     totalPairs: config.pairs,
@@ -66,7 +70,6 @@ export function createInitialState(
     quickRecalls: 0,
     previewTimer: config.previewMs,
     animalsMatched: [],
-    verseMilestone: 0,
   };
 }
 
@@ -139,6 +142,23 @@ export function flipCard(
       card2: state.secondFlipped!,
     });
 
+    // Out of moves: this pending mismatch was the last attempt. Resolve to a
+    // failed level instead of letting the player start a fresh flip.
+    if (state.movesRemaining <= 0) {
+      const failedState: GameState = {
+        ...state,
+        cards,
+        firstFlipped: null,
+        secondFlipped: null,
+        flipPhase: 'idle',
+        phase: 'level_failed',
+        mismatchTimer: 0,
+        combo: 0,
+      };
+      events.push({ type: 'level_failed', level: state.level });
+      return { state: failedState, events };
+    }
+
     // Flip the new card as a fresh first flip.
     cards = updateCard(cards, cardIndex, { state: 'faceup' });
     events.push({ type: 'card_flipped', cardIndex });
@@ -197,6 +217,7 @@ export function flipCard(
     const firstCard = cards[state.firstFlipped!];
     const secondCard = cards[cardIndex];
     const moves = state.moves + 1;
+    const movesRemaining = Math.max(0, state.movesRemaining - 1);
 
     // Check for Quick Recall bonus (second flip within 2s of first).
     const flipDelta = state.elapsedMs - state.firstFlipTimestamp;
@@ -236,14 +257,6 @@ export function flipCard(
       const animalsMatched = [...state.animalsMatched];
       if (!animalsMatched.includes(firstCard.name)) {
         animalsMatched.push(firstCard.name);
-      }
-
-      // Verse milestone check.
-      let verseMilestone = state.verseMilestone;
-      const newMilestone = Math.floor(newMatches / GAME_CONSTANTS.VERSE_MILESTONE_MATCHES);
-      if (newMilestone > verseMilestone) {
-        verseMilestone = newMilestone;
-        events.push({ type: 'verse_milestone', milestone: verseMilestone });
       }
 
       // Check for level completion.
@@ -301,11 +314,11 @@ export function flipCard(
           combo: newCombo,
           bestCombo,
           moves,
+          movesRemaining,
           matches: newMatches,
           stars,
           quickRecalls,
           animalsMatched,
-          verseMilestone,
         };
 
         return { state: newState, events };
@@ -322,10 +335,10 @@ export function flipCard(
         combo: newCombo,
         bestCombo,
         moves,
+        movesRemaining,
         matches: newMatches,
         quickRecalls,
         animalsMatched,
-        verseMilestone,
       };
 
       return { state: newState, events };
@@ -344,6 +357,7 @@ export function flipCard(
         flipPhase: 'mismatch_delay',
         mismatchTimer: GAME_CONSTANTS.MISMATCH_DELAY_MS,
         moves,
+        movesRemaining: Math.max(0, state.movesRemaining - 1),
         mismatches: state.mismatches + 1,
         combo: 0,
       };
@@ -428,16 +442,25 @@ export function tick(
         card2: state.secondFlipped!,
       });
 
+      // Out of moves and the board isn't cleared: the level is lost. Fire the
+      // fail AFTER the cards flip back so the player sees the final mismatch.
+      const outOfMoves = state.movesRemaining <= 0;
+
       const newState: GameState = {
         ...state,
         cards,
         firstFlipped: null,
         secondFlipped: null,
         flipPhase: 'idle',
+        phase: outOfMoves ? 'level_failed' : state.phase,
         mismatchTimer: 0,
         combo: 0,
         elapsedMs,
       };
+
+      if (outOfMoves) {
+        events.push({ type: 'level_failed', level: state.level });
+      }
 
       return { state: newState, events };
     }
