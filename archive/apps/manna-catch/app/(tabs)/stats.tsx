@@ -47,7 +47,7 @@ export default function StatsTab() {
               >
                 {badge.name}
               </Text>
-              <Text style={styles.badgeDesc}>
+              <Text style={styles.badgeDesc} numberOfLines={2}>
                 {badge.unlockedAt ? badge.description : 'Keep playing!'}
               </Text>
             </View>

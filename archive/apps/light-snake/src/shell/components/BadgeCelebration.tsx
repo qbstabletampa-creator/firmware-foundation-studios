@@ -250,6 +250,8 @@ const styles = StyleSheet.create({
   glowRing: {
     position: 'absolute',
     top: 20,
+    left: '50%',
+    marginLeft: -50,
     width: 100,
     height: 100,
     borderRadius: 50,
