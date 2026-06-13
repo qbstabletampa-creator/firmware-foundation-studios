@@ -1,5 +1,13 @@
 # Firmware Foundation Studios Log
 
+## 2026-06-13 -- iOS readiness audit + fixes, 4 native apps (Claude)
+
+- New page `pages/ffs-ios-readiness-2026-06-13.md`; linked top of Active Build in `index.md`.
+- Read-only audit of all 5 games, then fix pass on the 4 native apps. Branch `ffs-ios-readiness` (pushed, not merged), commit `aa82ea3`. No EAS builds or OTA publishes spent.
+- KEY FINDING: Gosple live App Store build `546cdf31` is SDK 56, build #3, NO update channel = cannot take OTA. Fixes need a new build + review. The 2 errored SDK-54 builds died at pod install on the old Xcode-15.4 image pin (already removed).
+- Gosple: channel bindings + GOSPLE_EPOCH=2026-06-13 + deleted dead MenuScreen. Manna: badgeDesc 2-line cap + channels. Shepherd's Trail: centered glowRing, gold -> Vegas #D4C36A, channels. Noah: 3-strikes-per-level (HUD hearts) + verse after every level incl. final + tests 19/19, adversarially re-verified.
+- All 4: tsc clean + expo export ios clean. Arc Hopper + Bible Brick Breaker confirmed web-only (in src/games/, old Capacitor "FFS Games" bundle at firmwarefoundation.com/play/), never split into native apps.
+
 ## 2026-06-11 -- Shepherd's Trail (light-snake) polish round (Engine)
 
 - New page `pages/shepherds-trail-build-log.md`; linked under Active Build in `index.md`.

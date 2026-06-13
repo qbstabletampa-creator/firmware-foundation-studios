@@ -21,6 +21,7 @@
 
 ## Active Build
 
+- [FFS iOS Readiness Audit + Fixes (2026-06-13)](pages/ffs-ios-readiness-2026-06-13.md) -- LATEST. Audit of all 5 games + fix pass on the 4 native apps (branch ffs-ios-readiness, commit aa82ea3). Gosple live build = SDK56, no channel, CANNOT take OTA (needs new build). Noah 3-strikes-per-level + verse-every-level. Arc Hopper + BBB still web-only. PICKUP: ios-preflight, Expo Go publish, merge, build lane, Arc Hopper Opt1 vs Opt2.
 - [Elite Upgrade Plan](pages/elite-upgrade-plan.md) -- MASTER PLAN: 6-phase roadmap. Phases 0-4 done (Phase 0 partial), Phase 5 App Store not started.
 - [Elite Audit - June 2026](pages/elite-audit-june-2026.md) -- 8-agent audit: 44 bugs (8 critical), 3/4 games silent, 2/4 emoji splash screens, 2/7 onboarding, ~1,660 duplicated lines.
 - [Phase 2 Build Log](pages/phase2-build-log.md) -- Shared infrastructure: GameSplashScreen, soundEngine, GameOnboarding, rayShader extraction. ~1,436 duplicated lines eliminated.
