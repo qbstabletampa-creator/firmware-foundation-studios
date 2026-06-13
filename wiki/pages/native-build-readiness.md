@@ -1,40 +1,66 @@
-# Native Build Readiness (App Store path)
+# Native Build Readiness (App Store ship pipeline)
 
-**Summary:** How FFS games get onto phones as real native apps. Short version: it's **Capacitor, not Expo Go.** Phaser is a browser canvas/WebGL engine and cannot run in Expo Go (React Native). Capacitor wraps the existing web build into native iOS/Android apps, which is the correct fit and is already set up in this repo.
-**Last Updated:** 2026-06-05
-**Sources:** capacitor.config.ts, package.json, June 4 visual-upgrade session.
-**Related:** [[visual-upgrade-pipeline]], [[phone-testing-workflow]], [[session-pickup-june-4-2026]]
+**Summary:** The canonical, repeatable way every FFS app ships to iOS. Five FREE gates prove the build before you spend a single paid EAS build, then two paid/policy gates (signing + Apple review) finish it. Run this exact order for every app, every time. Goal: by the time you hit `eas build`, the only thing left is waiting on Apple.
+**Last Updated:** 2026-06-13
+**Sources:** 2026-06-13 ship-pipeline session (Stable/CJ). Supersedes the 2026-06-05 Capacitor version of this page.
+**Related:** [[native-expo-testing-and-build]], [[ffs-ios-readiness-2026-06-13]], [[app-shell-standard-splash-onboarding]]
+
+> **History note:** Until 2026-06-01 the games were Phaser/web wrapped in **Capacitor**. The fleet has since pivoted to **native Expo (SDK 54)** apps that run in Expo Go (Manna Catch, Noah, Light Snake, Gosple). Capacitor only still applies to the not-yet-split web games (Arc Hopper, Bible Brick Breaker) inside the old "FFS Games" bundle. For any native Expo app, use the pipeline below, not Capacitor.
 
 ---
 
-## Why not Expo Go
-- Expo Go runs **React Native** (native UI components). Our games are **Phaser** (DOM/Canvas/WebGL, browser-only). Phaser does not run in React Native.
-- The only way to get them into an Expo shell is a WebView loading the web build, which is identical to just opening the dev URL in the phone browser. No benefit, more steps.
-- The repo pivoted from Expo to web-first on June 1, 2026. Expo is gone.
+## The locked flow (free until the very last line)
 
-## What's already in place (Capacitor 8.4.0)
-- Deps: `@capacitor/core`, `/cli`, `/android`, `/ios` all `^8.4.0`.
-- Platforms generated: `android/` and `ios/` both exist.
-- `capacitor.config.ts`: appId `com.firmwarefoundation.studios`, appName `FFS Games`, `webDir: 'dist'`, iOS bg `#10100E`, Android bg `#10100E`.
-- Scripts: `cap:build` (= `npm run build && npx cap sync`), `cap:ios`, `cap:android`, `cap:sync`.
+| # | Gate | Cost | What it proves | Command |
+|---|------|------|----------------|---------|
+| 1 | **Expo Go on phone** | Free | JS, UI, gameplay, feel | publish: `eas update --branch preview -m "msg"` (audit `.env` first) |
+| 2 | **`tsc --noEmit`** | Free | Types clean | `npx tsc --noEmit` |
+| 3 | **`expo export`** | Free | Bundling, imports, assets resolve | `npx expo export --platform ios` |
+| 4 | **`ios-preflight`** | Free | prebuild + **pod install** (the phase EAS dies on) | `gh workflow run ios-preflight -f app=<dir>` → `gh run watch` |
+| 5 | **`ios-sim-smoke`** | Free | **Real native Release compile** + sim boot + screenshots | `gh workflow run ios-sim-smoke -f app=<dir>` → `gh run watch` |
+| 6 | **`eas build`** | **Paid** | Sign + archive + upload | `eas build --profile production` |
+| 7 | **Submit** | Policy | Apple human review | ASC submit + metadata |
 
-## How to do a native test build
-1. `npm run cap:build` — runs `tsc -b && vite build` into `dist/`, then `npx cap sync` copies web assets into the native projects.
-2. iOS: `npm run cap:ios` opens Xcode. Needs a **Mac + Xcode + Apple Developer account** to install on a device. (The Mac Mini on Tailscale could host this.)
-3. Android: `npm run cap:android` opens Android Studio. Needs Android Studio + an emulator or USB device.
+Steps 1-5 are free (FFS repo is public = unlimited GitHub macOS runners). They replicate everything EAS does **except** signing/upload. Get all five green and step 6 succeeding is near-certain.
 
-## GOTCHA: test mode is OFF in native builds
-`TEST_MODE = import.meta.env.DEV || localStorage 'ffs-test-mode'==='on'`. A Capacitor build uses `vite build` (production), so `import.meta.env.DEV` is **false** → the **paywall is active** in the native app.
+**Hard discipline: never run `eas build` until `ios-sim-smoke` is green.** That single rule is the difference between "wait on Apple" and "burned another build."
 
-To test all games free in a native build, either:
-- Set the flag at runtime: in the app's webview, `localStorage.setItem('ffs-test-mode','on')` (hard to reach in a packaged app), OR
-- **Better:** add a temporary build-time override before `cap:build` (e.g. an env var `VITE_TEST_MODE=on` read in `purchaseStore.ts`), then remove it before the real store build.
+---
 
-This is why **browser testing (dev URL) is the easy path** for now — test mode is automatic there. Save native builds for when you're actually preparing a store submission.
+## Why this is ~95% but not 100%
 
-## Pre-submission checklist (when ready)
-- Fix the stats-not-saved bug first (scores/badges save) — see session-pickup note.
-- Confirm paywall + Stripe purchase flow works in a production build (test mode OFF).
-- App icons + splash per platform (check `android/.../res` and iOS assets).
-- Bump version in `capacitor.config.ts` / native projects.
-- iOS: provisioning profile, App Store Connect listing. Android: signing key, Play Console listing.
+The free gates make the **build** bulletproof. They cannot prove the two gates that come after compile:
+
+### Gate A — Code signing (last 10% of the EAS build)
+- Free gates compile with `CODE_SIGNING_ALLOWED=NO`. EAS still signs + archives with real Apple certs/provisioning.
+- Can fail on entitlements, capability mismatch, or provisioning even when code compiles.
+- **EAS's "synced capabilities" display lies** under ASC-key auth (see [[ffs-ios-readiness-2026-06-13]] and memory `feedback_eas_capability_sync_lie`). Verify capabilities via the **ASC API**, not EAS's UI.
+- One-time setup per app, then stable. Not a per-build code risk.
+
+### Gate B — Apple App Store review (human policy gate, after submit)
+A perfectly compiled + signed build says nothing about approval. Pre-clear these BEFORE submit:
+
+- [ ] **Privacy policy** live + linked in App Store Connect
+- [ ] **Data collection** disclosed accurately (App Privacy "nutrition label")
+- [ ] **Kids category compliance** (most FFS games are Christian kids apps):
+  - [ ] No third-party tracking / analytics SDKs
+  - [ ] No behavioral ads; any ads must be human-reviewed + kid-appropriate
+  - [ ] **Parental gate** in front of external links, purchases, anything leaving the app
+  - [ ] Age rating set correctly
+- [ ] **No crash on the reviewer's device** (sim-smoke + real-device check first)
+- [ ] **Metadata + screenshots** match the actual app, no placeholder content
+- [ ] **IAP** (if any) configured + reviewable; restore-purchases works
+
+The honest promise: *"the build compiles, signs, and uploads without surprises; the remaining risk is Apple's policy review, which we've pre-checked."* Never promise more.
+
+---
+
+## Phone testing per SDK
+
+- **SDK 54 (fleet standard):** Expo Go on CJ's phone, free + instant, the full loop. This is why the whole fleet stays on 54 (see global rule `app-build-testing.md`).
+- **SDK 56:** Expo Go can't load it yet. Build-validation (gates 4-5) still works for free on any SDK. For phone *feel* on 56, spend **one** development build to get a dev client, then iterate free into it. Don't put new apps on 56 until Expo Go supports it, or you throw away gate 1.
+
+---
+
+## Per-app readiness state
+Live build IDs, SDK, channel status, and build-lane notes live in [[ffs-ios-readiness-2026-06-13]]. Check there before building any specific app (e.g. Gosple's live build has no update channel = no OTA, needs build #4).

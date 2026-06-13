@@ -1,5 +1,12 @@
 # Firmware Foundation Studios Log
 
+## 2026-06-13 -- Locked the canonical App Store ship pipeline (Claude/CJ)
+
+- CJ wanted a permanent, error-proof way to take any app to "95% ready, just waiting on Apple." Codified it in two places (no duplication).
+- GLOBAL RULE `~/.claude/rules/app-build-testing.md`: upgraded the pre-flight pipeline native gate to TWO free GitHub macOS gates (3a `ios-preflight` = pod install, 3b `ios-sim-smoke` = real Release compile + sim boot). Added new HARD RULE "build-ready is NOT Apple-approved": signing (ASC API verify, EAS capability display lies) + Apple Kids-category review are separate gates the free pipeline can't prove. Agents must never promise CJ "submit, zero problems."
+- WIKI: rewrote stale `pages/native-build-readiness.md` (was "Capacitor not Expo" from 6/5, contradicted the now-native-Expo fleet) into the canonical 7-step ship pipeline table (5 free gates + paid build + Apple review) with the signing + Kids-category pre-submission checklist. Updated index.md line for it. Capacitor noted as superseded except for unsplit Arc Hopper/BBB.
+- No code changed, no builds spent. Both gate workflows (`ios-preflight.yml`, `ios-sim-smoke.yml`) confirmed present in `.github/workflows/`.
+
 ## 2026-06-13 -- iOS readiness audit + fixes, 4 native apps (Claude)
 
 - New page `pages/ffs-ios-readiness-2026-06-13.md`; linked top of Active Build in `index.md`.
