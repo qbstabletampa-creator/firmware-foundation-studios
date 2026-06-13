@@ -1,0 +1,100 @@
+# iOS simulator DEBUG launch: same Release build as ios-sim-smoke, but launches
+# the app with --console-pty AND streams the simulator os_log, so the actual JS
+# startup error (which expo-updates ErrorRecovery swallows into a bare SIGABRT,
+# leaving the .ips crash report with no reason string) is captured to an artifact.
+# One-off diagnostic for the 2026-06-13 universal launch crash. Not a gate.
+#
+# Trigger: gh workflow run ios-sim-debug -f app=<dir>
+name: ios-sim-debug
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "App dir under archive/apps"
+        required: true
+        default: "manna-catch"
+
+jobs:
+  debug:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: archive/package-lock.json
+
+      - name: Install workspace deps
+        working-directory: archive
+        run: npm ci --no-audit --no-fund
+
+      - name: Install standalone app deps
+        working-directory: archive/apps/${{ github.event.inputs.app }}
+        run: if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; fi
+
+      - name: Prebuild native iOS project
+        working-directory: archive/apps/${{ github.event.inputs.app }}
+        env:
+          EXPO_NO_DEPENDENCY_VALIDATION: "1"
+        run: npx expo prebuild --platform ios --no-install
+
+      - name: Select newest Xcode for SDK 56
+        if: ${{ github.event.inputs.app == 'gosple' }}
+        run: |
+          XC=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XC"
+          xcodebuild -version
+
+      - name: pod install
+        working-directory: archive/apps/${{ github.event.inputs.app }}/ios
+        run: pod install
+
+      - name: Build Release for simulator
+        working-directory: archive/apps/${{ github.event.inputs.app }}/ios
+        run: |
+          set -o pipefail
+          WORKSPACE=$(ls -d *.xcworkspace | head -1)
+          SCHEME="${WORKSPACE%.xcworkspace}"
+          xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" \
+            -configuration Release -sdk iphonesimulator \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO \
+            -destination 'generic/platform=iOS Simulator' build 2>&1 | tail -20
+
+      - name: Launch with console + os_log capture
+        working-directory: archive/apps/${{ github.event.inputs.app }}/ios
+        run: |
+          APP_PATH=$(ls -d build/Build/Products/Release-iphonesimulator/*.app | head -1)
+          BUNDLE_ID=$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$APP_PATH/Info.plist")
+          DEVICE=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(dev['udid'] for k in d for dev in d[k] if 'iPhone' in dev['name']))")
+          echo "app=$APP_PATH bundle=$BUNDLE_ID device=$DEVICE"
+          xcrun simctl boot "$DEVICE" || true
+          xcrun simctl bootstatus "$DEVICE" -b
+          xcrun simctl install "$DEVICE" "$APP_PATH"
+          # stream the whole simulator log to a file in the background
+          ( xcrun simctl spawn "$DEVICE" log stream --level=debug --style=syslog > oslog-stream.txt 2>&1 & echo $! > logpid )
+          sleep 2
+          # --console-pty attaches the app's stdout/stderr; RN prints the JS error here before crashing
+          echo "===== LAUNCH CONSOLE =====" | tee launch-console.txt
+          timeout 25 xcrun simctl launch --console-pty "$DEVICE" "$BUNDLE_ID" 2>&1 | tee -a launch-console.txt || true
+          sleep 3
+          kill "$(cat logpid)" 2>/dev/null || true
+          # also pull a focused log dump for the app + RN/Expo subsystems
+          xcrun simctl spawn "$DEVICE" log show --last 3m --style syslog > oslog-show.txt 2>&1 || true
+          echo ""
+          echo "########## CANDIDATE ERROR LINES ##########"
+          grep -iE "Exception|fatal|Unhandled|RCTFatal|facebook::react|reanimated|worklet|skia|TurboModule|invariant|RuntimeError|undefined is not|is not a function|cannot read|Error:|ExpoModules|ErrorRecovery|abort" launch-console.txt oslog-stream.txt oslog-show.txt 2>/dev/null | grep -iv "MobileSafari\|Passbook\|migrator" | head -120 || echo "no candidate lines matched"
+
+      - name: Upload all logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-logs-${{ github.event.inputs.app }}
+          path: |
+            archive/apps/${{ github.event.inputs.app }}/ios/launch-console.txt
+            archive/apps/${{ github.event.inputs.app }}/ios/oslog-stream.txt
+            archive/apps/${{ github.event.inputs.app }}/ios/oslog-show.txt
+          if-no-files-found: warn
