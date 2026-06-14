@@ -1,5 +1,14 @@
 # Firmware Foundation Studios Log
 
+## 2026-06-13 -- Ran all 4 apps through the gates; fixed a universal Release launch crash (Claude/CJ)
+
+- Ran the free gates on branch ffs-ios-readiness for all 4 apps. ios-preflight (pod install) GREEN x4. ios-sim-smoke first pass FAILED x4: apps compiled but crashed ~1.2s after launch (screenshots = iOS springboard, never the app).
+- Root cause via a one-off `ios-sim-debug.yml` (launch + process-filtered os_log, since the .ips carried no JS string): `Cannot find native module 'ExpoAsset'` -> Invariant "main" not registered -> RCTFatal -> expo-updates ErrorRecovery SIGABRT. Cause: `expo-audio@1.1.1` declares `expo-asset:*`; npm hoisted SDK56 `expo-asset@56.0.16` over SDK54 `12.0.13`. NOT new-arch (rejected that as a no-op). Full trap written to `pages/native-expo-testing-and-build.md`; memory `feedback_expo_transitive_wildcard_native_module`.
+- FIX: `overrides {expo-asset ~12.0.13}` in archive/package.json + gosple/package.json; clean reinstall (npm 11 needed node_modules+lock nuke to honor it); verified 12.0.13 hoisted/deduped, zero 56.x in locks. Re-ran sim-smoke x4 -> all GREEN, all 4 render their real onboarding (verified by screenshots).
+- Rulebook: added Step 6 "Publish to Expo Go for CJ test, before any paid build" to global rule + `pages/native-build-readiness.md` (now 8 steps).
+- Published all 4 to Expo Go preview (SDK 54) for CJ. Step 6 immediately caught 2 bugs: Manna regressed vs the PM-verified "Polish" preview (rolled the preview back, group bf3d816c) and Noah's home `logo.png` is the wrong asset (Manna's golden basket; correct animal art is its `icon.png`). Build lane PAUSED. See MC card for the PICKUP.
+- 2 self-inflicted workflow bugs hit + fixed: GNU `timeout` absent on macOS runners; a `.filter` precedence slip in a workflow script.
+
 ## 2026-06-13 -- Locked the canonical App Store ship pipeline (Claude/CJ)
 
 - CJ wanted a permanent, error-proof way to take any app to "95% ready, just waiting on Apple." Codified it in two places (no duplication).
