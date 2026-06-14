@@ -13,17 +13,20 @@
 
 | # | Gate | Cost | What it proves | Command |
 |---|------|------|----------------|---------|
-| 1 | **Expo Go on phone** | Free | JS, UI, gameplay, feel | publish: `eas update --branch preview -m "msg"` (audit `.env` first) |
+| 1 | **Expo Go (dev loop)** | Free | JS, UI, gameplay, feel while building | dev server / `eas update` |
 | 2 | **`tsc --noEmit`** | Free | Types clean | `npx tsc --noEmit` |
 | 3 | **`expo export`** | Free | Bundling, imports, assets resolve | `npx expo export --platform ios` |
 | 4 | **`ios-preflight`** | Free | prebuild + **pod install** (the phase EAS dies on) | `gh workflow run ios-preflight -f app=<dir>` → `gh run watch` |
 | 5 | **`ios-sim-smoke`** | Free | **Real native Release compile** + sim boot + screenshots | `gh workflow run ios-sim-smoke -f app=<dir>` → `gh run watch` |
-| 6 | **`eas build`** | **Paid** | Sign + archive + upload | `eas build --profile production` |
-| 7 | **Submit** | Policy | Apple human review | ASC submit + metadata |
+| 6 | **Publish to Expo Go for CJ test** | Free | CJ taps it on his phone + signs off BEFORE any paid build | `eas update --branch preview -m "msg"` (audit `.env` first) |
+| 7 | **`eas build`** | **Paid** | Sign + archive + upload | `eas build --profile production` |
+| 8 | **Submit** | Policy | Apple human review | ASC submit + metadata |
 
-Steps 1-5 are free (FFS repo is public = unlimited GitHub macOS runners). They replicate everything EAS does **except** signing/upload. Get all five green and step 6 succeeding is near-certain.
+Steps 1-6 are free (FFS repo is public = unlimited GitHub macOS runners; Expo Go publish is free). They replicate everything EAS does **except** signing/upload. Get gates 1-5 green AND CJ approving in Expo Go (6), and step 7 succeeding is near-certain.
 
-**Hard discipline: never run `eas build` until `ios-sim-smoke` is green.** That single rule is the difference between "wait on Apple" and "burned another build."
+**Hard discipline:**
+- Never run `eas build` until `ios-sim-smoke` is green.
+- Never run `eas build` until **CJ has tested the Expo Go publish (step 6) and said build it.** Expo Go validates the game's JS/UX; sim-smoke (5) already proved native/Release. CJ's sign-off on 6 is the gate to spend money.
 
 ---
 
