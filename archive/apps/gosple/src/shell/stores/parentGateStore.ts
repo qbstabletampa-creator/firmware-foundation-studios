@@ -34,7 +34,7 @@ export const useParentGateStore = create<ParentGateState>()(
       },
     }),
     {
-      name: '@ffs/parentgate',
+      name: '@ffs/v2/parentgate',
       storage: createJSONStorage(() => asyncStorage),
     },
   ),

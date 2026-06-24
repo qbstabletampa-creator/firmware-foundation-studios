@@ -27,7 +27,7 @@ export const useProfileStore = create<ProfileState>()(
       reset: () => set({ currentProfile: null, name: null, hasCompletedOnboarding: false }),
     }),
     {
-      name: '@ffs/profile',
+      name: '@ffs/v2/profile',
       storage: createJSONStorage(() => asyncStorage),
     },
   ),

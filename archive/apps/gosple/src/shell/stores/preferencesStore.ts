@@ -23,7 +23,7 @@ export const usePreferencesStore = create<PreferencesState>()(
         set((s) => ({ notificationsEnabled: !s.notificationsEnabled })),
     }),
     {
-      name: '@ffs/preferences',
+      name: '@ffs/v2/preferences',
       storage: createJSONStorage(() => asyncStorage),
     },
   ),

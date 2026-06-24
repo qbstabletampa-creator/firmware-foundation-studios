@@ -1,5 +1,33 @@
 # Firmware Foundation Studios Log
 
+## 2026-06-24 -- Gosple test reset + published to Expo Go preview (Claude/CJ)
+
+- CJ wanted to test the current Gosple in Expo Go with a clean slate: fresh onboarding, reset word/day count, randomized word length. Published to the preview channel (free Expo Go lane, no build spent).
+- **Epoch reset:** `GOSPLE_EPOCH` -> `2026-06-24` in `src/game/dailyPuzzle.ts` (Day 1 = relaunch/today). Was 2026-06-13.
+- **Fresh first-run:** version-bumped all 7 zustand persist keys `@ffs/<x>` -> `@ffs/v2/<x>` (profile, streak, dailyBoard, badges, preferences, parentgate, purchase). Orphans old AsyncStorage on existing test phones so onboarding shows, profile/"login" is gone, streak/board/badges reset. `FORCE_ONBOARDING=__DEV__` does NOT fire in a published bundle (`__DEV__` false), so the key bump is the correct way to force a true first-run over OTA. Verified `purchaseStore.isPurchased` gates NOTHING (vestigial; App Store handles the paid entitlement), so the reset can't lock the app.
+- **Word length:** already randomized, confirmed real. 1000 puzzles, evenly split (254/253/248/245 across 5/6/7/8-letter), `gospleDailyOrder` Fisher-Yates shuffle seed `0x60591e28` so length varies day to day.
+- Gates green: `tsc --noEmit` clean, vitest 17/17, `expo export --platform ios` clean, no `.env` to audit. No test pins the epoch or keys.
+- Published: `eas update --branch preview --platform ios` (iOS-only per the web-export-crash rule). Update group `715a93b1-9318-48aa-9488-5af3af779a5c`, runtime `exposdk:54.0.0`, commit 348446b. `channel:view preview` confirmed it serves the new group.
+- STILL OPEN (told CJ): in-app home logo `assets/logo.png` is still the FFS company logo, not Gosple art (pending CJ's art call). Then merge `ffs-ios-readiness` + one production EAS build #4 + ASC resubmit with CJ's screen recording.
+
+## 2026-06-18 -- Captured SEO free tools and backlink growth loop
+
+- Added `pages/seo-free-tools-backlink-growth-capture-2026-06-18.md` from Janu's X post about BoilerplateHub SEO growth.
+- Routed it to Firmware Foundation Studios because it fits app discovery for Gosple and future Christian kids games.
+- Captured the useful growth loop: parent useful free tools or resource pages, real backlinks, and search traffic that routes into the app ecosystem.
+
+## 2026-06-17 -- Captured TikTok tips slideshow app growth format
+
+- Added `pages/tiktok-tips-slideshow-app-growth-format-2026-06-17.md` from Gaurav's X post on a repeatable slideshow growth format.
+- Routed it to Firmware Foundation Studios because it fits app launch creative for Gosple and future Christian kids games.
+- Connected it to hook screenshot growth, UGC reaction video growth, app factory strategy, studio decisions, and Gosple.
+
+## 2026-06-17 -- Captured UGC reaction video app growth format
+
+- Added `pages/ugc-reaction-video-app-growth-format.md` from Rork's X post on app discovery, UGC reaction hooks, and 7 second demos.
+- Routed it to Firmware Foundation Studios because it directly fits Christian App Store and FFS launch testing.
+- Connected it to the existing hook screenshot growth format, app factory strategy, Gosple, and parent trusted studio decisions.
+
 ## 2026-06-13 -- Ran all 4 apps through the gates; fixed a universal Release launch crash (Claude/CJ)
 
 - Ran the free gates on branch ffs-ios-readiness for all 4 apps. ios-preflight (pod install) GREEN x4. ios-sim-smoke first pass FAILED x4: apps compiled but crashed ~1.2s after launch (screenshots = iOS springboard, never the app).
