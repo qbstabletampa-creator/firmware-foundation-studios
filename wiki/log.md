@@ -23,6 +23,15 @@
   - Stamped a `FFS LOCKED SPLASH` marker comment on all 4 native apps' SplashScreen/RayCanvas/rayShaderSource (gosple, manna-catch, light-snake, noah). Fleet confirmed consistent (all 4 have RayCanvas; no Skia wired in routing).
 - Gates green (tsc, vitest 17/17, expo export ios). Republished gosple preview ios update group `8c62f444-5c34-46b9-abda-98ea1b2f4d86`, channel verified. Commit `d54af74` on `ffs-ios-readiness`.
 
+## 2026-06-25 -- Gosple 1.1.0 SUBMITTED to App Store via /ship-update (Claude/CJ)
+
+- Ran `/ship-update` for Gosple 1.1. Result: **version 1.1.0 -> WAITING_FOR_REVIEW, build 4 attached.** Live 1.0 was READY_FOR_SALE (real live-app update, minimal delta applies).
+- Phase 0 (free gates): valid (gosple byte-identical to green-gated 70e97b9; greenlight clean). Phase 1: version 1.1.0. Phase 3: one production build, #4, EAS build `e07fe890`, IPA 24.7 MB. Phase 4: uploaded via ASC buildUploads API (`upload-build.py`), Apple processed to VALID fast.
+- **Privacy verified at the binary, not the scanner:** greenlight `--ipa` still flagged "No PrivacyInfo.xcprivacy" CRITICAL, but unzipping the IPA showed `Payload/Gosple.app/PrivacyInfo.xcprivacy` (1330 B) present with `NSPrivacyAccessedAPICategoryUserDefaults` reason `CA92.1` + no-tracking, plus 9 module manifests. greenlight IPA-mode privacy critical is a confirmed FALSE NEGATIVE (documented). WARNs (framework manifests, launch storyboard) are non-blocking and present on the already-live 1.0.
+- **Minimal delta held:** created 1.1.0 version record (id `4332c976`); it auto-inherited 1.0's description (1373 ch), keywords (97 ch), supportUrl, and all 4 screenshots. Set ONLY `whatsNew` (CJ-approved notes). Delta audit CAUGHT one drift: `promotionalText` did NOT auto-inherit (1.0 had 127 ch, 1.1 came up empty) -> copied 1.0's promo text forward so the live listing loses nothing. Final delta = whatsNew + build only.
+- **BUG found + fixed in the skill:** generalized `submit-robust.py` matched the OLD COMPLETE 1.0 review submission and printed `SUBMITTED_OK` while 1.1 was still PREPARE_FOR_SUBMISSION. Did the submit correctly by hand (new reviewSubmission -> add 1.1 item -> submit -> WAITING_FOR_REVIEW), then rewrote the asset to be VERSION-AWARE (done is judged by the target version's appStoreState, terminal submissions ignored) + added a SKILL.md note to always verify the version state, never trust SUBMITTED_OK alone.
+- Remaining: Apple review (24-48h typical). Auto-release on approval. Nothing else for CJ unless Apple kicks something back. (Also still open from before: merge ffs-ios-readiness -> main now that the build is cut.)
+
 ## 2026-06-25 -- New skill: /ship-update (minimal-delta App Store version updates) (Claude/CJ)
 
 - CJ: "anytime we upload a new version we only submit and change what is necessary... we don't need to reinvent the wheel." Built `/ship-update` (`~/.claude/skills/ship-update/`) + hard rule `~/.claude/rules/app-store-minimal-delta.md`.
