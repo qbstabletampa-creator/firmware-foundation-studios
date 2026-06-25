@@ -23,6 +23,14 @@
   - Stamped a `FFS LOCKED SPLASH` marker comment on all 4 native apps' SplashScreen/RayCanvas/rayShaderSource (gosple, manna-catch, light-snake, noah). Fleet confirmed consistent (all 4 have RayCanvas; no Skia wired in routing).
 - Gates green (tsc, vitest 17/17, expo export ios). Republished gosple preview ios update group `8c62f444-5c34-46b9-abda-98ea1b2f4d86`, channel verified. Commit `d54af74` on `ffs-ios-readiness`.
 
+## 2026-06-24 -- Gosple v1.1 pre-submission gates GREEN (Claude/CJ)
+
+- Ran /greenlight + native gates before any paid build. **All green on v1.1 (commit 70e97b9, branch ffs-ios-readiness).**
+- **greenlight:** description WARN fixed; the 2 privacy CRITICALs are the documented managed-Expo source-scan blind spot (greenlight does not parse app.json privacyManifests). Declared `ios.privacyManifests` (NSPrivacyAccessedAPICategoryUserDefaults reason CA92.1 for AsyncStorage, NSPrivacyTracking false, empty collected-data). EAS bakes PrivacyInfo.xcprivacy at build; confirm clear with `greenlight preflight --ipa`. Privacy-policy URL goes in ASC at submit (have it). app.json version bumped to 1.1.0.
+- **ios-preflight:** GREEN (pod install incl. ExpoGL). **ios-sim-smoke:** GREEN, app boots and renders the real onboarding in a Release build, no crash, no crash logs.
+- PROCESS BUG caught + fixed: first gate runs were dispatched WITHOUT `--ref`, so `gh workflow run` built the DEFAULT branch (main = stale gosple, no expo-gl, old expo-asset launch crash). The SIGABRT "failure" was stale main, not v1.1. Re-ran both with `--ref ffs-ios-readiness` -> green. Always pass `--ref <branch>` for feature-branch gate runs.
+- v1.1 is BUILD-READY. Remaining: merge ffs-ios-readiness -> one production EAS build (#4, autoIncrement) -> TestFlight -> ASC submit (paste privacy URL + attach CJ screen recording).
+
 ## 2026-06-18 -- Captured SEO free tools and backlink growth loop
 
 - Added `pages/seo-free-tools-backlink-growth-capture-2026-06-18.md` from Janu's X post about BoilerplateHub SEO growth.
