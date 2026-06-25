@@ -3,7 +3,8 @@
     "name": "Gosple",
     "slug": "gosple",
     "scheme": "gosple",
-    "version": "1.0.0",
+    "version": "1.1.0",
+    "description": "A daily Bible word puzzle for the whole family. Solve a new Scripture word every day, build streaks, earn badges, and reflect on a verse. No ads, no tracking, no data collection.",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -21,6 +22,17 @@
       "buildNumber": "1",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "privacyManifests": {
+        "NSPrivacyTracking": false,
+        "NSPrivacyTrackingDomains": [],
+        "NSPrivacyCollectedDataTypes": [],
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          }
+        ]
       }
     },
     "android": {
