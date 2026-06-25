@@ -23,6 +23,14 @@
   - Stamped a `FFS LOCKED SPLASH` marker comment on all 4 native apps' SplashScreen/RayCanvas/rayShaderSource (gosple, manna-catch, light-snake, noah). Fleet confirmed consistent (all 4 have RayCanvas; no Skia wired in routing).
 - Gates green (tsc, vitest 17/17, expo export ios). Republished gosple preview ios update group `8c62f444-5c34-46b9-abda-98ea1b2f4d86`, channel verified. Commit `d54af74` on `ffs-ios-readiness`.
 
+## 2026-06-25 -- New skill: /ship-update (minimal-delta App Store version updates) (Claude/CJ)
+
+- CJ: "anytime we upload a new version we only submit and change what is necessary... we don't need to reinvent the wheel." Built `/ship-update` (`~/.claude/skills/ship-update/`) + hard rule `~/.claude/rules/app-store-minimal-delta.md`.
+- ONLY touch on a version bump: version number, the new build (IPA), "What's New" release notes (Apple requires per update), privacy manifest IF data practices changed. NEVER touch (inherits from live): screenshots, pricing, description, keywords, category, age rating, URLs.
+- Guarded resumable checkpoint pipeline: Phase 0 free gates (greenlight + ios-preflight + ios-sim-smoke) LOOP until green; Phase 3 paid build + Phase 6 submit are HARD STOPS for CJ; downstream failures resume without rebuilding; delta audit asserts only version+build+whatsNew changed before submit; IPA greenlight audit confirms privacy clears in the signed binary. Never auto-spends a 2nd build.
+- Failure routing: free gate -> loop/fix; paid build -> STOP after one, root-cause; transient ASC API -> retry once then flag; Apple rejection -> surface to CJ.
+- Bundled the proven Little Soles ASC API recipes as golden assets (`asc.py`, `upload-build.py`, `submit-robust.py` - the idempotent outage-resilient submit), generalized via `ASC_APP_ID`/`ASC_VERSION_ID` env (EAS Submit is broken on our setup). Creds in `~/.env.integrations` (EXPO_ASC_*). Gosple ASC app id 6774244495.
+
 ## 2026-06-24 -- Gosple v1.1 pre-submission gates GREEN (Claude/CJ)
 
 - Ran /greenlight + native gates before any paid build. **All green on v1.1 (commit 70e97b9, branch ffs-ios-readiness).**
