@@ -1,3 +1,7 @@
+// FFS LOCKED SPLASH, canonical, do not redesign. Install/repair via the /ffs-splash
+// skill; locked by ~/.claude/rules/ffs-splash-lock.md. GL ray-shader splash, company
+// logo + "Romans 8:28". NEVER the Skia RadiantSplashScreen (it black-screens Release
+// builds). Chief enforces this in the weekly audit.
 // GLSL port of the DEPLOYED iOS Gosple splash shader
 // (archive/apps/gosple/src/shell/shaders/lightRays.ts, Skia SkSL) so the native
 // splash is identical to the shipped App Store build. Key match vs the web

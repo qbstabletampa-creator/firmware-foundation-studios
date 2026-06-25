@@ -1,3 +1,7 @@
+// FFS LOCKED SPLASH, canonical, do not redesign. Install/repair via the /ffs-splash
+// skill; locked by ~/.claude/rules/ffs-splash-lock.md. GL ray-shader splash, company
+// logo + "Romans 8:28". NEVER the Skia RadiantSplashScreen (it black-screens Release
+// builds). Chief enforces this in the weekly audit.
 import { GLView, type ExpoWebGLRenderingContext } from 'expo-gl';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { VERT, FRAG } from './rayShaderSource';

@@ -1,3 +1,7 @@
+// FFS LOCKED SPLASH, canonical, do not redesign. Install/repair via the /ffs-splash
+// skill; locked by ~/.claude/rules/ffs-splash-lock.md. GL ray-shader splash, company
+// logo + "Romans 8:28". NEVER the Skia RadiantSplashScreen (it black-screens Release
+// builds). Chief enforces this in the weekly audit.
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Easing, ImageSourcePropType, StyleSheet } from 'react-native';
 import RayCanvas from '../components/RayCanvas';
