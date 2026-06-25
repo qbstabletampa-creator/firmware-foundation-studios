@@ -12,6 +12,17 @@
 
 **Splash mismatch fix (same day, commit 43e5ac0).** CJ: the Expo Go splash didn't match the live App Store one. Root cause: the live 5/28 SDK-56 build rendered `RadiantSplashScreen` (native Skia rays) on native; the 6/10 "kill Skia" pass (black-screened standalone builds) re-pointed gosple at a stripped plain-logo `SplashScreen`, and gosple never had the safe GL version. Manna kept it — manna's `SplashScreen.tsx` is documented as the EXACT native port of the deployed iOS Gosple splash (full-screen GL ray shader, 160px logo at 0.42, white italic "Romans 8:28" at bottom 30%). CJ chose "match the live one". Fix: ported manna's `SplashScreen` + `RayCanvas` + `rayShaderSource` into gosple, added `expo-gl ~16.0.10` (SDK-54, bundled in Expo Go so it renders OTA, GL not Skia = no black-screen). gosple's pre-existing `shaders/lightRays.ts` is byte-identical to manna's. Gates green (tsc, vitest 17/17, expo export ios). Republished preview ios, update group `778e0b87-4442-4cf3-b373-97f51e4626e6`, channel verified serving. NOTE for the eventual build: the live build used Skia RadiantSplashScreen which black-screens SDK-54 standalone builds — this GL port is the build-safe equivalent, do NOT re-point at RadiantSplashScreen.
 
+## 2026-06-24 -- Gosple home logo + stats + parent gate, and the FFS splash LOCKED (Claude/CJ)
+
+- **Home logo:** the small home badge now uses the Gosple Bible-grid mark (`assets/icon.png`) at full opacity. CRITICAL: left `logo.png` (FFS company logo) untouched because the splash uses it and CJ approved that splash. Home and splash logos are now decoupled. Only `app/(tabs)/home.tsx` logoSource changed + `HomeScreen` smallLogo opacity 0.7 -> 1.
+- **Stats:** rebuilt gosple `app/(tabs)/stats.tsx` to manna's canonical format (2-per-row centered stat boxes, badge name `numberOfLines={2}`+`adjustsFontSizeToFit`+centered, badge desc 2-line). Fixes the "Unshakable" overflow/overlap CJ flagged.
+- **Parent gate removed (kids-first, CJ):** deleted the 2-second hold "Parent verification" gate. It only protected Settings (sound/haptics toggles + profile change, NO external links or purchases), so removing it is Apple-safe (no Kids-category gate required for that content). Removed from home/more/settings, deleted `ParentGate.tsx` + `parentGateStore.ts` + index export.
+- **FFS SPLASH LOCKED (CJ: "make that splash a skill for any firmwarefoundation app. Needs to be locked in"):**
+  - New skill `/ffs-splash` (`~/.claude/skills/ffs-splash/`) with the 4 frozen golden files (SplashScreen, RayCanvas, rayShaderSource, lightRays) + install steps + hard constraints (GL only, never Skia RadiantSplashScreen, company logo + Romans 8:28, expo-gl SDK-matched).
+  - New hard rule `~/.claude/rules/ffs-splash-lock.md` (loads for all agents). Chief owns enforcement in the weekly audit.
+  - Stamped a `FFS LOCKED SPLASH` marker comment on all 4 native apps' SplashScreen/RayCanvas/rayShaderSource (gosple, manna-catch, light-snake, noah). Fleet confirmed consistent (all 4 have RayCanvas; no Skia wired in routing).
+- Gates green (tsc, vitest 17/17, expo export ios). Republished gosple preview ios update group `8c62f444-5c34-46b9-abda-98ea1b2f4d86`, channel verified. Commit `d54af74` on `ffs-ios-readiness`.
+
 ## 2026-06-18 -- Captured SEO free tools and backlink growth loop
 
 - Added `pages/seo-free-tools-backlink-growth-capture-2026-06-18.md` from Janu's X post about BoilerplateHub SEO growth.
