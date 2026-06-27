@@ -62,6 +62,7 @@ export function createInitialState(
     moves: 0,
     movesBudget,
     movesRemaining: movesBudget,
+    strikes: 0,
     matches: 0,
     mismatches: 0,
     totalPairs: config.pairs,
@@ -142,9 +143,9 @@ export function flipCard(
       card2: state.secondFlipped!,
     });
 
-    // Out of moves: this pending mismatch was the last attempt. Resolve to a
-    // failed level instead of letting the player start a fresh flip.
-    if (state.movesRemaining <= 0) {
+    // Out of strikes: this pending mismatch was the 3rd wrong match. Resolve to
+    // a failed level instead of letting the player start a fresh flip.
+    if (state.strikes >= GAME_CONSTANTS.STRIKES_PER_LEVEL) {
       const failedState: GameState = {
         ...state,
         cards,
@@ -359,6 +360,7 @@ export function flipCard(
         moves,
         movesRemaining: Math.max(0, state.movesRemaining - 1),
         mismatches: state.mismatches + 1,
+        strikes: state.strikes + 1,
         combo: 0,
       };
 
@@ -442,9 +444,10 @@ export function tick(
         card2: state.secondFlipped!,
       });
 
-      // Out of moves and the board isn't cleared: the level is lost. Fire the
-      // fail AFTER the cards flip back so the player sees the final mismatch.
-      const outOfMoves = state.movesRemaining <= 0;
+      // Out of strikes (3rd wrong match) and the board isn't cleared: the level
+      // is lost. Fire the fail AFTER the cards flip back so the player sees the
+      // final mismatch.
+      const outOfStrikes = state.strikes >= GAME_CONSTANTS.STRIKES_PER_LEVEL;
 
       const newState: GameState = {
         ...state,
@@ -452,13 +455,13 @@ export function tick(
         firstFlipped: null,
         secondFlipped: null,
         flipPhase: 'idle',
-        phase: outOfMoves ? 'level_failed' : state.phase,
+        phase: outOfStrikes ? 'level_failed' : state.phase,
         mismatchTimer: 0,
         combo: 0,
         elapsedMs,
       };
 
-      if (outOfMoves) {
+      if (outOfStrikes) {
         events.push({ type: 'level_failed', level: state.level });
       }
 

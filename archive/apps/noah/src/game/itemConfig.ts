@@ -90,11 +90,10 @@ export const GAME_CONSTANTS = {
   /** Perfect clear bonus (zero mismatches). */
   PERFECT_CLEAR_BONUS: 1000,
 
-  /** Moves budget = ceil(pairs * MOVES_BUDGET_PER_PAIR) + MOVES_BUDGET_FLOOR.
-   *  Generous for kids: a perfect run needs `pairs` moves, so 2.5x + 1 leaves
-   *  plenty of room to forget a card or two and still clear the board. */
-  MOVES_BUDGET_PER_PAIR: 2.5,
-  MOVES_BUDGET_FLOOR: 1,
+  /** Wrong matches allowed per level before the level fails and restarts.
+   *  Shown in the HUD as 3 hearts that empty on each mismatch. This is the
+   *  single source of level failure (the old moves budget is unbounded). */
+  STRIKES_PER_LEVEL: 3,
 
   /** Maximum combo multiplier cap. */
   MAX_COMBO_MULTIPLIER: 3.0,
@@ -108,13 +107,12 @@ export const GAME_CONSTANTS = {
 // ---------------------------------------------------------------------------
 
 /**
- * Moves budget for a level with `pairs` pairs.
- * = ceil(pairs * 2.5) + 1. A perfect run uses exactly `pairs` moves, so this
- * gives kids ~1.5x slack plus a floor of one extra move. Out of budget before
- * the board is cleared fails the level.
+ * Moves budget for a level. Moves no longer limit play -- the 3-strikes system
+ * (STRIKES_PER_LEVEL) is the single source of level failure. Returns Infinity
+ * so the budget never runs out; moves are still counted for scoring and stars.
  */
-export function getMovesBudget(pairs: number): number {
-  return Math.ceil(pairs * GAME_CONSTANTS.MOVES_BUDGET_PER_PAIR) + GAME_CONSTANTS.MOVES_BUDGET_FLOOR;
+export function getMovesBudget(_pairs: number): number {
+  return Number.POSITIVE_INFINITY;
 }
 
 /**

@@ -12,6 +12,25 @@ Every FFS app must be testable in **Expo Go** (like Manna Catch) or as a **devel
 
 ---
 
+## TRAP: transitive `*` dep hoists a wrong-SDK native module -> Release launch crash (2026-06-13)
+**Symptom:** app builds + installs fine, runs fine in Expo Go and `expo export` is clean, but crashes ~1.2s after launch in a Release/native build. Sim shows the iOS springboard, never the app. Crash `.ips` = EXC_CRASH/SIGABRT on thread `expo.controller.errorRecoveryQueue` with NO JS error string (expo-updates ErrorRecovery aborts with a bare NSException).
+
+**Real error (only visible via sim os_log, not the .ips):** `Cannot find native module 'ExpoAsset'` -> Invariant Violation `"main" has not been registered` -> RCTFatal -> expo-updates ErrorRecovery (tryRelaunchFromCache fails) -> `crash()` -> SIGABRT.
+
+**Root cause:** `expo-audio@1.1.1` (the correct SDK 54 version) declares `"expo-asset": "*"`. npm resolved `*` to the newest published `expo-asset` (`56.0.16`, SDK 56) and HOISTED it over SDK 54's `12.0.13`. Autolinking built the SDK-56 native ExpoAsset into an SDK-54 binary -> never registers. Hit all 4 apps (shared workspace node_modules + same wildcard in standalone gosple). Triggered by an incomplete SDK 56->54 downgrade leaving the tree resolvable to the 56 line.
+
+**Catch it:** the `ios-sim-smoke` GitHub gate (real Release compile + sim launch). Expo Go and `expo export` CANNOT — Expo Go has expo-asset built in; export only bundles JS.
+
+**Read the real error:** `xcrun simctl spawn <device> log show --last 3m --info --debug --predicate 'process == "<AppProcName>"'` after launch. (Do NOT rely on `--console-pty` + GNU `timeout` — `timeout` is absent on macOS runners.)
+
+**Fix:** pin to the SDK-matched version (check `node_modules/expo/bundledNativeModules.json`) via `overrides` at each install root (workspace root + each standalone app):
+```json
+"overrides": { "expo-asset": "~12.0.13" }
+```
+npm 11 ignores a freshly-added override until you delete `node_modules` + lockfile and reinstall clean (a plain `npm install` reports "up to date" and keeps the bad hoist). `npm ci` in CI then respects the regenerated lock. Verify with `npm ls expo-asset --all` (one version, deduped) before re-running the gate. Commit the regenerated lockfiles.
+
+---
+
 ## Expo Go on CJ's phone (LAN is broken on the box -> use Tailscale)
 
 **AUTOMATED 2026-06-09.** All dev servers are now managed by the launcher at the repo root:

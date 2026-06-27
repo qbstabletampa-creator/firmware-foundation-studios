@@ -15,10 +15,10 @@ import { starterPuzzles } from '../content/starterPuzzles';
 // streak all flip together at LOCAL midnight.
 // ---------------------------------------------------------------------------
 
-// Day 1 of the daily puzzle. RESET 2026-06-08 to restart numbering (was 2026-06-02).
-// At App Store launch, set GOSPLE_EPOCH to the launch date so players start on Day 1.
+// Day 1 of the daily puzzle. RESET 2026-06-24 = the relaunch/advertise date (CJ),
+// so players opening the updated build start at Day 1. (was 2026-06-13, 2026-06-08, 2026-06-02.)
 // Format: YYYY-MM-DD, interpreted as a LOCAL calendar date.
-export const GOSPLE_EPOCH = '2026-06-08';
+export const GOSPLE_EPOCH = '2026-06-24';
 
 const MS_PER_DAY = 86_400_000;
 

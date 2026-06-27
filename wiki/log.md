@@ -1,5 +1,96 @@
 # Firmware Foundation Studios Log
 
+## 2026-06-24 -- Gosple test reset + published to Expo Go preview (Claude/CJ)
+
+- CJ wanted to test the current Gosple in Expo Go with a clean slate: fresh onboarding, reset word/day count, randomized word length. Published to the preview channel (free Expo Go lane, no build spent).
+- **Epoch reset:** `GOSPLE_EPOCH` -> `2026-06-24` in `src/game/dailyPuzzle.ts` (Day 1 = relaunch/today). Was 2026-06-13.
+- **Fresh first-run:** version-bumped all 7 zustand persist keys `@ffs/<x>` -> `@ffs/v2/<x>` (profile, streak, dailyBoard, badges, preferences, parentgate, purchase). Orphans old AsyncStorage on existing test phones so onboarding shows, profile/"login" is gone, streak/board/badges reset. `FORCE_ONBOARDING=__DEV__` does NOT fire in a published bundle (`__DEV__` false), so the key bump is the correct way to force a true first-run over OTA. Verified `purchaseStore.isPurchased` gates NOTHING (vestigial; App Store handles the paid entitlement), so the reset can't lock the app.
+- **Word length:** already randomized, confirmed real. 1000 puzzles, evenly split (254/253/248/245 across 5/6/7/8-letter), `gospleDailyOrder` Fisher-Yates shuffle seed `0x60591e28` so length varies day to day.
+- Gates green: `tsc --noEmit` clean, vitest 17/17, `expo export --platform ios` clean, no `.env` to audit. No test pins the epoch or keys.
+- Published: `eas update --branch preview --platform ios` (iOS-only per the web-export-crash rule). Update group `715a93b1-9318-48aa-9488-5af3af779a5c`, runtime `exposdk:54.0.0`, commit 348446b. `channel:view preview` confirmed it serves the new group.
+- STILL OPEN (told CJ): in-app home logo `assets/logo.png` is still the FFS company logo, not Gosple art (pending CJ's art call). Then merge `ffs-ios-readiness` + one production EAS build #4 + ASC resubmit with CJ's screen recording.
+
+**Splash mismatch fix (same day, commit 43e5ac0).** CJ: the Expo Go splash didn't match the live App Store one. Root cause: the live 5/28 SDK-56 build rendered `RadiantSplashScreen` (native Skia rays) on native; the 6/10 "kill Skia" pass (black-screened standalone builds) re-pointed gosple at a stripped plain-logo `SplashScreen`, and gosple never had the safe GL version. Manna kept it — manna's `SplashScreen.tsx` is documented as the EXACT native port of the deployed iOS Gosple splash (full-screen GL ray shader, 160px logo at 0.42, white italic "Romans 8:28" at bottom 30%). CJ chose "match the live one". Fix: ported manna's `SplashScreen` + `RayCanvas` + `rayShaderSource` into gosple, added `expo-gl ~16.0.10` (SDK-54, bundled in Expo Go so it renders OTA, GL not Skia = no black-screen). gosple's pre-existing `shaders/lightRays.ts` is byte-identical to manna's. Gates green (tsc, vitest 17/17, expo export ios). Republished preview ios, update group `778e0b87-4442-4cf3-b373-97f51e4626e6`, channel verified serving. NOTE for the eventual build: the live build used Skia RadiantSplashScreen which black-screens SDK-54 standalone builds — this GL port is the build-safe equivalent, do NOT re-point at RadiantSplashScreen.
+
+## 2026-06-24 -- Gosple home logo + stats + parent gate, and the FFS splash LOCKED (Claude/CJ)
+
+- **Home logo:** the small home badge now uses the Gosple Bible-grid mark (`assets/icon.png`) at full opacity. CRITICAL: left `logo.png` (FFS company logo) untouched because the splash uses it and CJ approved that splash. Home and splash logos are now decoupled. Only `app/(tabs)/home.tsx` logoSource changed + `HomeScreen` smallLogo opacity 0.7 -> 1.
+- **Stats:** rebuilt gosple `app/(tabs)/stats.tsx` to manna's canonical format (2-per-row centered stat boxes, badge name `numberOfLines={2}`+`adjustsFontSizeToFit`+centered, badge desc 2-line). Fixes the "Unshakable" overflow/overlap CJ flagged.
+- **Parent gate removed (kids-first, CJ):** deleted the 2-second hold "Parent verification" gate. It only protected Settings (sound/haptics toggles + profile change, NO external links or purchases), so removing it is Apple-safe (no Kids-category gate required for that content). Removed from home/more/settings, deleted `ParentGate.tsx` + `parentGateStore.ts` + index export.
+- **FFS SPLASH LOCKED (CJ: "make that splash a skill for any firmwarefoundation app. Needs to be locked in"):**
+  - New skill `/ffs-splash` (`~/.claude/skills/ffs-splash/`) with the 4 frozen golden files (SplashScreen, RayCanvas, rayShaderSource, lightRays) + install steps + hard constraints (GL only, never Skia RadiantSplashScreen, company logo + Romans 8:28, expo-gl SDK-matched).
+  - New hard rule `~/.claude/rules/ffs-splash-lock.md` (loads for all agents). Chief owns enforcement in the weekly audit.
+  - Stamped a `FFS LOCKED SPLASH` marker comment on all 4 native apps' SplashScreen/RayCanvas/rayShaderSource (gosple, manna-catch, light-snake, noah). Fleet confirmed consistent (all 4 have RayCanvas; no Skia wired in routing).
+- Gates green (tsc, vitest 17/17, expo export ios). Republished gosple preview ios update group `8c62f444-5c34-46b9-abda-98ea1b2f4d86`, channel verified. Commit `d54af74` on `ffs-ios-readiness`.
+
+## 2026-06-25 -- Gosple 1.1.0 SUBMITTED to App Store via /ship-update (Claude/CJ)
+
+- Ran `/ship-update` for Gosple 1.1. Result: **version 1.1.0 -> WAITING_FOR_REVIEW, build 4 attached.** Live 1.0 was READY_FOR_SALE (real live-app update, minimal delta applies).
+- Phase 0 (free gates): valid (gosple byte-identical to green-gated 70e97b9; greenlight clean). Phase 1: version 1.1.0. Phase 3: one production build, #4, EAS build `e07fe890`, IPA 24.7 MB. Phase 4: uploaded via ASC buildUploads API (`upload-build.py`), Apple processed to VALID fast.
+- **Privacy verified at the binary, not the scanner:** greenlight `--ipa` still flagged "No PrivacyInfo.xcprivacy" CRITICAL, but unzipping the IPA showed `Payload/Gosple.app/PrivacyInfo.xcprivacy` (1330 B) present with `NSPrivacyAccessedAPICategoryUserDefaults` reason `CA92.1` + no-tracking, plus 9 module manifests. greenlight IPA-mode privacy critical is a confirmed FALSE NEGATIVE (documented). WARNs (framework manifests, launch storyboard) are non-blocking and present on the already-live 1.0.
+- **Minimal delta held:** created 1.1.0 version record (id `4332c976`); it auto-inherited 1.0's description (1373 ch), keywords (97 ch), supportUrl, and all 4 screenshots. Set ONLY `whatsNew` (CJ-approved notes). Delta audit CAUGHT one drift: `promotionalText` did NOT auto-inherit (1.0 had 127 ch, 1.1 came up empty) -> copied 1.0's promo text forward so the live listing loses nothing. Final delta = whatsNew + build only.
+- **BUG found + fixed in the skill:** generalized `submit-robust.py` matched the OLD COMPLETE 1.0 review submission and printed `SUBMITTED_OK` while 1.1 was still PREPARE_FOR_SUBMISSION. Did the submit correctly by hand (new reviewSubmission -> add 1.1 item -> submit -> WAITING_FOR_REVIEW), then rewrote the asset to be VERSION-AWARE (done is judged by the target version's appStoreState, terminal submissions ignored) + added a SKILL.md note to always verify the version state, never trust SUBMITTED_OK alone.
+- Remaining: Apple review (24-48h typical). Auto-release on approval. Nothing else for CJ unless Apple kicks something back. (Also still open from before: merge ffs-ios-readiness -> main now that the build is cut.)
+
+## 2026-06-25 -- New skill: /ship-update (minimal-delta App Store version updates) (Claude/CJ)
+
+- CJ: "anytime we upload a new version we only submit and change what is necessary... we don't need to reinvent the wheel." Built `/ship-update` (`~/.claude/skills/ship-update/`) + hard rule `~/.claude/rules/app-store-minimal-delta.md`.
+- ONLY touch on a version bump: version number, the new build (IPA), "What's New" release notes (Apple requires per update), privacy manifest IF data practices changed. NEVER touch (inherits from live): screenshots, pricing, description, keywords, category, age rating, URLs.
+- Guarded resumable checkpoint pipeline: Phase 0 free gates (greenlight + ios-preflight + ios-sim-smoke) LOOP until green; Phase 3 paid build + Phase 6 submit are HARD STOPS for CJ; downstream failures resume without rebuilding; delta audit asserts only version+build+whatsNew changed before submit; IPA greenlight audit confirms privacy clears in the signed binary. Never auto-spends a 2nd build.
+- Failure routing: free gate -> loop/fix; paid build -> STOP after one, root-cause; transient ASC API -> retry once then flag; Apple rejection -> surface to CJ.
+- Bundled the proven Little Soles ASC API recipes as golden assets (`asc.py`, `upload-build.py`, `submit-robust.py` - the idempotent outage-resilient submit), generalized via `ASC_APP_ID`/`ASC_VERSION_ID` env (EAS Submit is broken on our setup). Creds in `~/.env.integrations` (EXPO_ASC_*). Gosple ASC app id 6774244495.
+
+## 2026-06-24 -- Gosple v1.1 pre-submission gates GREEN (Claude/CJ)
+
+- Ran /greenlight + native gates before any paid build. **All green on v1.1 (commit 70e97b9, branch ffs-ios-readiness).**
+- **greenlight:** description WARN fixed; the 2 privacy CRITICALs are the documented managed-Expo source-scan blind spot (greenlight does not parse app.json privacyManifests). Declared `ios.privacyManifests` (NSPrivacyAccessedAPICategoryUserDefaults reason CA92.1 for AsyncStorage, NSPrivacyTracking false, empty collected-data). EAS bakes PrivacyInfo.xcprivacy at build; confirm clear with `greenlight preflight --ipa`. Privacy-policy URL goes in ASC at submit (have it). app.json version bumped to 1.1.0.
+- **ios-preflight:** GREEN (pod install incl. ExpoGL). **ios-sim-smoke:** GREEN, app boots and renders the real onboarding in a Release build, no crash, no crash logs.
+- PROCESS BUG caught + fixed: first gate runs were dispatched WITHOUT `--ref`, so `gh workflow run` built the DEFAULT branch (main = stale gosple, no expo-gl, old expo-asset launch crash). The SIGABRT "failure" was stale main, not v1.1. Re-ran both with `--ref ffs-ios-readiness` -> green. Always pass `--ref <branch>` for feature-branch gate runs.
+- v1.1 is BUILD-READY. Remaining: merge ffs-ios-readiness -> one production EAS build (#4, autoIncrement) -> TestFlight -> ASC submit (paste privacy URL + attach CJ screen recording).
+
+## 2026-06-18 -- Captured SEO free tools and backlink growth loop
+
+- Added `pages/seo-free-tools-backlink-growth-capture-2026-06-18.md` from Janu's X post about BoilerplateHub SEO growth.
+- Routed it to Firmware Foundation Studios because it fits app discovery for Gosple and future Christian kids games.
+- Captured the useful growth loop: parent useful free tools or resource pages, real backlinks, and search traffic that routes into the app ecosystem.
+
+## 2026-06-17 -- Captured TikTok tips slideshow app growth format
+
+- Added `pages/tiktok-tips-slideshow-app-growth-format-2026-06-17.md` from Gaurav's X post on a repeatable slideshow growth format.
+- Routed it to Firmware Foundation Studios because it fits app launch creative for Gosple and future Christian kids games.
+- Connected it to hook screenshot growth, UGC reaction video growth, app factory strategy, studio decisions, and Gosple.
+
+## 2026-06-17 -- Captured UGC reaction video app growth format
+
+- Added `pages/ugc-reaction-video-app-growth-format.md` from Rork's X post on app discovery, UGC reaction hooks, and 7 second demos.
+- Routed it to Firmware Foundation Studios because it directly fits Christian App Store and FFS launch testing.
+- Connected it to the existing hook screenshot growth format, app factory strategy, Gosple, and parent trusted studio decisions.
+
+## 2026-06-13 -- Ran all 4 apps through the gates; fixed a universal Release launch crash (Claude/CJ)
+
+- Ran the free gates on branch ffs-ios-readiness for all 4 apps. ios-preflight (pod install) GREEN x4. ios-sim-smoke first pass FAILED x4: apps compiled but crashed ~1.2s after launch (screenshots = iOS springboard, never the app).
+- Root cause via a one-off `ios-sim-debug.yml` (launch + process-filtered os_log, since the .ips carried no JS string): `Cannot find native module 'ExpoAsset'` -> Invariant "main" not registered -> RCTFatal -> expo-updates ErrorRecovery SIGABRT. Cause: `expo-audio@1.1.1` declares `expo-asset:*`; npm hoisted SDK56 `expo-asset@56.0.16` over SDK54 `12.0.13`. NOT new-arch (rejected that as a no-op). Full trap written to `pages/native-expo-testing-and-build.md`; memory `feedback_expo_transitive_wildcard_native_module`.
+- FIX: `overrides {expo-asset ~12.0.13}` in archive/package.json + gosple/package.json; clean reinstall (npm 11 needed node_modules+lock nuke to honor it); verified 12.0.13 hoisted/deduped, zero 56.x in locks. Re-ran sim-smoke x4 -> all GREEN, all 4 render their real onboarding (verified by screenshots).
+- Rulebook: added Step 6 "Publish to Expo Go for CJ test, before any paid build" to global rule + `pages/native-build-readiness.md` (now 8 steps).
+- Published all 4 to Expo Go preview (SDK 54) for CJ. Step 6 immediately caught real bugs. Build lane PAUSED. Rolled ALL 4 previews back to their last PM-verified versions (manna bf3d816c, light-snake 029bef38, noah 35dcc345, gosple e697691e).
+- ICON/LOGO AUDIT (visual, every asset): the iOS app icons (`assets/icon.png`) are ALL CORRECT + distinct (basket / shepherd+sheep / animals / Bible grid). The bug is the IN-APP HOME LOGO (`assets/logo.png`, used by `app/(tabs)/home.tsx` logoSource): 3 of 4 WRONG — light-snake AND noah both show Manna's basket, gosple shows the FFS company logo, only manna is correct. Root cause: apps scaffolded from Manna's template, `logo.png` never swapped per app. Correct per-app art exists as each app's `icon.png` (square w/ bg; home logo wants transparent bg like manna's). Native splash (`splash-icon.png`) = FFS company logo for all, which is BY DESIGN (ffs-splash-company-brand), not a bug. FIX (pending CJ art call): rebuild light-snake/noah/gosple `logo.png` from their own icon art, transparent bg, screenshot all 4 home screens, show CJ before republish. See MC card for the PICKUP.
+- 2 self-inflicted workflow bugs hit + fixed: GNU `timeout` absent on macOS runners; a `.filter` precedence slip in a workflow script.
+
+## 2026-06-13 -- Locked the canonical App Store ship pipeline (Claude/CJ)
+
+- CJ wanted a permanent, error-proof way to take any app to "95% ready, just waiting on Apple." Codified it in two places (no duplication).
+- GLOBAL RULE `~/.claude/rules/app-build-testing.md`: upgraded the pre-flight pipeline native gate to TWO free GitHub macOS gates (3a `ios-preflight` = pod install, 3b `ios-sim-smoke` = real Release compile + sim boot). Added new HARD RULE "build-ready is NOT Apple-approved": signing (ASC API verify, EAS capability display lies) + Apple Kids-category review are separate gates the free pipeline can't prove. Agents must never promise CJ "submit, zero problems."
+- WIKI: rewrote stale `pages/native-build-readiness.md` (was "Capacitor not Expo" from 6/5, contradicted the now-native-Expo fleet) into the canonical 7-step ship pipeline table (5 free gates + paid build + Apple review) with the signing + Kids-category pre-submission checklist. Updated index.md line for it. Capacitor noted as superseded except for unsplit Arc Hopper/BBB.
+- No code changed, no builds spent. Both gate workflows (`ios-preflight.yml`, `ios-sim-smoke.yml`) confirmed present in `.github/workflows/`.
+
+## 2026-06-13 -- iOS readiness audit + fixes, 4 native apps (Claude)
+
+- New page `pages/ffs-ios-readiness-2026-06-13.md`; linked top of Active Build in `index.md`.
+- Read-only audit of all 5 games, then fix pass on the 4 native apps. Branch `ffs-ios-readiness` (pushed, not merged), commit `aa82ea3`. No EAS builds or OTA publishes spent.
+- KEY FINDING: Gosple live App Store build `546cdf31` is SDK 56, build #3, NO update channel = cannot take OTA. Fixes need a new build + review. The 2 errored SDK-54 builds died at pod install on the old Xcode-15.4 image pin (already removed).
+- Gosple: channel bindings + GOSPLE_EPOCH=2026-06-13 + deleted dead MenuScreen. Manna: badgeDesc 2-line cap + channels. Shepherd's Trail: centered glowRing, gold -> Vegas #D4C36A, channels. Noah: 3-strikes-per-level (HUD hearts) + verse after every level incl. final + tests 19/19, adversarially re-verified.
+- All 4: tsc clean + expo export ios clean. Arc Hopper + Bible Brick Breaker confirmed web-only (in src/games/, old Capacitor "FFS Games" bundle at firmwarefoundation.com/play/), never split into native apps.
+
 ## 2026-06-11 -- Shepherd's Trail (light-snake) polish round (Engine)
 
 - New page `pages/shepherds-trail-build-log.md`; linked under Active Build in `index.md`.

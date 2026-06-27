@@ -21,6 +21,7 @@
 
 ## Active Build
 
+- [FFS iOS Readiness Audit + Fixes (2026-06-13)](pages/ffs-ios-readiness-2026-06-13.md) -- LATEST. Audit of all 5 games + fix pass on the 4 native apps (branch ffs-ios-readiness, commit aa82ea3). Gosple live build = SDK56, no channel, CANNOT take OTA (needs new build). Noah 3-strikes-per-level + verse-every-level. Arc Hopper + BBB still web-only. PICKUP: ios-preflight, Expo Go publish, merge, build lane, Arc Hopper Opt1 vs Opt2.
 - [Elite Upgrade Plan](pages/elite-upgrade-plan.md) -- MASTER PLAN: 6-phase roadmap. Phases 0-4 done (Phase 0 partial), Phase 5 App Store not started.
 - [Elite Audit - June 2026](pages/elite-audit-june-2026.md) -- 8-agent audit: 44 bugs (8 critical), 3/4 games silent, 2/4 emoji splash screens, 2/7 onboarding, ~1,660 duplicated lines.
 - [Phase 2 Build Log](pages/phase2-build-log.md) -- Shared infrastructure: GameSplashScreen, soundEngine, GameOnboarding, rayShader extraction. ~1,436 duplicated lines eliminated.
@@ -32,7 +33,7 @@
 - [Sprite System Build](pages/sprite-system-build.md) -- Full sprite infrastructure, scene refactors, environment polish. ChatGPT claymation style locked. 47/47 game sprites done, icons + tiles remain.
 - [Gameplay Audit - June 2026](pages/gameplay-audit-june-2026.md) -- 6-agent audit of all 4 games. 8 critical, 16 major, 20 minor bugs found and fixed. Deployed June 3.
 - [Visual Upgrade Pipeline](pages/visual-upgrade-pipeline.md) -- How we fix sprite alpha (rembg) and generate AI worlds/textures (Reve via AIML). Per-game art state, test mode, backups, costs. Jun 4 evening.
-- [Native Build Readiness](pages/native-build-readiness.md) -- App Store path is Capacitor, NOT Expo Go (Phaser can't run in Expo). Cap 8.4 already set up. Build steps + the test-mode-off-in-prod gotcha.
+- [Native Build Readiness (App Store ship pipeline)](pages/native-build-readiness.md) -- CANONICAL ship flow for every app: 5 FREE gates (Expo Go, tsc, expo export, ios-preflight, ios-sim-smoke) prove the build before any paid `eas build`, then signing + Apple-review gates. Includes the Kids-category pre-submission checklist. REWRITTEN 2026-06-13 (old Capacitor version superseded).
 - [Native Expo Testing + Build (gotchas)](pages/native-expo-testing-and-build.md) -- CHEAT SHEET for the native Expo apps (Manna/Noah/Light Snake/Gosple): Tailscale Expo Go command, monorepo metro config, dev-cert online fetch, EXPO_NO_DEPENDENCY_VALIDATION for the undici crash, EAS 'weak must be mutable' Xcode-image pin. Cost us a full session 6/8.
 - [Onboarding Loop Bug](pages/onboarding-loop-bug.md) -- LIVE BLOCKER (Jun 5). Games loop on onboarding for returning users. Root cause + one-line fix documented. Not yet applied.
 

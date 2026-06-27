@@ -69,6 +69,8 @@ export type GameState = {
   movesBudget: number;
   /** Moves remaining before the level fails (counts down from movesBudget). */
   movesRemaining: number;
+  /** Wrong matches made this level. At STRIKES_PER_LEVEL the level fails. */
+  strikes: number;
   matches: number;
   mismatches: number;
   totalPairs: number;

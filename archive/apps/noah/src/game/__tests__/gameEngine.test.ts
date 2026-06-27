@@ -54,38 +54,53 @@ function doMismatchMove(state: GameState): { state: GameState; failedHere: boole
 }
 
 describe('moves budget', () => {
-  it('computes ceil(pairs * 2.5) + 1', () => {
-    expect(getMovesBudget(3)).toBe(9); // ceil(7.5)=8, +1
-    expect(getMovesBudget(6)).toBe(16); // ceil(15)=15, +1
-    expect(getMovesBudget(8)).toBe(21); // ceil(20)=20, +1
-    expect(getMovesBudget(10)).toBe(26);
-    expect(getMovesBudget(15)).toBe(39); // ceil(37.5)=38, +1
+  it('is unbounded -- strikes, not moves, limit play', () => {
+    expect(getMovesBudget(3)).toBe(Number.POSITIVE_INFINITY);
+    expect(getMovesBudget(15)).toBe(Number.POSITIVE_INFINITY);
   });
 
-  it('seeds movesRemaining from the budget at level start', () => {
-    const state = createInitialState(1, fixedRng(1));
-    const budget = getMovesBudget(getLevelConfig(1).pairs);
-    expect(state.movesBudget).toBe(budget);
-    expect(state.movesRemaining).toBe(budget);
-  });
-
-  it('counts a move down on each pair attempt', () => {
+  it('counts moves up on each pair attempt (still tracked for scoring)', () => {
     const state = startPlaying(1);
-    const before = state.movesRemaining;
+    const before = state.moves;
     const { state: after } = doMismatchMove(state);
-    // One move spent (whether it failed the level or not).
-    expect(after.movesRemaining).toBe(before - 1);
+    expect(after.moves).toBe(before + 1);
   });
 });
 
-describe('out-of-moves fail path', () => {
-  it('fails the level when moves run out before the board is cleared', () => {
-    let state = startPlaying(1);
-    const budget = state.movesBudget;
+describe('strikes', () => {
+  it('starts every level at 0 strikes', () => {
+    expect(createInitialState(1, fixedRng(1)).strikes).toBe(0);
+    expect(createInitialState(3, fixedRng(7)).strikes).toBe(0);
+  });
+
+  it('increments strikes by 1 on each mismatch', () => {
+    let state = startPlaying(2);
+    expect(state.strikes).toBe(0);
+
+    state = doMismatchMove(state).state;
+    expect(state.strikes).toBe(1);
+
+    state = doMismatchMove(state).state;
+    expect(state.strikes).toBe(2);
+  });
+
+  it('does not increment strikes on a match', () => {
+    const state = startPlaying(1);
+    const remaining = state.cards.filter((c) => c.state !== 'matched');
+    const first = remaining[0];
+    const partner = remaining.find((c) => c.id !== first.id && c.pairId === first.pairId)!;
+    let next = flipCard(state, first.id).state;
+    next = flipCard(next, partner.id).state;
+    expect(next.strikes).toBe(0);
+  });
+});
+
+describe('three-strikes fail path', () => {
+  it('fails the level on the STRIKES_PER_LEVEL-th wrong match', () => {
+    let state = startPlaying(2);
 
     let failed = false;
-    // Burn every move on deliberate mismatches; never clear the board.
-    for (let i = 0; i < budget + 2; i++) {
+    for (let i = 0; i < GAME_CONSTANTS.STRIKES_PER_LEVEL + 1; i++) {
       const res = doMismatchMove(state);
       state = res.state;
       if (res.failedHere || state.phase === 'level_failed') {
@@ -96,21 +111,28 @@ describe('out-of-moves fail path', () => {
 
     expect(failed).toBe(true);
     expect(state.phase).toBe('level_failed');
-    expect(state.movesRemaining).toBe(0);
+    expect(state.strikes).toBe(GAME_CONSTANTS.STRIKES_PER_LEVEL);
     // The board was NOT cleared on a fail.
     expect(state.matches).toBeLessThan(state.totalPairs);
   });
 
-  it('emits a level_failed event exactly when the last move resolves', () => {
-    let state = startPlaying(1);
-    const budget = state.movesBudget;
+  it('does not fail before reaching STRIKES_PER_LEVEL strikes', () => {
+    let state = startPlaying(2);
+    for (let i = 0; i < GAME_CONSTANTS.STRIKES_PER_LEVEL - 1; i++) {
+      state = doMismatchMove(state).state;
+    }
+    expect(state.strikes).toBe(GAME_CONSTANTS.STRIKES_PER_LEVEL - 1);
+    expect(state.phase).toBe('playing');
+  });
+
+  it('emits a single level_failed event when the final strike resolves', () => {
+    let state = startPlaying(2);
     let failEvents = 0;
 
-    for (let i = 0; i < budget + 2; i++) {
+    for (let i = 0; i < GAME_CONSTANTS.STRIKES_PER_LEVEL + 1; i++) {
       const [a, b] = findMismatchPair(state);
       state = flipCard(state, a).state;
       state = flipCard(state, b).state;
-      // Resolve the mismatch via tick and collect events.
       for (let t = 0; t <= GAME_CONSTANTS.MISMATCH_DELAY_MS + 200; t += 100) {
         const r = tick(state, 100);
         state = r.state;
@@ -124,9 +146,18 @@ describe('out-of-moves fail path', () => {
     expect(state.phase).toBe('level_failed');
   });
 
-  it('does not fail when the board is cleared on the final move (win beats out-of-moves)', () => {
-    // Drive a full clean clear: always flip matching pairs. The board clears in
-    // exactly `pairs` moves, well under budget, so it completes, never fails.
+  it('resets strikes back to 0 when a fresh level starts', () => {
+    let state = startPlaying(2);
+    state = doMismatchMove(state).state;
+    expect(state.strikes).toBe(1);
+    // Starting any level (retry or next) rebuilds state with strikes = 0.
+    const fresh = createInitialState(state.level, fixedRng(99));
+    expect(fresh.strikes).toBe(0);
+  });
+
+  it('does not fail when the board is cleared (win beats strikes)', () => {
+    // Drive a full clean clear: always flip matching pairs. No mismatches, so
+    // no strikes; the level completes.
     let state = startPlaying(1);
     const pairs = state.totalPairs;
 
@@ -140,5 +171,6 @@ describe('out-of-moves fail path', () => {
 
     expect(['level_complete', 'game_complete']).toContain(state.phase);
     expect(state.matches).toBe(pairs);
+    expect(state.strikes).toBe(0);
   });
 });

@@ -7,5 +7,9 @@
     "apps/noah",
     "apps/light-snake",
     "packages/*"
-  ]
+  ],
+  "comment_overrides": "expo-audio@1.1.1 declares expo-asset:* which hoists the SDK56 expo-asset@56 over SDK54's ~12.0.13, breaking the native ExpoAsset module at launch. Pin to SDK54.",
+  "overrides": {
+    "expo-asset": "~12.0.13"
+  }
 }

@@ -34,7 +34,7 @@ export const useBadgeStore = create<BadgeState>()(
         set({ badges: defaultBadges.map((b) => ({ ...b })), newlyUnlocked: [] }),
     }),
     {
-      name: '@ffs/badges',
+      name: '@ffs/v2/badges',
       storage: createJSONStorage(() => asyncStorage),
       partialize: (state) => ({ badges: state.badges }),
       merge: (persisted, current) => {

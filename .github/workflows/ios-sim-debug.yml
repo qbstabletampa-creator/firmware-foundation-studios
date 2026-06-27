@@ -64,37 +64,34 @@ jobs:
             -derivedDataPath build CODE_SIGNING_ALLOWED=NO \
             -destination 'generic/platform=iOS Simulator' build 2>&1 | tail -20
 
-      - name: Launch with console + os_log capture
+      - name: Launch and capture the app's JS error
         working-directory: archive/apps/${{ github.event.inputs.app }}/ios
         run: |
+          set -x
           APP_PATH=$(ls -d build/Build/Products/Release-iphonesimulator/*.app | head -1)
           BUNDLE_ID=$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$APP_PATH/Info.plist")
+          PROC=$(basename "$APP_PATH" .app)
           DEVICE=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(dev['udid'] for k in d for dev in d[k] if 'iPhone' in dev['name']))")
-          echo "app=$APP_PATH bundle=$BUNDLE_ID device=$DEVICE"
+          echo "app=$APP_PATH bundle=$BUNDLE_ID proc=$PROC device=$DEVICE"
           xcrun simctl boot "$DEVICE" || true
           xcrun simctl bootstatus "$DEVICE" -b
           xcrun simctl install "$DEVICE" "$APP_PATH"
-          # stream the whole simulator log to a file in the background
-          ( xcrun simctl spawn "$DEVICE" log stream --level=debug --style=syslog > oslog-stream.txt 2>&1 & echo $! > logpid )
-          sleep 2
-          # --console-pty attaches the app's stdout/stderr; RN prints the JS error here before crashing
-          echo "===== LAUNCH CONSOLE =====" | tee launch-console.txt
-          timeout 25 xcrun simctl launch --console-pty "$DEVICE" "$BUNDLE_ID" 2>&1 | tee -a launch-console.txt || true
-          sleep 3
-          kill "$(cat logpid)" 2>/dev/null || true
-          # also pull a focused log dump for the app + RN/Expo subsystems
-          xcrun simctl spawn "$DEVICE" log show --last 3m --style syslog > oslog-show.txt 2>&1 || true
-          echo ""
-          echo "########## CANDIDATE ERROR LINES ##########"
-          grep -iE "Exception|fatal|Unhandled|RCTFatal|facebook::react|reanimated|worklet|skia|TurboModule|invariant|RuntimeError|undefined is not|is not a function|cannot read|Error:|ExpoModules|ErrorRecovery|abort" launch-console.txt oslog-stream.txt oslog-show.txt 2>/dev/null | grep -iv "MobileSafari\|Passbook\|migrator" | head -120 || echo "no candidate lines matched"
+          # fire and forget — simctl launch returns immediately with a PID; the app crashes ~1.2s in
+          xcrun simctl launch "$DEVICE" "$BUNDLE_ID" || true
+          # give it time to start, throw, and let expo-updates ErrorRecovery log + abort
+          sleep 15
+          # dump ONLY this app process's log (tiny + exact). RN logs the JS error here before the abort.
+          xcrun simctl spawn "$DEVICE" log show --last 3m --info --debug --style syslog --predicate "process == \"$PROC\"" > app-oslog.txt 2>&1 || true
+          echo "app-oslog lines: $(wc -l < app-oslog.txt)"
+          echo "########## FULL APP LOG (process == $PROC) ##########"
+          cat app-oslog.txt
+          echo "########## ERROR-FOCUSED ##########"
+          grep -iE "Exception|fatal|Unhandled|RCTFatal|facebook::react|reanimated|worklet|skia|TurboModule|invariant|RuntimeError|undefined|is not a function|cannot read|Error|ErrorRecovery|abort|throw|require|Unable to|Cannot find" app-oslog.txt | head -120 || echo "no candidate lines matched"
 
-      - name: Upload all logs
+      - name: Upload app log
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: debug-logs-${{ github.event.inputs.app }}
-          path: |
-            archive/apps/${{ github.event.inputs.app }}/ios/launch-console.txt
-            archive/apps/${{ github.event.inputs.app }}/ios/oslog-stream.txt
-            archive/apps/${{ github.event.inputs.app }}/ios/oslog-show.txt
+          path: archive/apps/${{ github.event.inputs.app }}/ios/app-oslog.txt
           if-no-files-found: warn

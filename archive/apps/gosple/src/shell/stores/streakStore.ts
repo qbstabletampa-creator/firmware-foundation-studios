@@ -85,7 +85,7 @@ export const useStreakStore = create<StreakState>()(
         }),
     }),
     {
-      name: '@ffs/streak',
+      name: '@ffs/v2/streak',
       storage: createJSONStorage(() => asyncStorage),
     },
   ),

@@ -229,7 +229,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 8,
-    opacity: 0.7,
   },
   gearButton: {
     width: 44,

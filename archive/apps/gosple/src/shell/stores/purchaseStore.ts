@@ -16,7 +16,7 @@ export const usePurchaseStore = create<PurchaseState>()(
       setPurchased: (date) => set({ isPurchased: true, purchaseDate: date }),
     }),
     {
-      name: '@ffs/purchase',
+      name: '@ffs/v2/purchase',
       storage: createJSONStorage(() => asyncStorage),
     },
   ),

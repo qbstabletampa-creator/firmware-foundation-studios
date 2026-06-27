@@ -7,7 +7,7 @@ export const colors = {
   textSecondary: '#B0B0A8',
   textMuted: '#6A6A64',
 
-  gold: '#FFD700',
+  gold: '#D4C36A',
   goldMuted: '#C5A600',
 
   correct: '#00E676',

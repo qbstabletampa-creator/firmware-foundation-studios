@@ -19,11 +19,15 @@ export default function StatsTab() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.heading}>Stats</Text>
 
+        {/* Canonical 2-per-row layout (matches manna). Centered, equal width,
+            never collapses or overlaps on a narrow screen. */}
         <View style={styles.statRow}>
           <StatBox label="Played" value={totalGamesPlayed} />
-          <StatBox label="Win %" value={winPercent} />
-          <StatBox label="Streak" value={currentStreak} valueColor={colors.teal} />
-          <StatBox label="Best" value={longestStreak} valueColor={colors.gold} />
+          <StatBox label="Win %" value={winPercent} valueColor={colors.teal} />
+        </View>
+        <View style={styles.statRow}>
+          <StatBox label="Streak" value={currentStreak} valueColor={colors.gold} />
+          <StatBox label="Best" value={longestStreak} />
         </View>
 
         <Text style={styles.sectionTitle}>Badges</Text>
@@ -34,10 +38,15 @@ export default function StatsTab() {
               <Text style={[styles.badgeIcon, !badge.unlockedAt && styles.badgeLocked]}>
                 {badge.icon}
               </Text>
-              <Text style={[styles.badgeName, !badge.unlockedAt && styles.badgeLockedText]}>
+              <Text
+                style={[styles.badgeName, !badge.unlockedAt && styles.badgeLockedText]}
+                numberOfLines={2}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
+              >
                 {badge.name}
               </Text>
-              <Text style={styles.badgeDesc}>
+              <Text style={styles.badgeDesc} numberOfLines={2}>
                 {badge.unlockedAt ? badge.description : 'Keep playing!'}
               </Text>
             </View>
@@ -84,31 +93,37 @@ const styles = StyleSheet.create({
   statRow: {
     flexDirection: 'row',
     gap: spacing.sm,
-    marginBottom: spacing.xxl,
+    marginBottom: spacing.md,
   },
   statBox: {
     flex: 1,
+    minWidth: 0,
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
     paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
     alignItems: 'center',
+    justifyContent: 'center',
     ...shadows.card,
   },
   statValue: {
     color: colors.textPrimary,
     fontSize: 26,
     fontWeight: '900',
+    textAlign: 'center',
   },
   statLabel: {
     color: colors.textMuted,
     fontSize: 11,
     fontWeight: '700',
-    marginTop: 2,
+    marginTop: 4,
     textTransform: 'uppercase',
+    textAlign: 'center',
   },
   sectionTitle: {
     color: colors.textPrimary,
     ...typography.sectionTitle,
+    marginTop: spacing.md,
     marginBottom: spacing.md,
   },
   badgeGrid: {
@@ -117,12 +132,16 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   badgeCard: {
-    width: '31%',
+    // Three across with the row's gaps accounted for, equal height so rows line
+    // up cleanly regardless of badge name/description length.
+    width: '31.5%',
+    minHeight: 104,
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
-    padding: spacing.sm,
+    paddingHorizontal: 4,
     paddingVertical: spacing.md,
     alignItems: 'center',
+    justifyContent: 'flex-start',
     ...shadows.card,
   },
   badgeIcon: {
@@ -134,16 +153,19 @@ const styles = StyleSheet.create({
   },
   badgeName: {
     color: colors.textPrimary,
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '800',
+    lineHeight: 15,
+    textAlign: 'center',
   },
   badgeLockedText: {
     color: colors.textMuted,
   },
   badgeDesc: {
     color: colors.textSecondary,
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: 11,
+    lineHeight: 14,
+    marginTop: 4,
     textAlign: 'center',
   },
 });

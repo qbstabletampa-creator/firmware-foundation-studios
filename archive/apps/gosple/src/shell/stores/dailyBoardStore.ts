@@ -67,7 +67,7 @@ export const useDailyBoardStore = create<DailyBoardState>()(
         set({ day: null, rows: [], currentGuess: '', solved: false, completed: false }),
     }),
     {
-      name: '@ffs/dailyBoard',
+      name: '@ffs/v2/dailyBoard',
       storage: createJSONStorage(() => asyncStorage),
     },
   ),

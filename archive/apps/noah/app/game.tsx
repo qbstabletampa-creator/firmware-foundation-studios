@@ -75,6 +75,9 @@ export default function GameScreen() {
   const [sessionVerses, setSessionVerses] = useState<Verse[]>([]);
   const [shownVerseIndex, setShownVerseIndex] = useState(0);
   const [activeVerse, setActiveVerse] = useState<Verse | null>(null);
+  // True while showing the final level's verse: Continue goes to game over,
+  // not to a next level (there is none after the last level).
+  const [verseEndsGame, setVerseEndsGame] = useState(false);
   const [lastResult, setLastResult] = useState<LevelResult | null>(null);
   const [celebratingBadge, setCelebratingBadge] = useState<typeof newlyUnlocked[number] | null>(null);
 
@@ -114,6 +117,7 @@ export default function GameScreen() {
       setGameMode(mode);
       setCumulativeScore(0);
       setShownVerseIndex(0);
+      setVerseEndsGame(false);
       verseCursor.current = 0;
 
       const seenIds = noahStore.seenVerseIds;
@@ -243,6 +247,29 @@ export default function GameScreen() {
     }).start();
   }, [overlayOpacity]);
 
+  // Show the verse for the FINAL level, then mark it so Continue opens the
+  // game-over card instead of trying to start a (non-existent) next level. If
+  // the session ran out of verses, fall straight through to game over.
+  const showFinalVerse = useCallback(() => {
+    const idx = verseCursor.current;
+    if (idx < sessionVerses.length) {
+      verseCursor.current = idx + 1;
+      setActiveVerse(sessionVerses[idx]);
+      setShownVerseIndex((prev) => Math.max(prev, idx + 1));
+      setVerseEndsGame(true);
+      setScreenMode('verse');
+      verseOpacity.setValue(0);
+      Animated.timing(verseOpacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      setScreenMode('gameover');
+      fadeInOverlay();
+    }
+  }, [sessionVerses, verseOpacity, fadeInOverlay]);
+
   // React to phase changes that end a level.
   useEffect(() => {
     if (!gameState || screenMode !== 'playing') return;
@@ -253,8 +280,9 @@ export default function GameScreen() {
       fadeInOverlay();
     } else if (gameState.phase === 'game_complete' && lastResult) {
       commitResult(lastResult, true);
-      setScreenMode('gameover');
-      fadeInOverlay();
+      // Show the FINAL level's verse before the game-over card, same as every
+      // other level break. Continue from the verse then opens game over.
+      showFinalVerse();
     } else if (gameState.phase === 'level_failed') {
       // Out of moves before clearing the board. The level isn't completed, so
       // there's no LevelResult to commit; the score from previously cleared
@@ -271,6 +299,7 @@ export default function GameScreen() {
     screenMode,
     commitResult,
     fadeInOverlay,
+    showFinalVerse,
     recordPlay,
     todayStr,
     sessionVerses,
@@ -399,13 +428,20 @@ export default function GameScreen() {
     }
   }, [sessionVerses, verseOpacity, level, startLevel]);
 
-  // "Continue" on the verse card: build the next board.
+  // "Continue" on the verse card: build the next board, or -- if this was the
+  // final level's verse -- open the game-over card.
   const continueFromVerse = useCallback(() => {
     SoundManager.play('verse');
     setActiveVerse(null);
+    if (verseEndsGame) {
+      setVerseEndsGame(false);
+      setScreenMode('gameover');
+      fadeInOverlay();
+      return;
+    }
     setLastResult(null);
     startLevel(level + 1, rngRef.current);
-  }, [level, startLevel]);
+  }, [level, startLevel, verseEndsGame, fadeInOverlay]);
 
   // "Try Again" on the fail card: restart the SAME level fresh. Score from
   // previously completed levels (cumulativeScore) is kept.
@@ -520,13 +556,18 @@ export default function GameScreen() {
         <View style={styles.hudCenter}>
           <Text style={styles.hudLevel}>Level {gs.level}</Text>
           <View
-            style={[styles.movesPill, gs.movesRemaining <= 3 && styles.movesPillLow]}
+            style={styles.heartsRow}
             accessibilityRole="text"
-            accessibilityLabel={`Moves left: ${gs.movesRemaining}`}
+            accessibilityLabel={`Hearts left: ${Math.max(0, GAME_CONSTANTS.STRIKES_PER_LEVEL - gs.strikes)}`}
           >
-            <Text style={[styles.movesPillText, gs.movesRemaining <= 3 && styles.movesPillTextLow]}>
-              Moves: {gs.movesRemaining}
-            </Text>
+            {Array.from({ length: GAME_CONSTANTS.STRIKES_PER_LEVEL }).map((_, i) => (
+              <Text
+                key={i}
+                style={[styles.heart, i < gs.strikes && styles.heartLost]}
+              >
+                {i < gs.strikes ? '🤍' : '❤️'}
+              </Text>
+            ))}
           </View>
         </View>
         <View style={styles.hudRight}>
@@ -795,7 +836,7 @@ function HowToPlayModal({ visible, onDismiss }: { visible: boolean; onDismiss: (
           <View style={styles.howToList}>
             <HowToRow icon="🃏" text="Flip two cards to find matching animal pairs." />
             <HowToRow icon="🛟" text="Match all the pairs to fill the Ark." />
-            <HowToRow icon="👣" text="Watch your moves. Run out and you retry the level." />
+            <HowToRow icon="❤️" text="You have 3 hearts. 3 wrong matches and you restart the level." />
             <HowToRow icon="📖" text="A Bible verse waits after every level." />
           </View>
           <Pressable style={styles.modalButton} onPress={onDismiss}>
@@ -875,20 +916,9 @@ const styles = StyleSheet.create({
   hudCombo: { color: colors.teal, ...typography.combo },
   hudCenter: { alignItems: 'center', flex: 1, gap: 3 },
   hudLevel: { color: colors.textPrimary, fontSize: 14, fontWeight: '800' },
-  movesPill: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(120, 220, 255, 0.14)',
-    borderWidth: 1,
-    borderColor: 'rgba(120, 220, 255, 0.32)',
-  },
-  movesPillLow: {
-    backgroundColor: 'rgba(255, 179, 71, 0.18)',
-    borderColor: colors.present,
-  },
-  movesPillText: { color: colors.teal, fontSize: 12, fontWeight: '900', letterSpacing: 0.3 },
-  movesPillTextLow: { color: colors.present },
+  heartsRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  heart: { fontSize: 15 },
+  heartLost: { opacity: 0.55 },
   hudRight: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.sm },
   hudMatches: { color: colors.teal, fontSize: 18, fontWeight: '900' },
   quitButton: {

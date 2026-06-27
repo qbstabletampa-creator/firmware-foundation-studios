@@ -1,8 +1,6 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { ParentGate } from '../../src/shell/components/ParentGate';
-import { useParentGateStore } from '../../src/shell/stores/parentGateStore';
 import { useProfileStore } from '../../src/shell/stores/profileStore';
 import { colors, radii, shadows, spacing, typography } from '../../src/shell/theme';
 
@@ -10,39 +8,21 @@ type MoreItem = {
   icon: string;
   label: string;
   route: '/settings' | '/about' | '/privacy' | '/giveback';
-  gated: boolean;
 };
 
 const ITEMS: MoreItem[] = [
-  { icon: '⚙️', label: 'Settings', route: '/settings', gated: true },
-  { icon: 'ℹ️', label: 'About', route: '/about', gated: false },
-  { icon: '🔒', label: 'Privacy', route: '/privacy', gated: false },
-  { icon: '💛', label: 'Giveback', route: '/giveback', gated: false },
+  { icon: '⚙️', label: 'Settings', route: '/settings' },
+  { icon: 'ℹ️', label: 'About', route: '/about' },
+  { icon: '🔒', label: 'Privacy', route: '/privacy' },
+  { icon: '💛', label: 'Giveback', route: '/giveback' },
 ];
 
 export default function MoreTab() {
   const router = useRouter();
   const name = useProfileStore((s) => s.name);
-  const unlock = useParentGateStore((s) => s.unlock);
-
-  const [gateVisible, setGateVisible] = useState(false);
-
-  const handleGateSuccess = useCallback(() => {
-    setGateVisible(false);
-    unlock();
-    router.push('/settings');
-  }, [unlock, router]);
-
-  const handleGateCancel = useCallback(() => {
-    setGateVisible(false);
-  }, []);
 
   const handlePress = useCallback(
     (item: MoreItem) => {
-      if (item.gated) {
-        setGateVisible(true);
-        return;
-      }
       router.push(item.route);
     },
     [router],
@@ -53,51 +33,43 @@ export default function MoreTab() {
   }, [router]);
 
   return (
-    <>
-      <SafeAreaView style={styles.screen}>
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <Text style={styles.heading}>More</Text>
+    <SafeAreaView style={styles.screen}>
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <Text style={styles.heading}>More</Text>
 
-          <Pressable
-            style={({ pressed }) => [styles.profileCard, pressed && styles.pressed]}
-            onPress={handleChangeProfile}
-          >
-            <View style={styles.profileLeft}>
-              <View style={styles.profileAvatar}>
-                <Text style={styles.profileAvatarText}>
-                  {(name ?? 'P')[0].toUpperCase()}
-                </Text>
-              </View>
-              <View>
-                <Text style={styles.profileName}>{name ?? 'Player'}</Text>
-                <Text style={styles.profileHint}>Tap to change</Text>
-              </View>
+        <Pressable
+          style={({ pressed }) => [styles.profileCard, pressed && styles.pressed]}
+          onPress={handleChangeProfile}
+        >
+          <View style={styles.profileLeft}>
+            <View style={styles.profileAvatar}>
+              <Text style={styles.profileAvatarText}>
+                {(name ?? 'P')[0].toUpperCase()}
+              </Text>
             </View>
-            <Text style={styles.arrow}>{'›'}</Text>
-          </Pressable>
-
-          <View style={styles.list}>
-            {ITEMS.map((item) => (
-              <Pressable
-                key={item.route}
-                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-                onPress={() => handlePress(item)}
-              >
-                <Text style={styles.rowIcon}>{item.icon}</Text>
-                <Text style={styles.rowLabel}>{item.label}</Text>
-                <Text style={styles.arrow}>{'›'}</Text>
-              </Pressable>
-            ))}
+            <View>
+              <Text style={styles.profileName}>{name ?? 'Player'}</Text>
+              <Text style={styles.profileHint}>Tap to change</Text>
+            </View>
           </View>
-        </ScrollView>
-      </SafeAreaView>
+          <Text style={styles.arrow}>{'›'}</Text>
+        </Pressable>
 
-      <ParentGate
-        visible={gateVisible}
-        onSuccess={handleGateSuccess}
-        onCancel={handleGateCancel}
-      />
-    </>
+        <View style={styles.list}>
+          {ITEMS.map((item) => (
+            <Pressable
+              key={item.route}
+              style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              onPress={() => handlePress(item)}
+            >
+              <Text style={styles.rowIcon}>{item.icon}</Text>
+              <Text style={styles.rowLabel}>{item.label}</Text>
+              <Text style={styles.arrow}>{'›'}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
