@@ -59,3 +59,11 @@ Per app (manna-catch, light-snake, noah), after CJ approves the home screens:
 5. ASC upload + Submit for review.
 
 These are the steps that were intentionally NOT automated. Everything free and code-level is done and green.
+
+## Splash verification (/ffs-splash) — fleet is correct, golden re-synced
+
+Ran the `/ffs-splash` check across the fleet. Result: **the splash is right and identical on every app.** All four apps (manna-catch, light-snake, noah, gosple) have byte-identical splash files (`SplashScreen.tsx`, `RayCanvas.tsx`, `rayShaderSource.ts`, `shaders/lightRays.ts` — same md5 across the fleet), it is the GL ray-shader (RayCanvas via expo-gl + `rayShaderSource`), the dead Skia cluster (`RadiantSplash*`, the Skia `lightRays.ts`) is referenced only by a comment in `app/index.tsx` and is NOT imported by any live route (ios-sim-smoke boots to home, no black screen), and it is exactly the version Apple is reviewing on Gosple. Each app carries the `FFS LOCKED SPLASH` header the rule requires.
+
+The only drift was that the `/ffs-splash` skill's golden copies (frozen 2026-06-24) were missing that 4-line locked-header comment — the code bodies were identical. Fixed by re-syncing the 4 skill golden files (`~/.claude/skills/ffs-splash/assets/`) to the shipping fleet, so golden == fleet exactly. **No app splash was modified** (they are correct and Apple-approved; overwriting would have regressed off the reviewed version and risked the black-screen the lock exists to prevent).
+
+Approval screenshots (real iOS-simulator home screens from ios-sim-smoke, confirming each app's own art renders, no Manna basket): committed alongside this work in each app's `screenshots/` and downloadable from the sim-smoke run artifacts. Google Drive "My Drive" was not writable from the tools (streaming namespace), so they live in the repo + CI artifacts.
