@@ -20,7 +20,7 @@ export default function GivebackScreen({ onBack }: GivebackScreenProps) {
 
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.intro}>
-          {'❤️'} 10% of every purchase supports ministries that serve children.
+          {'❤️'} We support ministries that serve children.
         </Text>
 
         <View style={styles.card}>

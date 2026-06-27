@@ -50,7 +50,6 @@ export default function RootLayout() {
         <Stack.Screen name="about" />
         <Stack.Screen name="privacy" />
         <Stack.Screen name="giveback" />
-        <Stack.Screen name="purchase" />
       </Stack>
     </SafeAreaProvider>
   );

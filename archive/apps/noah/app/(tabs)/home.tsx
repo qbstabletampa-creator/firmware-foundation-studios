@@ -42,7 +42,7 @@ export default function HomeTab() {
       <HomeScreen
         gameName="Noah Animal Match"
         tagline="Match the pairs. Fill the Ark."
-        logoSource={require('../../assets/logo.png')}
+        logoSource={require('../../assets/icon.png')}
         currentStreak={currentStreak}
         hasPlayedToday={hasPlayedToday}
         onPlay={handlePlay}

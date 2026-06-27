@@ -42,7 +42,7 @@ export default function HomeTab() {
       <HomeScreen
         gameName="Shepherd's Trail"
         tagline="Gather the flock. Avoid the thorns."
-        logoSource={require('../../assets/logo.png')}
+        logoSource={require('../../assets/icon.png')}
         currentStreak={currentStreak}
         hasPlayedToday={hasPlayedToday}
         onPlay={handlePlay}
