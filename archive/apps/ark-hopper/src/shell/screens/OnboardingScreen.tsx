@@ -166,7 +166,7 @@ export default function OnboardingScreen({ gameName, onComplete }: OnboardingScr
               <Animated.Image source={MASCOT_WAVE} style={[styles.joyBig, { transform: [{ translateY: joyFloat }] }]} resizeMode="contain" />
               <Text style={styles.welcome}>Welcome to</Text>
               <Text style={styles.title}>{gameName}</Text>
-              <Text style={styles.promise}>Match the pairs.{'\n'}Fill the ark.{'\n'}Two by two!</Text>
+              <Text style={styles.promise}>Hop across the river.{'\n'}Outrun the flood.{'\n'}Make it to the Ark!</Text>
             </View>
           )}
 
