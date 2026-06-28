@@ -42,5 +42,8 @@
     "build:ios": "eas build --platform ios --profile preview",
     "submit:ios": "eas submit --platform ios"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "expo-asset": "~12.0.13"
+  }
 }
