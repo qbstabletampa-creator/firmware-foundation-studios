@@ -20,9 +20,9 @@ type OnboardingScreenProps = {
   onComplete: (name: string) => void;
 };
 
-const MASCOT_NAME = 'Ari';
-const MASCOT_WAVE = require('../../../assets/ari-wave.png');
-const MASCOT_CELEBRATE = require('../../../assets/ari-celebrate.png');
+const MASCOT_NAME = 'Woolly';
+const MASCOT_WAVE = require('../../../assets/woolly-wave.png');
+const MASCOT_CELEBRATE = require('../../../assets/woolly-celebrate.png');
 
 // Warm light theme (Macadam-style bright onboarding). Cream bg means Ari's
 // light body blends in cleanly with no transparency fringe.
