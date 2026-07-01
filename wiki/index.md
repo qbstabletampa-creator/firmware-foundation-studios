@@ -21,6 +21,7 @@
 
 ## Active Build
 
+- [Ark Hopper Native Build (web->Expo port, 2026-06-27)](pages/ark-hopper-native-build-2026-06-27.md) -- Nativized the web-only Ark Hopper into its own Expo SDK54 app: engine ported byte-identical, Phaser scene rewritten to RN render, /aiml art (Woolly lamb mascot), own EAS project, launch crash fixed (expo-asset override), all free gates GREEN, published to Expo Go. PICKUP: CJ play-test + elite polish + paid build.
 - [FFS iOS Readiness Audit + Fixes (2026-06-13)](pages/ffs-ios-readiness-2026-06-13.md) -- LATEST. Audit of all 5 games + fix pass on the 4 native apps (branch ffs-ios-readiness, commit aa82ea3). Gosple live build = SDK56, no channel, CANNOT take OTA (needs new build). Noah 3-strikes-per-level + verse-every-level. Arc Hopper + BBB still web-only. PICKUP: ios-preflight, Expo Go publish, merge, build lane, Arc Hopper Opt1 vs Opt2.
 - [Elite Upgrade Plan](pages/elite-upgrade-plan.md) -- MASTER PLAN: 6-phase roadmap. Phases 0-4 done (Phase 0 partial), Phase 5 App Store not started.
 - [Elite Audit - June 2026](pages/elite-audit-june-2026.md) -- 8-agent audit: 44 bugs (8 critical), 3/4 games silent, 2/4 emoji splash screens, 2/7 onboarding, ~1,660 duplicated lines.

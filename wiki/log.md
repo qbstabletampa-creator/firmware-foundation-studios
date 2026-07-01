@@ -1,5 +1,9 @@
 # Firmware Foundation Studios Log
 
+## 2026-06-27 -- Ark Hopper NATIVIZED + published to Expo Go (Claude)
+Ported the web-only Ark Hopper into its own Expo SDK54 app (archive/apps/ark-hopper, branch feature/ark-hopper-native, EAS project 10d6557f). Pure engine ported byte-identical; the 2098-line Phaser scene rewritten into a playable RN app/game.tsx (frame-independent RAF tick, swipe->hop, ride/death/respawn/level-flow, NEW BEST, sound/haptics). Real /aiml art (icon, home logo, Woolly mascot wave+celebrate). Launch crash root-caused via ios-sim-debug (Cannot find native module ExpoAsset = expo-audio@1.1.1 dragging expo-asset@56) and fixed with overrides.expo-asset ~12.0.13. Gates: tsc + ios-preflight + ios-sim-smoke GREEN, /ffs-splash matches golden, /greenlight clean. Published to Expo Go preview (update c11943c1). Page pages/ark-hopper-native-build-2026-06-27.md. PICKUP: CJ play-test gameplay, then elite polish + paid build/submit.
+
+
 ## 2026-06-24 -- Gosple test reset + published to Expo Go preview (Claude/CJ)
 
 - CJ wanted to test the current Gosple in Expo Go with a clean slate: fresh onboarding, reset word/day count, randomized word length. Published to the preview channel (free Expo Go lane, no build spent).
